@@ -1,0 +1,173 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Progress bar */
+.progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 3px;
+  background: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progressLabel {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Card flip */
+.cardArea {
+  width: 100%;
+  height: 280px;
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.scene {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--flip-duration) var(--flip-easing);
+}
+
+.scene.flipped {
+  transform: rotateX(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  backface-visibility: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  gap: 12px;
+}
+
+.front {
+  background: var(--bg-raised);
+}
+
+.back {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  transform: rotateX(180deg);
+}
+
+.sideLabel {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  position: absolute;
+  top: 18px;
+  left: 20px;
+}
+
+.back .sideLabel {
+  color: var(--accent-text);
+  opacity: 0.7;
+}
+
+.content {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.back .content {
+  color: var(--accent-text);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.tapHint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  position: absolute;
+  bottom: 16px;
+}
+
+.back .tapHint {
+  color: var(--accent-text);
+  opacity: 0.5;
+}
+
+/* Action buttons */
+.actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.dontKnow,
+.know {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid;
+  transition: background var(--transition-fast), transform 0.1s;
+}
+
+.dontKnow:active,
+.know:active {
+  transform: scale(0.98);
+}
+
+.dontKnow {
+  background: var(--red-subtle);
+  border-color: var(--red-border);
+  color: var(--red-text);
+}
+
+.dontKnow:hover {
+  background: var(--red-border);
+}
+
+.know {
+  background: var(--green-subtle);
+  border-color: var(--green-border);
+  color: var(--green-text);
+}
+
+.know:hover {
+  background: var(--green-border);
+}
