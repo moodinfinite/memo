@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
+import ImportModal from '@/components/ui/ImportModal'
 import styles from './NewSetPage.module.css'
 
 interface CardRow {
@@ -23,6 +24,15 @@ export default function NewSetPage() {
   const [rows, setRows] = useState<CardRow[]>([makeRow(0), makeRow(1)])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showImport, setShowImport] = useState(false)
+
+  const handleImportLocal = (imported: { term: string; definition: string }[]) => {
+    const existingFilled = rows.filter(r => r.term.trim() || r.definition.trim())
+    const newRows = imported.map((c, i) =>
+      ({ tempId: crypto.randomUUID(), term: c.term, definition: c.definition, position: existingFilled.length + i })
+    )
+    setRows([...existingFilled, ...newRows])
+  }
 
   const updateRow = (tempId: string, field: 'term' | 'definition', value: string) => {
     setRows((prev) => prev.map((r) => r.tempId === tempId ? { ...r, [field]: value } : r))
@@ -95,8 +105,16 @@ export default function NewSetPage() {
       {/* Card rows */}
       <div className={styles.cardsSection}>
         <div className={styles.cardsHeader}>
-          <span className={styles.sectionLabel}>Cards</span>
-          <span className={styles.cardCount}>{rows.length}</span>
+          <div className={styles.cardsHeaderLeft}>
+            <span className={styles.sectionLabel}>Cards</span>
+            <span className={styles.cardCount}>{rows.length}</span>
+          </div>
+          <button className={styles.importTriggerBtn} onClick={() => setShowImport(true)}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <path d="M6.5 1v8M3.5 6l3 3 3-3M1 10.5h11" />
+            </svg>
+            Import
+          </button>
         </div>
 
         <div className={styles.cardList}>
@@ -147,6 +165,13 @@ export default function NewSetPage() {
           Add card
         </button>
       </div>
+
+      {showImport && (
+        <ImportModal
+          onImportLocal={handleImportLocal}
+          onClose={() => setShowImport(false)}
+        />
+      )}
     </div>
   )
 }

@@ -4,12 +4,13 @@ import { useSetsStore } from '@/store/setsStore'
 import styles from './ImportModal.module.css'
 
 interface Props {
-  setId: string
+  setId?: string
+  onImportLocal?: (cards: { term: string; definition: string }[]) => void
   onClose: () => void
-  onSuccess: (count: number) => void
+  onSuccess?: (count: number) => void
 }
 
-export default function ImportModal({ setId, onClose, onSuccess }: Props) {
+export default function ImportModal({ setId, onImportLocal, onClose, onSuccess }: Props) {
   const { importCards } = useSetsStore()
   const [raw, setRaw] = useState('')
   const [errors, setErrors] = useState<string[]>([])
@@ -22,10 +23,16 @@ export default function ImportModal({ setId, onClose, onSuccess }: Props) {
     const result = parseTabSeparated(raw)
     if (result.cards.length === 0) return
 
+    if (onImportLocal) {
+      onImportLocal(result.cards.map(c => ({ term: c.term, definition: c.definition })))
+      onClose()
+      return
+    }
+
     setImporting(true)
     try {
-      await importCards(setId, result.cards)
-      onSuccess(result.cards.length)
+      await importCards(setId!, result.cards)
+      onSuccess?.(result.cards.length)
       onClose()
     } catch {
       setErrors(['Import failed — please try again'])

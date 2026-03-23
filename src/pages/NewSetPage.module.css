@@ -94,7 +94,7 @@
 .label {
   font-size: 12.5px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .optional {
@@ -132,6 +132,13 @@
 .cardsHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardsHeaderLeft {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -140,7 +147,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .cardCount {
@@ -205,10 +212,10 @@
 
 .fieldLabel {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .textarea {
@@ -263,18 +270,40 @@
   align-items: center;
   gap: 7px;
   padding: 10px 16px;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--border-default);
-  background: transparent;
-  color: var(--text-secondary);
+  border-radius: var(--r-md);
+  border: 1px solid var(--accent-border);
+  background: var(--accent-subtle);
+  color: var(--accent-text);
   font-size: 13.5px;
+  font-weight: 500;
   font-family: var(--font);
-  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+  transition: border-color var(--t-fast), background var(--t-fast);
   align-self: flex-start;
 }
 
 .addRowBtn:hover {
   border-color: var(--accent);
-  color: var(--accent-text);
   background: var(--accent-subtle);
+  filter: brightness(0.95);
+}
+
+.importTriggerBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-family: var(--font);
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.importTriggerBtn:hover {
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
