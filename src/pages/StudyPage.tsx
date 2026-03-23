@@ -138,7 +138,7 @@ export default function StudyPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} hideProgress />}
+      {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {timerOn && (

@@ -55,7 +55,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, get().setId, true)
     set({ known: newKnown, currentIndex: nextIndex, isComplete })
-    if (isComplete) get()._persist(newKnown, get().unknown)
+    if (isComplete) { (get() as any)._persist(newKnown, get().unknown) }
   },
 
   markUnknown: () => {
@@ -66,7 +66,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, get().setId, false)
     set({ unknown: newUnknown, currentIndex: nextIndex, isComplete })
-    if (isComplete) get()._persist(get().known, newUnknown)
+    if (isComplete) { (get() as any)._persist(get().known, newUnknown) }
   },
 
   submitTyped: () => {
@@ -97,7 +97,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       const remaining = sessionCards.slice(currentIndex).map(c => c.id)
       const finalUnknown = [...unknown, ...remaining]
       set({ isComplete: true, unknown: finalUnknown })
-      get()._persist(known, finalUnknown)
+      ;(get() as any)._persist(known, finalUnknown)
     }
   },
 

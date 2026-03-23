@@ -20,3 +20,4 @@ export interface CardProgress {
   id: string; user_id: string; card_id: string; set_id: string
   known_count: number; unknown_count: number; last_seen_at: string
 }
+export interface Database { public: { Tables: Record<string, unknown> } }

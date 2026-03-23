@@ -63,7 +63,7 @@ export default function EditSetPage() {
 
     setSaving(true)
     try {
-      await updateSet(id, { title: title.trim(), description: description.trim(), cards: validCards as never })
+      await updateSet(id, title.trim(), description.trim(), validCards as never)
       navigate(`/sets/${id}`)
     } catch {
       setError('Failed to save — please try again')

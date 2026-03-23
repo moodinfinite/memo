@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Card } from '@/store/setsStore'
+import type { Card } from '@/lib/database.types'
 import styles from './FlashCard.module.css'
 
 interface Props {
