@@ -127,11 +127,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || !setId || setId === '__master__') return
-    await supabase.from('study_sessions').insert({
+    const { error } = await supabase.from('study_sessions').insert({
       user_id: user.id, set_id: setId, mode, total_cards: total,
       known_count: known.length, unknown_count: unknown.length,
       score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
+      completed_at: new Date().toISOString(),
     })
+    if (error) { console.error('study_sessions insert failed:', error.message); return }
     useProgressStore.getState().fetchProgress()
   },
 } as StudyState & { _persist: (known: string[], unknown: string[]) => Promise<void> }))
