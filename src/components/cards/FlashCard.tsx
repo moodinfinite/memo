@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Card } from '@/lib/database.types'
 import styles from './FlashCard.module.css'
 
@@ -14,6 +14,15 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow }: Pr
   const [flipped, setFlipped] = useState(false)
 
   const handleFlip = () => setFlipped((f) => !f)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
+      if (e.code === 'Space') { e.preventDefault(); handleFlip() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   const handleKnow = () => {
     setFlipped(false)
