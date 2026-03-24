@@ -1,26 +1,24 @@
-export const config = { runtime: 'edge' }
-
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500 })
+    return res.status(500).json({ error: 'API key not configured' })
   }
 
-  const { cards } = await req.json()
+  const { cards } = req.body || {}
   if (!cards || cards.length === 0) {
-    return new Response(JSON.stringify({ error: 'No cards provided' }), { status: 400 })
+    return res.status(400).json({ error: 'No cards provided' })
   }
 
   const cardList = (cards as { term: string; definition: string }[])
     .slice(0, 12)
-    .map(c => `- ${c.term}: ${c.definition}`)
+    .map((c: any) => `- ${c.term}: ${c.definition}`)
     .join('\n')
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
@@ -37,11 +35,11 @@ export default async function handler(req: Request): Promise<Response> {
     }),
   })
 
-  if (!res.ok) {
-    return new Response(JSON.stringify({ error: 'AI error' }), { status: 502 })
+  if (!anthropicRes.ok) {
+    return res.status(502).json({ error: 'AI error' })
   }
 
-  const data = await res.json()
+  const data = await anthropicRes.json()
   const raw = (data.content?.[0]?.text ?? '').trim()
   const suggestions = raw
     .split('\n')
@@ -49,7 +47,5 @@ export default async function handler(req: Request): Promise<Response> {
     .filter((l: string) => l.length > 0)
     .slice(0, 3)
 
-  return new Response(JSON.stringify({ suggestions }), {
-    headers: { 'content-type': 'application/json' },
-  })
+  return res.json({ suggestions })
 }
