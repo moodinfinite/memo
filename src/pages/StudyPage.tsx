@@ -21,7 +21,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, startSession, markKnown, markUnknown, resetSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcResult, startSession, markKnown, markUnknown, resetSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
@@ -29,8 +29,11 @@ export default function StudyPage() {
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
   const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
+  const [burstMsg, setBurstMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const shownMilestones = useRef(new Set<number>())
+  const mcStreak = useRef(0)
+  const prevMcResult = useRef<string>('idle')
 
   useEffect(() => {
     if (id) { fetchSet(id); fetchSRS(id) }
@@ -65,8 +68,29 @@ export default function StudyPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timerOn, selecting, isComplete])
 
-  // Reset milestones on new session
-  useEffect(() => { shownMilestones.current = new Set() }, [sessionCards.length])
+  // Reset milestones and streak on new session
+  useEffect(() => {
+    shownMilestones.current = new Set()
+    mcStreak.current = 0
+    prevMcResult.current = 'idle'
+  }, [sessionCards.length])
+
+  // MC streak burst
+  const BURST_MSGS = ['On a roll!', 'Unstoppable!', 'On fire!', 'Legendary!']
+  useEffect(() => {
+    if (mode !== 'multiple_choice') return
+    if (mcResult === 'correct' && prevMcResult.current === 'idle') {
+      mcStreak.current += 1
+      if (mcStreak.current % 5 === 0) {
+        const idx = Math.floor(mcStreak.current / 5) - 1
+        setBurstMsg(BURST_MSGS[Math.min(idx, BURST_MSGS.length - 1)])
+        setTimeout(() => setBurstMsg(null), 2000)
+      }
+    } else if (mcResult === 'incorrect' && prevMcResult.current === 'idle') {
+      mcStreak.current = 0
+    }
+    prevMcResult.current = mcResult
+  }, [mcResult])
 
   // Milestone toasts
   useEffect(() => {
@@ -195,6 +219,20 @@ export default function StudyPage() {
         </div>
       )}
       {milestoneMsg && <div className={styles.milestoneToast}>{milestoneMsg}</div>}
+      {burstMsg && <StreakBurst msg={burstMsg} streak={mcStreak.current} />}
+    </div>
+  )
+}
+
+function StreakBurst({ msg, streak }: { msg: string; streak: number }) {
+  return (
+    <div className={styles.burstOverlay}>
+      <div className={styles.burstRing} />
+      <div className={styles.burstRing2} />
+      <div className={styles.burstContent}>
+        <div className={styles.burstStreak}>{streak} in a row</div>
+        <div className={styles.burstMsg}>{msg}</div>
+      </div>
     </div>
   )
 }
