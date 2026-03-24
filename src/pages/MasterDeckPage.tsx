@@ -20,7 +20,7 @@ export default function MasterDeckPage() {
   const {
     mode, sessionCards, currentIndex, known, unknown, isComplete,
     timerSecsLeft, timerOn, mcStreak,
-    startSession, markKnown, markUnknown, resetSession,
+    startSession, markKnown, markUnknown, resetSession, persistSession,
     tickTimer, selectMCOption, reshuffleRemaining,
   } = useStudyStore()
 
@@ -96,7 +96,11 @@ export default function MasterDeckPage() {
     setSelecting(false)
   }
 
-  const handleEnd = () => { resetSession(); setSelecting(true) }
+  const handleEnd = () => {
+    if (!isComplete) persistSession()
+    resetSession()
+    setSelecting(true)
+  }
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60 < 10 ? '0' : '')}${s % 60}`
   const canMC = allCards.length >= 4
 

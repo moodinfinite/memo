@@ -21,7 +21,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, startSession, markKnown, markUnknown, resetSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, startSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
@@ -105,7 +105,11 @@ export default function StudyPage() {
     setSelecting(false)
   }
 
-  const handleEnd = () => { resetSession(); setSelecting(true) }
+  const handleEnd = () => {
+    if (!isComplete) persistSession()
+    resetSession()
+    setSelecting(true)
+  }
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60 < 10 ? '0' : '')}${s % 60}`
 

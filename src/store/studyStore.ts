@@ -18,6 +18,7 @@ interface StudyState {
   selectMCOption: (idx: number) => void
   reshuffleRemaining: () => void
   tickTimer: () => void; resetSession: () => void
+  persistSession: () => Promise<void>
 }
 
 function shuffleArr<T>(arr: T[]): T[] {
@@ -115,6 +116,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0 }),
+
+  persistSession: async () => {
+    const { known, unknown } = get()
+    if (known.length === 0 && unknown.length === 0) return
+    await (get() as any)._persist(known, unknown)
+  },
 
   _persist: async (known: string[], unknown: string[]) => {
     const { mode, setId, sessionCards } = get()
