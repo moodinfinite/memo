@@ -32,6 +32,10 @@ export default function AppLayout() {
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
             <span>All sets</span>
           </NavLink>
+          <NavLink to="/master" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M5 8h6M5 11h4"/></svg>
+            <span>Master Deck</span>
+          </NavLink>
         </nav>
 
         {folders.length > 0 && (

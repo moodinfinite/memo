@@ -119,7 +119,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   _persist: async (known: string[], unknown: string[]) => {
     const { mode, setId, sessionCards } = get()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !setId) return
+    if (!user || !setId || setId === '__master__') return
     const total = sessionCards.length
     await supabase.from('study_sessions').insert({
       user_id: user.id, set_id: setId, mode, total_cards: total,

@@ -11,6 +11,7 @@ import EditSetPage from '@/pages/EditSetPage'
 import StudyPage from '@/pages/StudyPage'
 import SetDetailPage from '@/pages/SetDetailPage'
 import FolderPage from '@/pages/FolderPage'
+import MasterDeckPage from '@/pages/MasterDeckPage'
 import '@/styles/globals.css'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/sets/:id" element={<SetDetailPage />} />
           <Route path="/sets/:id/edit" element={<EditSetPage />} />
           <Route path="/sets/:id/study" element={<StudyPage />} />
+          <Route path="/master" element={<MasterDeckPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

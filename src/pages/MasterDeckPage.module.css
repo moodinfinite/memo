@@ -1,0 +1,32 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-lg);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-text);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}

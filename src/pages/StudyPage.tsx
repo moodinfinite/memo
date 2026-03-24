@@ -210,7 +210,7 @@ export default function StudyPage() {
   )
 }
 
-function StreakBurst({ msg, streak }: { msg: string; streak: number }) {
+export function StreakBurst({ msg, streak }: { msg: string; streak: number }) {
   return (
     <div className={styles.burstOverlay}>
       <div className={styles.burstRing} />
@@ -223,7 +223,7 @@ function StreakBurst({ msg, streak }: { msg: string; streak: number }) {
   )
 }
 
-function CountUpScore({ pct, total, known, unknown }: { pct: number; total: number; known: number; unknown: number }) {
+export function CountUpScore({ pct, total, known, unknown }: { pct: number; total: number; known: number; unknown: number }) {
   const [display, setDisplay] = useState(0)
   const [bar, setBar] = useState(0)
   useEffect(() => {
@@ -243,7 +243,7 @@ function CountUpScore({ pct, total, known, unknown }: { pct: number; total: numb
   )
 }
 
-function PerfectScore({ total, known, unknown }: { total: number; known: number; unknown: number }) {
+export function PerfectScore({ total, known, unknown }: { total: number; known: number; unknown: number }) {
   const FINAL = ['rotate(-14deg) translate(-55px,6px)', 'rotate(7deg) translate(6px,-20px)', 'rotate(-5deg) translate(48px,4px)', 'rotate(11deg) translate(-16px,24px)', 'rotate(-2deg) translate(26px,-8px)']
   useEffect(() => {
     for (let i = 1; i <= 5; i++) { const el = document.getElementById(`pfc${i}`); if (!el) continue; el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(60px) scale(0.85)' }
