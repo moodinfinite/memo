@@ -96,7 +96,10 @@ export const useSetsStore = create<SetsState>((set, get) => ({
 
   moveToFolder: async (id, folderId) => {
     await supabase.from('sets').update({ folder_id: folderId }).eq('id', id)
-    set((state) => ({ sets: state.sets.map((s) => s.id === id ? { ...s, folder_id: folderId } : s) }))
+    set((state) => ({
+      sets: state.sets.map((s) => s.id === id ? { ...s, folder_id: folderId } : s),
+      currentSet: state.currentSet?.id === id ? { ...state.currentSet, folder_id: folderId } : state.currentSet,
+    }))
   },
 
   importCards: async (setId, rawCards) => {
