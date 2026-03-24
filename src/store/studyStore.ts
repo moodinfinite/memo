@@ -53,6 +53,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   markKnown: () => {
     const { sessionCards, currentIndex, known } = get()
     const card = sessionCards[currentIndex]
+    if (!card) return
     const newKnown = [...known, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
@@ -64,6 +65,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   markUnknown: () => {
     const { sessionCards, currentIndex, unknown } = get()
     const card = sessionCards[currentIndex]
+    if (!card) return
     const newUnknown = [...unknown, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
