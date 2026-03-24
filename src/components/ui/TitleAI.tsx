@@ -43,10 +43,12 @@ export default function TitleAI({ cards, onSelect }: Props) {
     setSuggestions([])
   }
 
+  const dismiss = () => { setSuggestions([]); setError(null) }
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setSuggestions([])
+      if (ref.current && !ref.current.contains(e.target as Node)) dismiss()
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -76,7 +78,7 @@ export default function TitleAI({ cards, onSelect }: Props) {
               <span className={styles.optionText}>{s}</span>
             </button>
           ))}
-          <button className={styles.dismiss} onClick={() => setSuggestions([])}>Dismiss</button>
+          <button className={styles.dismiss} onClick={dismiss}>Dismiss</button>
         </div>
       )}
     </div>

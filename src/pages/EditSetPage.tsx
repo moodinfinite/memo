@@ -63,10 +63,14 @@ export default function EditSetPage() {
     if (!id) return
 
     setSaving(true)
+    setError('')
+    const timer = setTimeout(() => { setSaving(false); setError('Save timed out — check your connection and try again') }, 15000)
     try {
       await updateSet(id, title.trim(), description.trim(), validCards as never)
+      clearTimeout(timer)
       navigate(`/sets/${id}`)
     } catch {
+      clearTimeout(timer)
       setError('Failed to save — please try again')
       setSaving(false)
     }

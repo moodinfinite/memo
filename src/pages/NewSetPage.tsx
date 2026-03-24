@@ -54,10 +54,14 @@ export default function NewSetPage() {
     if (validCards.length < 1) { setError('Add at least one complete card'); return }
 
     setSaving(true)
+    setError('')
+    const timer = setTimeout(() => { setSaving(false); setError('Save timed out — check your connection and try again') }, 15000)
     try {
       const set = await createSet(title.trim(), description.trim(), validCards)
+      clearTimeout(timer)
       navigate(`/sets/${set.id}`)
     } catch {
+      clearTimeout(timer)
       setError('Failed to save — please try again')
       setSaving(false)
     }
