@@ -1,6 +1,11 @@
 .page{display:flex;flex-direction:column;gap:24px;max-width:660px;margin:0 auto}
 .loading{font-size:13.5px;color:var(--text-tertiary);padding:48px 0;text-align:center}
 .topBar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topBarRight{display:flex;align-items:center;gap:8px}
+.shuffleBtn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--r-sm);border:1px solid var(--border-default);background:none;color:var(--text-tertiary);cursor:pointer;transition:color var(--t-fast),border-color var(--t-fast),background var(--t-fast)}
+.shuffleBtn:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-overlay)}
+.milestoneToast{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:var(--text-primary);color:var(--bg-base);padding:12px 28px;border-radius:var(--r-lg);font-size:15px;font-weight:600;letter-spacing:-0.01em;z-index:50;pointer-events:none;animation:toastPop 0.22s cubic-bezier(0.34,1.4,0.64,1)}
+@keyframes toastPop{from{opacity:0;transform:translate(-50%,-50%) scale(0.88)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .backBtn{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-secondary);background:none;border:none;font-family:var(--font);cursor:pointer;padding:0;transition:color var(--t-fast)}
 .backBtn:hover{color:var(--text-primary)}
 .modeTag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;background:var(--accent-subtle);color:var(--accent-text);border:1px solid var(--accent-border)}

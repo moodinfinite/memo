@@ -25,7 +25,8 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   error: null,
 
   fetchSets: async () => {
-    set({ isLoading: true, error: null })
+    if (get().sets.length === 0) set({ isLoading: true })
+    set({ error: null })
     const { data, error } = await supabase
       .from('sets')
       .select('*, cards(count)')
@@ -37,7 +38,8 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   },
 
   fetchSet: async (id) => {
-    set({ isLoading: true, error: null })
+    if (get().currentSet?.id !== id) set({ isLoading: true })
+    set({ error: null })
     const { data, error } = await supabase
       .from('sets').select('*, cards(*)').eq('id', id).single()
     if (error) { set({ error: error.message, isLoading: false }); return }
@@ -74,7 +76,6 @@ export const useSetsStore = create<SetsState>((set, get) => ({
       )
     }
     await get().fetchSet(id)
-    await get().fetchSets()
   },
 
   deleteSet: async (id) => {

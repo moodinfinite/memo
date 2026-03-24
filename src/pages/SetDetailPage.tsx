@@ -1,15 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
-import ImportModal from '@/components/ui/ImportModal'
 import styles from './SetDetailPage.module.css'
 
 export default function SetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentSet, fetchSet, deleteSet, isLoading } = useSetsStore()
-  const [showImport, setShowImport] = useState(false)
-  const [importSuccess, setImportSuccess] = useState<number | null>(null)
 
   useEffect(() => { if (id) fetchSet(id) }, [id])
 
@@ -20,23 +17,11 @@ export default function SetDetailPage() {
     navigate('/')
   }
 
-  const handleImportSuccess = (count: number) => {
-    setImportSuccess(count)
-    setTimeout(() => setImportSuccess(null), 3000)
-  }
-
-  if (isLoading || !currentSet) return <div className={styles.loading}>Loading…</div>
+  if (isLoading && !currentSet) return <div className={styles.loading}>Loading…</div>
+  if (!currentSet) return null
 
   return (
     <div className={styles.page}>
-      {showImport && id && (
-        <ImportModal
-          setId={id}
-          onClose={() => setShowImport(false)}
-          onSuccess={handleImportSuccess}
-        />
-      )}
-
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{currentSet.title}</h1>
@@ -45,22 +30,10 @@ export default function SetDetailPage() {
         </div>
         <div className={styles.actions}>
           <Link to={`/sets/${id}/study`} className={styles.studyBtn}>Study</Link>
-          <button className={styles.importBtn} onClick={() => setShowImport(true)}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M7 1v8M4 6l3 3 3-3M2 11h10"/>
-            </svg>
-            Import
-          </button>
           <Link to={`/sets/${id}/edit`} className={styles.editBtn}>Edit</Link>
           <button className={styles.deleteBtn} onClick={handleDelete}>Delete</button>
         </div>
       </div>
-
-      {importSuccess && (
-        <div className={styles.successBanner}>
-          {importSuccess} card{importSuccess === 1 ? '' : 's'} imported successfully
-        </div>
-      )}
 
       <div className={styles.sectionLabel}>All cards</div>
 

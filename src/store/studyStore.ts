@@ -16,6 +16,7 @@ interface StudyState {
   markKnown: () => void; markUnknown: () => void
   submitTyped: () => void; setTypedAnswer: (val: string) => void
   selectMCOption: (idx: number) => void
+  reshuffleRemaining: () => void
   tickTimer: () => void; resetSession: () => void
 }
 
@@ -99,6 +100,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ isComplete: true, unknown: finalUnknown })
       ;(get() as any)._persist(known, finalUnknown)
     }
+  },
+
+  reshuffleRemaining: () => {
+    const { sessionCards, currentIndex } = get()
+    const done = sessionCards.slice(0, currentIndex)
+    const remaining = shuffleArr(sessionCards.slice(currentIndex))
+    set({ sessionCards: [...done, ...remaining] })
   },
 
   resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', timerSecsLeft: 0 }),

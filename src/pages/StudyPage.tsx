@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useStudyStore } from '@/store/studyStore'
@@ -21,14 +21,16 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, startSession, markKnown, markUnknown, resetSession, tickTimer } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, startSession, markKnown, markUnknown, resetSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
+  const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const shownMilestones = useRef(new Set<number>())
 
   useEffect(() => {
     if (id) { fetchSet(id); fetchSRS(id) }
@@ -38,9 +40,17 @@ export default function StudyPage() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      if (selecting || isComplete || mode !== 'flashcard') return
-      if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
-      if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
+      if (selecting || isComplete) return
+      if (mode === 'flashcard') {
+        if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
+        if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
+      }
+      if (mode === 'multiple_choice') {
+        if (e.code === 'Digit1') { e.preventDefault(); selectMCOption(0) }
+        if (e.code === 'Digit2') { e.preventDefault(); selectMCOption(1) }
+        if (e.code === 'Digit3') { e.preventDefault(); selectMCOption(2) }
+        if (e.code === 'Digit4') { e.preventDefault(); selectMCOption(3) }
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -54,6 +64,24 @@ export default function StudyPage() {
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timerOn, selecting, isComplete])
+
+  // Reset milestones on new session
+  useEffect(() => { shownMilestones.current = new Set() }, [sessionCards.length])
+
+  // Milestone toasts
+  useEffect(() => {
+    if (sessionCards.length === 0 || isComplete || mode !== 'flashcard') return
+    const pct = (known.length / sessionCards.length) * 100
+    const checks: [number, string][] = [[25, 'Good start!'], [50, 'Halfway there!'], [75, 'Almost done!']]
+    for (const [thresh, msg] of checks) {
+      if (pct >= thresh && !shownMilestones.current.has(thresh)) {
+        shownMilestones.current.add(thresh)
+        setMilestoneMsg(msg)
+        setTimeout(() => setMilestoneMsg(null), 2000)
+        break
+      }
+    }
+  }, [known.length])
 
   const canMC = (currentSet?.cards?.length ?? 0) >= 4
 
@@ -131,8 +159,15 @@ export default function StudyPage() {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
           {currentSet.title}
         </button>
-        <div className={styles.modeTag}>{MODES.find((m) => m.id === mode)?.label}</div>
-        <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
+        <div className={styles.topBarRight}>
+          {mode === 'flashcard' && (
+            <button className={styles.shuffleBtn} onClick={reshuffleRemaining} title="Shuffle remaining cards">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
+            </button>
+          )}
+          <div className={styles.modeTag}>{MODES.find((m) => m.id === mode)?.label}</div>
+          <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
+        </div>
       </div>
       <div className={styles.progressRow}>
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
@@ -154,6 +189,12 @@ export default function StudyPage() {
           <span className={styles.kbd}><kbd>→</kbd> got it</span>
         </div>
       )}
+      {mode === 'multiple_choice' && (
+        <div className={styles.kbdHint}>
+          <span className={styles.kbd}><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> select answer</span>
+        </div>
+      )}
+      {milestoneMsg && <div className={styles.milestoneToast}>{milestoneMsg}</div>}
     </div>
   )
 }

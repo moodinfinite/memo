@@ -27,17 +27,6 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow }: Pr
 
   return (
     <div className={styles.wrap}>
-      {/* Progress */}
-      <div className={styles.progress}>
-        <div className={styles.progressTrack}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${(index / total) * 100}%` }}
-          />
-        </div>
-        <span className={styles.progressLabel}>{index + 1} / {total}</span>
-      </div>
-
       {/* Card */}
       <div className={styles.cardArea} onClick={handleFlip}>
         <div className={[styles.scene, flipped ? styles.flipped : ''].join(' ')}>

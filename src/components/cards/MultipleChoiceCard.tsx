@@ -36,7 +36,7 @@ export default function MultipleChoiceCard() {
               disabled={selectedOption !== null}
             >
               <span className={styles.mcOptionLetter}>
-                {['A', 'B', 'C', 'D'][i]}
+                {['1', '2', '3', '4'][i]}
               </span>
               <span className={styles.mcOptionText}>{opt}</span>
               {state === 'correct' && (
