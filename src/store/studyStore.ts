@@ -11,7 +11,7 @@ interface StudyState {
   currentIndex: number; known: string[]; unknown: string[]; isComplete: boolean
   doShuffle: boolean; timerOn: boolean; timerDurMin: number; timerSecsLeft: number
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
-  selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'
+  selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number
   startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
   markKnown: () => void; markUnknown: () => void
   submitTyped: () => void; setTypedAnswer: (val: string) => void
@@ -30,7 +30,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],
   currentIndex: 0, known: [], unknown: [], isComplete: false,
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
-  typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle',
+  typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
 
   startSession: (cards, mode, setId, opts = {}) => {
     const { shuffle = false, timerDurMin = 0 } = opts
@@ -44,7 +44,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       currentIndex: 0, known: [], unknown: [], isComplete: false,
       doShuffle: shuffle, timerOn: timerDurMin > 0,
       timerDurMin, timerSecsLeft: timerDurMin * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle',
+      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
     })
   },
 
@@ -80,11 +80,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   setTypedAnswer: (val) => set({ typedAnswer: val }),
 
   selectMCOption: (idx) => {
-    const { mcQuestions, currentIndex } = get()
+    const { mcQuestions, currentIndex, mcStreak } = get()
     const q = mcQuestions[currentIndex]
     if (!q || get().mcResult !== 'idle') return
     const correct = idx === q.correctIndex
-    set({ selectedOption: idx, mcResult: correct ? 'correct' : 'incorrect' })
+    const newStreak = correct ? mcStreak + 1 : 0
+    set({ selectedOption: idx, mcResult: correct ? 'correct' : 'incorrect', mcStreak: newStreak })
     setTimeout(() => { if (correct) get().markKnown(); else get().markUnknown(); set({ selectedOption: null, mcResult: 'idle' }) }, 1000)
   },
 
@@ -103,13 +104,17 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   reshuffleRemaining: () => {
-    const { sessionCards, currentIndex } = get()
+    const { sessionCards, currentIndex, mode } = get()
     const done = sessionCards.slice(0, currentIndex)
     const remaining = shuffleArr(sessionCards.slice(currentIndex))
-    set({ sessionCards: [...done, ...remaining] })
+    const newCards = [...done, ...remaining]
+    set({
+      sessionCards: newCards,
+      mcQuestions: mode === 'multiple_choice' ? generateMCQuestions(newCards) : [],
+    })
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', timerSecsLeft: 0 }),
+  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0 }),
 
   _persist: async (known: string[], unknown: string[]) => {
     const { mode, setId, sessionCards } = get()
