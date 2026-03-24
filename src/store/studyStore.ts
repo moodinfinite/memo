@@ -4,6 +4,7 @@ import type { Card, StudyMode } from '@/lib/database.types'
 import { generateMCQuestions, type MCQuestion } from '@/lib/multipleChoice'
 import { isFuzzyMatch } from '@/lib/fuzzy'
 import { useSRSStore } from './srsStore'
+import { useProgressStore } from './progressStore'
 
 interface StudyState {
   mode: StudyMode; setId: string
@@ -57,7 +58,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, get().setId, true)
     set({ known: newKnown, currentIndex: nextIndex, isComplete })
-    if (isComplete) { (get() as any)._persist(newKnown, get().unknown) }
+    if (isComplete) { (get() as any)._persist(newKnown, get().unknown, sessionCards.length, get().mode, get().setId) }
   },
 
   markUnknown: () => {
@@ -68,7 +69,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, get().setId, false)
     set({ unknown: newUnknown, currentIndex: nextIndex, isComplete })
-    if (isComplete) { (get() as any)._persist(get().known, newUnknown) }
+    if (isComplete) { (get() as any)._persist(get().known, newUnknown, sessionCards.length, get().mode, get().setId) }
   },
 
   submitTyped: () => {
@@ -118,20 +119,19 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0 }),
 
   persistSession: async () => {
-    const { known, unknown } = get()
+    const { known, unknown, sessionCards, mode, setId } = get()
     if (known.length === 0 && unknown.length === 0) return
-    await (get() as any)._persist(known, unknown)
+    await (get() as any)._persist(known, unknown, sessionCards.length, mode, setId)
   },
 
-  _persist: async (known: string[], unknown: string[]) => {
-    const { mode, setId, sessionCards } = get()
+  _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || !setId || setId === '__master__') return
-    const total = sessionCards.length
     await supabase.from('study_sessions').insert({
       user_id: user.id, set_id: setId, mode, total_cards: total,
       known_count: known.length, unknown_count: unknown.length,
       score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
     })
+    useProgressStore.getState().fetchProgress()
   },
 } as StudyState & { _persist: (known: string[], unknown: string[]) => Promise<void> }))
