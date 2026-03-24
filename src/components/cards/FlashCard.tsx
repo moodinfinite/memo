@@ -8,21 +8,17 @@ interface Props {
   total: number
   onKnow: () => void
   onDontKnow: () => void
+  flipKey?: number
 }
 
-export default function FlashCard({ card, index, total, onKnow, onDontKnow }: Props) {
+export default function FlashCard({ card, index, total, onKnow, onDontKnow, flipKey }: Props) {
   const [flipped, setFlipped] = useState(false)
 
   const handleFlip = () => setFlipped((f) => !f)
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      if (e.code === 'Space') { e.preventDefault(); handleFlip() }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
+    if ((flipKey ?? 0) > 0) setFlipped((f) => !f)
+  }, [flipKey])
 
   const handleKnow = () => {
     setFlipped(false)

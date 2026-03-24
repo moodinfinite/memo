@@ -32,6 +32,8 @@ export default function MasterDeckPage() {
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
+  const [flipKey, setFlipKey] = useState(0)
+  const [shuffleActive, setShuffleActive] = useState(false)
   const [burstMsg, setBurstMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -64,6 +66,7 @@ export default function MasterDeckPage() {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (selecting || isComplete) return
       if (mode === 'flashcard') {
+        if (e.code === 'Space') { e.preventDefault(); setFlipKey((k) => k + 1) }
         if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
         if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
       }
@@ -77,6 +80,8 @@ export default function MasterDeckPage() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [selecting, isComplete, mode])
+
+  useEffect(() => { setFlipKey(0) }, [currentIndex])
 
   const BURST_MSGS = ['On a roll!', 'Unstoppable!', 'On fire!', 'Legendary!']
   useEffect(() => {
@@ -181,7 +186,11 @@ export default function MasterDeckPage() {
         </button>
         <div className={styles.topBarRight}>
           {(mode === 'flashcard' || mode === 'multiple_choice') && (
-            <button className={styles.shuffleBtn} onClick={reshuffleRemaining} title="Shuffle remaining">
+            <button
+              className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
+              onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
+              title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
+            >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
             </button>
           )}
@@ -193,7 +202,7 @@ export default function MasterDeckPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} />}
+      {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {timerOn && (

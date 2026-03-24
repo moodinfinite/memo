@@ -9,7 +9,7 @@ interface Props {
 export default function TitleAI({ cards, onSelect }: Props) {
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   const filledCards = cards.filter(c => c.term.trim() && c.definition.trim())
@@ -17,7 +17,7 @@ export default function TitleAI({ cards, onSelect }: Props) {
   const handleGenerate = async () => {
     if (filledCards.length === 0) return
     setLoading(true)
-    setError(false)
+    setError(null)
     setSuggestions([])
     try {
       const res = await fetch('/api/generate-title', {
@@ -26,10 +26,13 @@ export default function TitleAI({ cards, onSelect }: Props) {
         body: JSON.stringify({ cards: filledCards.slice(0, 12) }),
       })
       const data = await res.json()
-      if (data.suggestions?.length) setSuggestions(data.suggestions)
-      else setError(true)
-    } catch {
-      setError(true)
+      if (data.suggestions?.length) {
+        setSuggestions(data.suggestions)
+      } else {
+        setError(data.detail || data.error || 'No suggestions returned')
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Network error')
     } finally {
       setLoading(false)
     }
@@ -64,9 +67,9 @@ export default function TitleAI({ cards, onSelect }: Props) {
         {loading ? 'Thinking…' : 'Suggest titles'}
       </button>
 
-      {(suggestions.length > 0 || error) && (
+      {(suggestions.length > 0 || error !== null) && (
         <div className={styles.dropdown}>
-          {error && <div className={styles.errorMsg}>Couldn't generate suggestions. Try again.</div>}
+          {error && <div className={styles.errorMsg}>{error}</div>}
           {suggestions.map((s, i) => (
             <button key={i} className={styles.option} onClick={() => handlePick(s)}>
               <span className={styles.optionNum}>{i + 1}</span>

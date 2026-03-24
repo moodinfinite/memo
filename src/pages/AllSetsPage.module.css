@@ -1,0 +1,33 @@
+.page { display: flex; flex-direction: column; gap: 24px }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px }
+
+.title { font-size: 22px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 4px }
+
+.sub { font-size: 13.5px; color: var(--text-secondary) }
+
+.filterRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+
+.filterPill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
+}
+
+.filterPill:hover { border-color: var(--border-strong); color: var(--text-primary) }
+
+.filterPillActive {
+  border-color: var(--accent-border);
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.filterDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block }

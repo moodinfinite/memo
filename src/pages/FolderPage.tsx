@@ -1,14 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
 import styles from './HomePage.module.css'
+import folderStyles from './FolderPage.module.css'
 
 export default function FolderPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { sets, fetchSets, togglePin } = useSetsStore()
+  const { sets, fetchSets, togglePin, moveToFolder } = useSetsStore()
   const { folders, deleteFolder } = useFoldersStore()
+  const [showAddSets, setShowAddSets] = useState(false)
 
   useEffect(() => { fetchSets() }, [])
 
@@ -21,6 +23,8 @@ export default function FolderPage() {
     await deleteFolder(folder.id)
     navigate('/')
   }
+
+  const outsideSets = sets.filter((s) => s.folder_id !== id)
 
   if (!folder) return <div className={styles.loading}>Loading…</div>
 
@@ -35,6 +39,12 @@ export default function FolderPage() {
           <p className={styles.sub}>{folderSets.length} set{folderSets.length === 1 ? '' : 's'}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          {outsideSets.length > 0 && (
+            <button className={folderStyles.addSetsBtn} onClick={() => setShowAddSets(true)}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h4l2 2h4v5H2zM7.5 7.5v2M6.5 8.5h2"/></svg>
+              Add sets
+            </button>
+          )}
           <Link to="/sets/new" className={styles.newBtn}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.5 1v11M1 6.5h11"/></svg>
             New set
@@ -44,6 +54,36 @@ export default function FolderPage() {
           </button>
         </div>
       </div>
+
+      {showAddSets && (
+        <div className={folderStyles.modalOverlay} onClick={() => setShowAddSets(false)}>
+          <div className={folderStyles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={folderStyles.modalHeader}>
+              <div className={folderStyles.modalTitle}>Add sets to {folder.name}</div>
+              <button className={folderStyles.modalClose} onClick={() => setShowAddSets(false)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 1l12 12M13 1L1 13"/></svg>
+              </button>
+            </div>
+            <div className={folderStyles.modalList}>
+              {outsideSets.map((s) => {
+                const currentFolder = folders.find(f => f.id === s.folder_id)
+                return (
+                  <button key={s.id} className={folderStyles.modalSetRow} onClick={async () => { await moveToFolder(s.id, id!); fetchSets() }}>
+                    <div className={folderStyles.modalSetName}>{s.title}</div>
+                    <div className={folderStyles.modalSetMeta}>
+                      {currentFolder
+                        ? <><span className={folderStyles.modalDot} style={{ background: currentFolder.color }} />{currentFolder.name}</>
+                        : 'No folder'
+                      }
+                      · {s.cardCount ?? 0} cards
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {folderSets.length === 0 ? (
         <div className={styles.empty}>

@@ -12,6 +12,7 @@ import StudyPage from '@/pages/StudyPage'
 import SetDetailPage from '@/pages/SetDetailPage'
 import FolderPage from '@/pages/FolderPage'
 import MasterDeckPage from '@/pages/MasterDeckPage'
+import AllSetsPage from '@/pages/AllSetsPage'
 import '@/styles/globals.css'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -36,7 +37,7 @@ export default function App() {
         <Route path="/signup" element={<RequireGuest><SignupPage /></RequireGuest>} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/sets" element={<HomePage />} />
+          <Route path="/sets" element={<AllSetsPage />} />
           <Route path="/folders/:id" element={<FolderPage />} />
           <Route path="/sets/new" element={<NewSetPage />} />
           <Route path="/sets/:id" element={<SetDetailPage />} />

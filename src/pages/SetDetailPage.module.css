@@ -96,6 +96,38 @@
   border-color: var(--red-border);
 }
 
+.folderRow { position: relative; margin-top: 6px }
+
+.folderBadgeBtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-family: var(--font); cursor: pointer;
+  padding: 3px 8px; border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-raised); color: var(--text-secondary);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.folderBadgeBtn:hover { border-color: var(--border-default); color: var(--text-primary) }
+
+.folderDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block }
+.folderDotEmpty { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; border: 1px solid var(--border-default) }
+
+.folderDropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+  background: var(--bg-raised); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 160px; padding: 4px; display: flex; flex-direction: column; gap: 1px;
+}
+
+.folderOption {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border-radius: 6px; width: 100%; text-align: left;
+  font-size: 13px; font-family: var(--font); cursor: pointer;
+  background: none; border: none; color: var(--text-primary);
+  transition: background var(--transition-fast);
+}
+.folderOption:hover { background: var(--bg-overlay) }
+.folderOption svg { margin-left: auto; color: var(--accent-text) }
+
 .sectionLabel {
   font-size: 11px;
   font-weight: 500;
