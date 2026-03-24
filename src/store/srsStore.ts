@@ -98,7 +98,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       last_seen_at: now,
     }
 
-    await supabase.from('card_srs').upsert(upsertData, { onConflict: 'card_id,set_id' })
+    await supabase.from('card_srs').upsert(upsertData)
 
     set((state) => ({
       cardSRS: { ...state.cardSRS, [cardId]: { ...upsertData, easiness: next.easiness, interval: next.interval, repetitions: next.repetitions } },
