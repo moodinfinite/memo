@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
+import TitleAI from '@/components/ui/TitleAI'
 import styles from './NewSetPage.module.css'
 
 interface CardRow {
@@ -92,7 +93,10 @@ export default function EditSetPage() {
 
       <div className={styles.metaCard}>
         <div className={styles.field}>
-          <label className={styles.label}>Title</label>
+          <div className={styles.labelRow}>
+            <label className={styles.label}>Title</label>
+            <TitleAI cards={rows} onSelect={setTitle} />
+          </div>
           <input className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div className={styles.field}>

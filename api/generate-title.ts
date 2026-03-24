@@ -29,10 +29,10 @@ export default async function handler(req: Request): Promise<Response> {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 40,
+      max_tokens: 120,
       messages: [{
         role: 'user',
-        content: `Give a short, descriptive title (5 words max, no quotes, no punctuation) for a flashcard set with these terms:\n\n${cardList}\n\nTitle:`,
+        content: `Give exactly 3 short, descriptive title options for a flashcard set with these terms. Each title should be 5 words max, no quotes, no numbers, no punctuation, one per line:\n\n${cardList}\n\nTitles:`,
       }],
     }),
   })
@@ -42,8 +42,14 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const data = await res.json()
-  const title = (data.content?.[0]?.text ?? '').trim().replace(/['"]/g, '')
-  return new Response(JSON.stringify({ title }), {
+  const raw = (data.content?.[0]?.text ?? '').trim()
+  const suggestions = raw
+    .split('\n')
+    .map((l: string) => l.replace(/^[-•\d.)\s]+/, '').replace(/['"]/g, '').trim())
+    .filter((l: string) => l.length > 0)
+    .slice(0, 3)
+
+  return new Response(JSON.stringify({ suggestions }), {
     headers: { 'content-type': 'application/json' },
   })
 }

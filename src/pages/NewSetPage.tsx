@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import ImportModal from '@/components/ui/ImportModal'
+import TitleAI from '@/components/ui/TitleAI'
 import styles from './NewSetPage.module.css'
 
 interface CardRow {
@@ -25,24 +26,6 @@ export default function NewSetPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showImport, setShowImport] = useState(false)
-  const [generatingTitle, setGeneratingTitle] = useState(false)
-
-  const handleGenerateTitle = async () => {
-    const filledCards = rows.filter(r => r.term.trim() && r.definition.trim())
-    if (filledCards.length === 0) return
-    setGeneratingTitle(true)
-    try {
-      const res = await fetch('/api/generate-title', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ cards: filledCards.map(r => ({ term: r.term, definition: r.definition })) }),
-      })
-      const data = await res.json()
-      if (data.title) setTitle(data.title)
-    } finally {
-      setGeneratingTitle(false)
-    }
-  }
 
   const handleImportLocal = (imported: { term: string; definition: string }[]) => {
     const existingFilled = rows.filter(r => r.term.trim() || r.definition.trim())
@@ -102,18 +85,7 @@ export default function NewSetPage() {
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <label className={styles.label}>Title</label>
-            <button
-              type="button"
-              className={styles.generateBtn}
-              onClick={handleGenerateTitle}
-              disabled={generatingTitle || rows.every(r => !r.term.trim())}
-              title="Generate title with AI"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M6 1v2M6 9v2M1 6h2M9 6h2M2.5 2.5l1.5 1.5M8 8l1.5 1.5M2.5 9.5L4 8M8 4l1.5-1.5"/>
-              </svg>
-              {generatingTitle ? 'Generating…' : 'AI title'}
-            </button>
+            <TitleAI cards={rows} onSelect={setTitle} />
           </div>
           <input
             className={styles.input}
