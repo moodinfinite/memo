@@ -192,3 +192,14 @@
   line-height: 1.5;
   min-width: 0;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header { flex-direction: column; gap: 12px }
+  .title { font-size: 18px }
+  .actions { width: 100%; flex-wrap: wrap }
+  .studyBtn, .editBtn, .deleteBtn { flex: 1; justify-content: center; text-align: center; min-width: 0 }
+  .cardRow { flex-direction: column; gap: 8px; padding: 12px 14px }
+  .rowContent { flex-direction: column; gap: 8px }
+  .divider { width: 100%; height: 1px; margin: 0 }
+}

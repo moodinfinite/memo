@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
+import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import styles from './HomePage.module.css'
 import folderStyles from './FolderPage.module.css'
 
@@ -26,7 +27,7 @@ export default function FolderPage() {
 
   const outsideSets = sets.filter((s) => s.folder_id !== id)
 
-  if (!folder) return <div className={styles.loading}>Loading…</div>
+  if (!folder) return <HomePageSkeleton />
 
   return (
     <div className={styles.page}>

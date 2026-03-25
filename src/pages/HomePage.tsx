@@ -5,6 +5,7 @@ import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
 import { useProgressStore } from '@/store/progressStore'
 import type { FlashcardSet } from '@/lib/database.types'
+import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
@@ -55,7 +56,7 @@ export default function HomePage() {
         {query && <button className={styles.searchClear} onClick={() => { setQuery(''); fetchSets() }}><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 1l11 11M12 1L1 12"/></svg></button>}
       </div>
 
-      {isLoading && <div className={styles.loading}>Loading…</div>}
+      {isLoading && <HomePageSkeleton />}
 
       {!isLoading && sets.length === 0 && !query && (
         <div className={styles.empty}>

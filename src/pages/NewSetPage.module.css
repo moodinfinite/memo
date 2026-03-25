@@ -314,3 +314,15 @@
   color: var(--text-primary);
   border-color: var(--border-strong);
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header { flex-direction: column; gap: 12px }
+  .title { font-size: 18px }
+  .headerActions { width: 100% }
+  .cancelBtn, .saveBtn { flex: 1; text-align: center; display: flex; justify-content: center }
+  .cardRow { flex-direction: column; gap: 8px; padding: 12px 14px }
+  .rowFields { flex-direction: column; gap: 8px }
+  .rowDivider { width: 100%; height: 1px; margin: 0 }
+  .metaCard { padding: 16px }
+}

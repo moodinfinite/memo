@@ -1,0 +1,130 @@
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -400px 0 }
+  100% { background-position: 400px 0 }
+}
+
+.bone {
+  background: linear-gradient(
+    90deg,
+    var(--bg-overlay) 0%,
+    var(--border-subtle) 40%,
+    var(--bg-overlay) 80%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--r-md);
+}
+
+.text {
+  height: 14px;
+  width: 100%;
+  composes: bone;
+}
+
+.textSm {
+  height: 11px;
+  width: 60%;
+  composes: bone;
+}
+
+.heading {
+  height: 22px;
+  width: 40%;
+  composes: bone;
+}
+
+.card {
+  height: 100px;
+  width: 100%;
+  composes: bone;
+  border-radius: var(--r-lg);
+}
+
+.cardTall {
+  height: 260px;
+  width: 100%;
+  composes: bone;
+  border-radius: var(--r-xl);
+}
+
+.circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  composes: bone;
+}
+
+.statCard {
+  height: 80px;
+  composes: bone;
+  border-radius: var(--r-md);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn {
+  height: 36px;
+  width: 100px;
+  composes: bone;
+  border-radius: var(--r-md);
+}
+
+/* Top loading bar */
+.topBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 100;
+  overflow: hidden;
+  background: var(--border-subtle);
+}
+
+.topBarFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  animation: loadBar 1.8s ease-in-out infinite;
+}
+
+@keyframes loadBar {
+  0% { width: 0%; margin-left: 0% }
+  50% { width: 40%; margin-left: 30% }
+  100% { width: 0%; margin-left: 100% }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .statsGrid { grid-template-columns: 1fr }
+  .grid { grid-template-columns: 1fr }
+}

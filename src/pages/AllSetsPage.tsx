@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
 import type { FlashcardSet } from '@/lib/database.types'
+import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import styles from './AllSetsPage.module.css'
 import homeStyles from './HomePage.module.css'
 
@@ -68,7 +69,7 @@ export default function AllSetsPage() {
         </div>
       )}
 
-      {isLoading && <div className={homeStyles.loading}>Loading…</div>}
+      {isLoading && <HomePageSkeleton />}
 
       {!isLoading && sets.length === 0 && !query && (
         <div className={homeStyles.empty}>

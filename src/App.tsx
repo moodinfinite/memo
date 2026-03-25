@@ -13,11 +13,12 @@ import SetDetailPage from '@/pages/SetDetailPage'
 import FolderPage from '@/pages/FolderPage'
 import MasterDeckPage from '@/pages/MasterDeckPage'
 import AllSetsPage from '@/pages/AllSetsPage'
+import { FullPageSkeleton } from '@/components/ui/Skeleton'
 import '@/styles/globals.css'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, initialised } = useAuthStore()
-  if (!initialised) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--text-tertiary)',fontSize:'14px' }}>Loading…</div>
+  if (!initialised) return <FullPageSkeleton />
   return user ? <>{children}</> : <Navigate to="/login" replace />
 }
 function RequireGuest({ children }: { children: React.ReactNode }) {

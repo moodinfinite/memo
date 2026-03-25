@@ -7,6 +7,7 @@ import type { StudyMode } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
+import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
 
 const MODES: { id: StudyMode; label: string; desc: string }[] = [
@@ -21,7 +22,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, startSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, startSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
@@ -105,15 +106,21 @@ export default function StudyPage() {
     setSelecting(false)
   }
 
-  const handleEnd = () => {
-    if (!isComplete) persistSession()
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleEnd = async () => {
+    if (!isComplete) {
+      setIsSaving(true)
+      await persistSession()
+      setIsSaving(false)
+    }
     resetSession()
     setSelecting(true)
   }
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60 < 10 ? '0' : '')}${s % 60}`
 
-  if (!currentSet) return <div className={styles.loading}>Loading…</div>
+  if (!currentSet) return <StudyPageSkeleton />
 
   if (selecting) return (
     <div className={styles.page}>
@@ -159,6 +166,7 @@ export default function StudyPage() {
         <div className={styles.summaryWrap}>
           <div className={styles.summary}>
             {pct === 100 ? <PerfectScore total={total} known={k} unknown={u} /> : <CountUpScore pct={pct} total={total} known={k} unknown={u} />}
+            {persistError && <div className={styles.persistError}>{persistError}</div>}
             <div className={styles.summaryActions}>
               <button className={styles.retryBtn} onClick={() => startSession(currentSet.cards, mode, id!, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })}>Study again</button>
               <button className={styles.changeModeBtn} onClick={handleEnd}>Change mode</button>
@@ -188,7 +196,7 @@ export default function StudyPage() {
             </button>
           )}
           <div className={styles.modeTag}>{MODES.find((m) => m.id === mode)?.label}</div>
-          <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
+          <button className={styles.exitBtn} onClick={handleEnd} disabled={isSaving}>{isSaving ? 'Saving…' : 'End session'}</button>
         </div>
       </div>
       <div className={styles.progressRow}>

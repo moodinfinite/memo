@@ -13,6 +13,7 @@ interface StudyState {
   doShuffle: boolean; timerOn: boolean; timerDurMin: number; timerSecsLeft: number
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number
+  persistError: string | null
   startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
   markKnown: () => void; markUnknown: () => void
   submitTyped: () => void; setTypedAnswer: (val: string) => void
@@ -20,6 +21,7 @@ interface StudyState {
   reshuffleRemaining: () => void
   tickTimer: () => void; resetSession: () => void
   persistSession: () => Promise<void>
+  _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => Promise<void>
 }
 
 function shuffleArr<T>(arr: T[]): T[] {
@@ -33,6 +35,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   currentIndex: 0, known: [], unknown: [], isComplete: false,
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
+  persistError: null,
 
   startSession: (cards, mode, setId, opts = {}) => {
     const { shuffle = false, timerDurMin = 0 } = opts
@@ -51,27 +54,27 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   markKnown: () => {
-    const { sessionCards, currentIndex, known } = get()
+    const { sessionCards, currentIndex, known, mode, setId } = get()
     const card = sessionCards[currentIndex]
     if (!card) return
     const newKnown = [...known, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
-    useSRSStore.getState().updateSRS(card.id, get().setId, true)
+    useSRSStore.getState().updateSRS(card.id, setId, true)
     set({ known: newKnown, currentIndex: nextIndex, isComplete })
-    if (isComplete) { (get() as any)._persist(newKnown, get().unknown, sessionCards.length, get().mode, get().setId) }
+    if (isComplete) { get()._persist(newKnown, get().unknown, sessionCards.length, mode, setId) }
   },
 
   markUnknown: () => {
-    const { sessionCards, currentIndex, unknown } = get()
+    const { sessionCards, currentIndex, unknown, mode, setId } = get()
     const card = sessionCards[currentIndex]
     if (!card) return
     const newUnknown = [...unknown, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
-    useSRSStore.getState().updateSRS(card.id, get().setId, false)
+    useSRSStore.getState().updateSRS(card.id, setId, false)
     set({ unknown: newUnknown, currentIndex: nextIndex, isComplete })
-    if (isComplete) { (get() as any)._persist(get().known, newUnknown, sessionCards.length, get().mode, get().setId) }
+    if (isComplete) { get()._persist(get().known, newUnknown, sessionCards.length, mode, setId) }
   },
 
   submitTyped: () => {
@@ -99,11 +102,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const next = timerSecsLeft - 1
     set({ timerSecsLeft: next })
     if (next <= 0) {
-      const { sessionCards, currentIndex, known, unknown } = get()
+      const { sessionCards, currentIndex, known, unknown, mode, setId } = get()
       const remaining = sessionCards.slice(currentIndex).map(c => c.id)
       const finalUnknown = [...unknown, ...remaining]
       set({ isComplete: true, unknown: finalUnknown })
-      ;(get() as any)._persist(known, finalUnknown)
+      get()._persist(known, finalUnknown, sessionCards.length, mode, setId)
     }
   },
 
@@ -118,24 +121,34 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     })
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0 }),
+  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0, persistError: null }),
 
   persistSession: async () => {
     const { known, unknown, sessionCards, mode, setId } = get()
     if (known.length === 0 && unknown.length === 0) return
-    await (get() as any)._persist(known, unknown, sessionCards.length, mode, setId)
+    await get()._persist(known, unknown, sessionCards.length, mode, setId)
   },
 
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !setId || setId === '__master__') return
-    const { error } = await supabase.from('study_sessions').insert({
-      user_id: user.id, set_id: setId, mode, total_cards: total,
-      known_count: known.length, unknown_count: unknown.length,
-      score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
-      completed_at: new Date().toISOString(),
-    })
-    if (error) { console.error('study_sessions insert failed:', error.message); return }
-    useProgressStore.getState().fetchProgress()
+    set({ persistError: null })
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !setId || setId === '__master__') return
+      const { error } = await supabase.from('study_sessions').insert({
+        user_id: user.id, set_id: setId, mode, total_cards: total,
+        known_count: known.length, unknown_count: unknown.length,
+        score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
+        completed_at: new Date().toISOString(),
+      })
+      if (error) {
+        console.error('study_sessions insert failed:', error.message)
+        set({ persistError: 'Failed to save session. Your progress may not be recorded.' })
+        return
+      }
+      await useProgressStore.getState().fetchProgress()
+    } catch (err) {
+      console.error('study_sessions persist error:', err)
+      set({ persistError: 'Failed to save session. Check your connection.' })
+    }
   },
-} as StudyState & { _persist: (known: string[], unknown: string[]) => Promise<void> }))
+}))

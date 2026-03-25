@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { FlashcardSet, Card } from '@/lib/database.types'
+import { sanitizeText, sanitizeCard, escapeIlike } from '@/lib/sanitize'
 
 interface SetsState {
   sets: FlashcardSet[]
@@ -50,14 +51,19 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   createSet: async (title, description, rawCards, folderId = null) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
+    const safeTitle = sanitizeText(title, 200)
+    const safeDesc = sanitizeText(description, 1000)
     const { data: setData, error: setError } = await supabase
       .from('sets')
-      .insert({ title, description, user_id: user.id, folder_id: folderId, pinned: false })
+      .insert({ title: safeTitle, description: safeDesc, user_id: user.id, folder_id: folderId, pinned: false })
       .select().single()
     if (setError) throw setError
     if (rawCards.length > 0) {
       await supabase.from('cards').insert(
-        rawCards.map((c, i) => ({ set_id: setData.id, user_id: user.id, term: c.term, definition: c.definition, position: i }))
+        rawCards.map((c, i) => {
+          const safe = sanitizeCard(c)
+          return { set_id: setData.id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
+        })
       )
     }
     const newSet = { ...setData, cardCount: rawCards.length }
@@ -68,11 +74,16 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   updateSet: async (id, title, description, rawCards, folderId = null) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
-    await supabase.from('sets').update({ title, description, folder_id: folderId }).eq('id', id)
+    const safeTitle = sanitizeText(title, 200)
+    const safeDesc = sanitizeText(description, 1000)
+    await supabase.from('sets').update({ title: safeTitle, description: safeDesc, folder_id: folderId }).eq('id', id)
     await supabase.from('cards').delete().eq('set_id', id)
     if (rawCards.length > 0) {
       await supabase.from('cards').insert(
-        rawCards.map((c, i) => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: i }))
+        rawCards.map((c, i) => {
+          const safe = sanitizeCard(c)
+          return { set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
+        })
       )
     }
     await get().fetchSet(id)
@@ -107,15 +118,19 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     if (!user) throw new Error('Not authenticated')
     const existing = get().currentSet?.cards ?? []
     await supabase.from('cards').insert(
-      rawCards.map((c, i) => ({ set_id: setId, user_id: user.id, term: c.term, definition: c.definition, position: existing.length + i }))
+      rawCards.map((c, i) => {
+        const safe = sanitizeCard(c)
+        return { set_id: setId, user_id: user.id, term: safe.term, definition: safe.definition, position: existing.length + i }
+      })
     )
     await get().fetchSet(setId)
   },
 
   searchSets: async (query) => {
     set({ isLoading: true })
+    const safeQuery = escapeIlike(query.trim())
     const { data, error } = await supabase
-      .from('sets').select('*, cards(count)').ilike('title', `%${query}%`)
+      .from('sets').select('*, cards(count)').ilike('title', `%${safeQuery}%`)
       .order('pinned', { ascending: false }).order('updated_at', { ascending: false })
     if (error) { set({ error: error.message, isLoading: false }); return }
     const sets = (data ?? []).map((s: any) => ({ ...s, cardCount: s.cards?.[0]?.count ?? 0 }))

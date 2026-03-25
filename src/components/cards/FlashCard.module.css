@@ -171,3 +171,34 @@
 .know:hover {
   background: var(--green-border);
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .wrap {
+    gap: 16px;
+  }
+  .cardArea {
+    height: 260px;
+  }
+  .face {
+    padding: 24px 20px;
+  }
+  .content {
+    font-size: 24px;
+  }
+  .back .content {
+    font-size: 20px;
+  }
+  .sideLabel {
+    top: 14px;
+    left: 16px;
+  }
+  .actions {
+    gap: 10px;
+  }
+  .dontKnow,
+  .know {
+    padding: 10px;
+    font-size: 13px;
+  }
+}

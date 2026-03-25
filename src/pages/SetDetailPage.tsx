@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
+import { SetDetailSkeleton } from '@/components/ui/Skeleton'
 import styles from './SetDetailPage.module.css'
 
 export default function SetDetailPage() {
@@ -35,7 +36,7 @@ export default function SetDetailPage() {
     navigate('/')
   }
 
-  if (isLoading && !currentSet) return <div className={styles.loading}>Loading…</div>
+  if (isLoading && !currentSet) return <SetDetailSkeleton />
   if (!currentSet) return null
 
   return (

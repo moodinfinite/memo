@@ -72,6 +72,7 @@
 .barGreen{height:100%;background:var(--accent);border-radius:3px;transition:width 0.8s ease}
 .barRed{height:100%;background:var(--red-border);border-radius:3px;transition:width 0.8s ease}
 .barCount{font-size:12px;color:var(--text-tertiary);min-width:20px}
+.persistError{font-size:13px;color:var(--red-text);background:var(--red-subtle);border:1px solid var(--red-border);border-radius:var(--r-md);padding:10px 14px;width:100%;text-align:center;margin-top:4px}
 .summaryActions{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:12px}
 .retryBtn{width:100%;padding:11px;border-radius:var(--r-md);background:var(--text-primary);color:var(--bg-base);font-size:14px;font-weight:500;border:none;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
 .retryBtn:hover{opacity:0.82}
@@ -98,3 +99,23 @@
 .stampInner{width:100px;height:100px;border-radius:50%;border:3px solid var(--accent);background:var(--accent-subtle);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .stampPct{font-size:26px;font-weight:600;color:var(--accent-text);letter-spacing:-0.03em;line-height:1}
 .stampLabel{font-size:9px;font-weight:600;color:var(--accent-text);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .page{gap:16px}
+  .topBar{flex-wrap:wrap;gap:8px}
+  .topBarRight{flex-wrap:wrap;gap:6px}
+  .backBtn{font-size:12.5px;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .modeSelector{padding:16px 0}
+  .modeSelectorTitle{font-size:16px}
+  .modeOptions{max-width:100%}
+  .modeOption{padding:12px 14px}
+  .sessionOpts{max-width:100%}
+  .timerPicker{max-width:100%}
+  .startBtn{max-width:100%}
+  .kbdHint{display:none}
+  .countScore{font-size:48px}
+  .summaryWrap{min-height:40vh}
+  .summary{max-width:100%}
+  .burstMsg{font-size:36px}
+}

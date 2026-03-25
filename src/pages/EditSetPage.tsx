@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import TitleAI from '@/components/ui/TitleAI'
+import { SetDetailSkeleton } from '@/components/ui/Skeleton'
 import styles from './NewSetPage.module.css'
 
 interface CardRow {
@@ -76,7 +77,7 @@ export default function EditSetPage() {
     }
   }
 
-  if (!currentSet) return <div style={{ padding: '48px', color: 'var(--text-tertiary)', textAlign: 'center' }}>Loading…</div>
+  if (!currentSet) return <SetDetailSkeleton />
 
   return (
     <div className={styles.page}>

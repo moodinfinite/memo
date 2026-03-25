@@ -264,3 +264,38 @@
 
 .typedSubmit:hover { opacity: 0.82; }
 .typedSubmit:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .mcWrap,
+  .typedWrap {
+    max-width: 100%;
+  }
+  .mcQuestion,
+  .typedQuestion {
+    padding: 20px 16px;
+    min-height: 100px;
+  }
+  .mcTerm {
+    font-size: 20px;
+  }
+  .mcOption {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .mcOptionLetter {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  .mcOptionText {
+    font-size: 13px;
+  }
+  .typedTerm {
+    font-size: 17px;
+  }
+  .typedInput {
+    padding: 14px;
+    font-size: 14px;
+  }
+}

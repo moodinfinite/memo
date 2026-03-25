@@ -6,6 +6,7 @@ import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
 import { CountUpScore, PerfectScore, StreakBurst } from './StudyPage'
+import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
 import mStyles from './MasterDeckPage.module.css'
 
@@ -104,7 +105,7 @@ export default function MasterDeckPage() {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60 < 10 ? '0' : '')}${s % 60}`
   const canMC = allCards.length >= 4
 
-  if (loading) return <div className={styles.loading}>Loading…</div>
+  if (loading) return <StudyPageSkeleton />
 
   if (selecting) return (
     <div className={styles.page}>
