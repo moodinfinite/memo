@@ -48,6 +48,12 @@
 .startBtn{width:100%;max-width:400px;padding:13px;border-radius:var(--r-md);border:none;background:var(--text-primary);color:var(--bg-base);font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
 .startBtn:hover{opacity:0.82}
 
+/* Resume prompt */
+.resumePrompt{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 0;text-align:center}
+.resumeTitle{font-size:20px;font-weight:600;color:var(--text-primary);letter-spacing:-0.02em}
+.resumeMeta{font-size:13.5px;color:var(--text-secondary)}
+.resumeActions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin-top:4px}
+
 /* Timer display */
 .timerDisplay{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--text-tertiary);font-variant-numeric:tabular-nums;transition:color 0.3s}
 .timerUrgent{color:var(--red-text)}

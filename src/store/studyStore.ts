@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import type { Card, StudyMode } from '@/lib/database.types'
+import type { Card, StudyMode, SessionDraft } from '@/lib/database.types'
 import { generateMCQuestions, type MCQuestion } from '@/lib/multipleChoice'
 import { isFuzzyMatch } from '@/lib/fuzzy'
 import { useSRSStore } from './srsStore'
@@ -14,7 +14,12 @@ interface StudyState {
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number
   persistError: string | null
+  hasDraft: boolean; draftLoading: boolean
   startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
+  resumeSession: (draft: SessionDraft, cards: Card[]) => void
+  saveProgress: () => Promise<void>
+  loadProgress: (setId: string) => Promise<SessionDraft | null>
+  clearProgress: (setId: string) => Promise<void>
   markKnown: () => void; markUnknown: () => void
   submitTyped: () => void; setTypedAnswer: (val: string) => void
   selectMCOption: (idx: number) => void
@@ -36,6 +41,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
   persistError: null,
+  hasDraft: false, draftLoading: false,
 
   startSession: (cards, mode, setId, opts = {}) => {
     const { shuffle = false, timerDurMin = 0 } = opts
@@ -63,6 +69,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     useSRSStore.getState().updateSRS(card.id, setId, true)
     set({ known: newKnown, currentIndex: nextIndex, isComplete })
     if (isComplete) { get()._persist(newKnown, get().unknown, sessionCards.length, mode, setId) }
+    else { get().saveProgress() }
   },
 
   markUnknown: () => {
@@ -75,6 +82,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     useSRSStore.getState().updateSRS(card.id, setId, false)
     set({ unknown: newUnknown, currentIndex: nextIndex, isComplete })
     if (isComplete) { get()._persist(get().known, newUnknown, sessionCards.length, mode, setId) }
+    else { get().saveProgress() }
   },
 
   submitTyped: () => {
@@ -129,6 +137,61 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     await get()._persist(known, unknown, sessionCards.length, mode, setId)
   },
 
+  resumeSession: (draft, cards) => {
+    const cardMap = Object.fromEntries(cards.map(c => [c.id, c]))
+    const orderedCards = draft.card_order.map(cid => cardMap[cid]).filter(Boolean) as Card[]
+    if (orderedCards.length === 0) return
+    const safeIndex = Math.min(draft.current_index, orderedCards.length - 1)
+    set({
+      mode: draft.mode, setId: draft.set_id, sessionCards: orderedCards,
+      mcQuestions: draft.mode === 'multiple_choice' ? generateMCQuestions(orderedCards) : [],
+      currentIndex: safeIndex, known: draft.known_ids, unknown: draft.unknown_ids,
+      isComplete: false, doShuffle: draft.do_shuffle,
+      timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,
+      timerSecsLeft: draft.timer_dur_min * 60,
+      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
+      persistError: null,
+    })
+  },
+
+  saveProgress: async () => {
+    const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin } = get()
+    if (!setId || setId === '__master__' || sessionCards.length === 0) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('session_drafts').upsert({
+      user_id: user.id, set_id: setId, mode,
+      card_order: sessionCards.map(c => c.id),
+      current_index: currentIndex,
+      known_ids: known, unknown_ids: unknown,
+      do_shuffle: doShuffle, timer_dur_min: timerDurMin,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,set_id' })
+  },
+
+  loadProgress: async (setId) => {
+    set({ draftLoading: true, hasDraft: false })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { set({ draftLoading: false }); return null }
+    const { data } = await supabase.from('session_drafts').select('*')
+      .eq('user_id', user.id).eq('set_id', setId).maybeSingle()
+    if (data && Date.now() - new Date(data.updated_at).getTime() > 7 * 24 * 60 * 60 * 1000) {
+      await get().clearProgress(setId)
+      set({ draftLoading: false, hasDraft: false })
+      return null
+    }
+    set({ draftLoading: false, hasDraft: !!data })
+    return (data as SessionDraft) ?? null
+  },
+
+  clearProgress: async (setId) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('session_drafts').delete()
+      .eq('user_id', user.id).eq('set_id', setId)
+    set({ hasDraft: false })
+  },
+
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => {
     set({ persistError: null })
     try {
@@ -145,6 +208,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         set({ persistError: 'Failed to save session. Your progress may not be recorded.' })
         return
       }
+      await get().clearProgress(setId)
       await useProgressStore.getState().fetchProgress()
     } catch (err) {
       console.error('study_sessions persist error:', err)

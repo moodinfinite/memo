@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useStudyStore } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
-import type { StudyMode } from '@/lib/database.types'
+import type { StudyMode, SessionDraft } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
@@ -22,9 +22,10 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, startSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
+  const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
@@ -40,6 +41,11 @@ export default function StudyPage() {
     if (id) { fetchSet(id); fetchSRS(id) }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [id])
+
+  useEffect(() => {
+    if (!id || !currentSet) return
+    loadProgress(id).then(draft => { if (draft) setResumePrompt(draft) })
+  }, [id, currentSet])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -106,6 +112,21 @@ export default function StudyPage() {
     setSelecting(false)
   }
 
+  const handleResume = (draft: SessionDraft) => {
+    if (!currentSet?.cards || !id) return
+    const valid = draft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
+    if (valid.length === 0) { clearProgress(id); setResumePrompt(null); return }
+    resumeSession(draft, currentSet.cards)
+    setResumePrompt(null)
+    setSelecting(false)
+  }
+
+  const handleStartFresh = async () => {
+    if (!id) return
+    await clearProgress(id)
+    setResumePrompt(null)
+  }
+
   const [isSaving, setIsSaving] = useState(false)
 
   const handleEnd = async () => {
@@ -114,6 +135,7 @@ export default function StudyPage() {
       await persistSession()
       setIsSaving(false)
     }
+    if (id) await clearProgress(id)
     resetSession()
     setSelecting(true)
   }
@@ -130,6 +152,19 @@ export default function StudyPage() {
           {currentSet.title}
         </button>
       </div>
+      {resumePrompt ? (
+        <div className={styles.resumePrompt}>
+          <div className={styles.resumeTitle}>Resume where you left off?</div>
+          <div className={styles.resumeMeta}>
+            {resumePrompt.current_index} of {resumePrompt.card_order.length} cards completed
+            · {MODES.find(m => m.id === resumePrompt.mode)?.label}
+          </div>
+          <div className={styles.resumeActions}>
+            <button className={styles.startBtn} onClick={() => handleResume(resumePrompt)}>Resume session</button>
+            <button className={styles.changeModeBtn} onClick={handleStartFresh}>Start fresh</button>
+          </div>
+        </div>
+      ) : (
       <div className={styles.modeSelector}>
         <div className={styles.modeSelectorTitle}>Choose a study mode</div>
         <div className={styles.modeOptions}>
@@ -155,6 +190,7 @@ export default function StudyPage() {
         )}
         <button className={styles.startBtn} onClick={handleStart}>Start studying</button>
       </div>
+      )}
     </div>
   )
 
