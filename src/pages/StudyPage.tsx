@@ -22,7 +22,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, isPersisting, persistSaved, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
@@ -201,11 +201,37 @@ export default function StudyPage() {
         <div className={styles.summaryWrap}>
           <div className={styles.summary}>
             {pct === 100 ? <PerfectScore total={total} known={k} unknown={u} /> : <CountUpScore pct={pct} total={total} known={k} unknown={u} />}
+
+            {/* Save status banner */}
+            {isPersisting && (
+              <div className={styles.saveStatus}>
+                <svg className={styles.saveSpinner} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5" strokeOpacity="0.25"/><path d="M7 2a5 5 0 0 1 5 5" strokeLinecap="round"/></svg>
+                Saving session…
+              </div>
+            )}
+            {!isPersisting && persistSaved && !persistError && (
+              <div className={styles.saveStatusOk}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7l3 3 6-6"/></svg>
+                Session saved
+              </div>
+            )}
             {persistError && <div className={styles.persistError}>{persistError}</div>}
+
             <div className={styles.summaryActions}>
-              <button className={styles.retryBtn} onClick={() => startSession(currentSet.cards, mode, id!, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })}>Study again</button>
-              <button className={styles.changeModeBtn} onClick={handleEnd}>Change mode</button>
-              <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
+              <button
+                className={styles.retryBtn}
+                onClick={() => startSession(currentSet.cards, mode, id!, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })}
+                disabled={isPersisting}
+              >
+                Study again
+              </button>
+              <button className={styles.changeModeBtn} onClick={handleEnd} disabled={isPersisting}>
+                Change mode
+              </button>
+              {isPersisting
+                ? <span className={styles.doneBtnDisabled}>Back to set</span>
+                : <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
+              }
             </div>
           </div>
         </div>

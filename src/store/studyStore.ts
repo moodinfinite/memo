@@ -15,6 +15,7 @@ interface StudyState {
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number
   persistError: string | null
   hasDraft: boolean; draftLoading: boolean
+  isPersisting: boolean; persistSaved: boolean
   startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
   resumeSession: (draft: SessionDraft, cards: Card[]) => void
   saveProgress: () => Promise<void>
@@ -41,7 +42,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
   persistError: null,
-  hasDraft: false, draftLoading: false,
+  hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
 
   startSession: (cards, mode, setId, opts = {}) => {
     const { shuffle = false, timerDurMin = 0 } = opts
@@ -129,7 +130,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     })
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0, persistError: null }),
+  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false }),
 
   persistSession: async () => {
     const { known, unknown, sessionCards, mode, setId } = get()
@@ -193,10 +194,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
-    set({ persistError: null })
+    set({ persistError: null, isPersisting: true, persistSaved: false })
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || !setId || setId === '__master__') return
+      if (!user || !setId || setId === '__master__') {
+        set({ isPersisting: false })
+        return
+      }
       const { error } = await supabase.from('study_sessions').insert({
         user_id: user.id, set_id: setId, mode, total_cards: total,
         known_count: known.length, unknown_count: unknown.length,
@@ -204,15 +208,16 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         completed_at: new Date().toISOString(),
       })
       if (error) {
-        console.error('study_sessions insert failed:', error.message)
-        set({ persistError: 'Failed to save session. Your progress may not be recorded.' })
+        console.error('study_sessions insert failed:', error.message, { setId, mode, total, known: known.length, unknown: unknown.length })
+        set({ persistError: `Could not save session: ${error.message}`, isPersisting: false })
         return
       }
       if (clearDraft) await get().clearProgress(setId)
       await useProgressStore.getState().fetchProgress()
-    } catch (err) {
+      set({ isPersisting: false, persistSaved: true })
+    } catch (err: any) {
       console.error('study_sessions persist error:', err)
-      set({ persistError: 'Failed to save session. Check your connection.' })
+      set({ persistError: `Could not save session: ${err?.message ?? 'Network error'}`, isPersisting: false })
     }
   },
 }))
