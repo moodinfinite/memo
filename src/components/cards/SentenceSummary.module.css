@@ -1,0 +1,47 @@
+.page{display:flex;flex-direction:column;align-items:center;padding:0 0 48px}
+.wrap{display:flex;flex-direction:column;gap:20px;width:100%;max-width:600px}
+
+/* Header */
+.header{text-align:center;display:flex;flex-direction:column;gap:6px;padding:16px 0 4px}
+.title{font-size:22px;font-weight:700;color:var(--text-primary);letter-spacing:-0.03em}
+.meta{font-size:14px;color:var(--text-secondary)}
+.tally{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.tallyGreat,.tallyGood,.tallyNeeds{font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px}
+.tallyGreat{background:rgba(132,204,22,0.12);color:var(--accent-text);border:1px solid var(--accent-border)}
+.tallyGood{background:rgba(59,130,246,0.1);color:#3b82f6;border:1px solid rgba(59,130,246,0.25)}
+.tallyNeeds{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25)}
+
+/* Save status */
+.saveStatus{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-tertiary);justify-content:center}
+.spinner{animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.saveStatusOk{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--accent-text);justify-content:center}
+.saveError{font-size:12.5px;color:#ef4444;text-align:center}
+
+/* Sentence list */
+.list{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:2px}
+.entry{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--r-lg);padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.entryTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.entryTerm{font-size:14px;font-weight:600;color:var(--text-primary)}
+.badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;flex-shrink:0}
+.great{background:rgba(132,204,22,0.12);color:var(--accent-text);border:1px solid var(--accent-border)}
+.good{background:rgba(59,130,246,0.1);color:#3b82f6;border:1px solid rgba(59,130,246,0.25)}
+.needsWork{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25)}
+.entrySentence{font-size:14px;color:var(--text-primary);line-height:1.5;font-style:italic}
+.entryFeedback{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.entryImproved{background:var(--bg-overlay);border-radius:var(--r-sm);padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.improvedLabel{font-size:10.5px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-tertiary)}
+.improvedText{font-size:13px;color:var(--text-primary);font-style:italic}
+
+/* Actions */
+.actions{display:flex;flex-direction:column;gap:8px}
+.exportBtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:13px;border-radius:var(--r-md);border:1px solid var(--accent-border);background:var(--accent-subtle);color:var(--accent-text);font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity 0.15s}
+.exportBtn:hover{opacity:0.82}
+.studyAgainBtn{width:100%;padding:12px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-primary);font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;transition:border-color 0.15s,background 0.15s}
+.studyAgainBtn:hover:not(:disabled){border-color:var(--border-strong);background:var(--bg-overlay)}
+.studyAgainBtn:disabled{opacity:0.4;cursor:not-allowed}
+.changeModeBtn{width:100%;padding:11px;border-radius:var(--r-md);border:1px solid var(--border-subtle);background:none;color:var(--text-secondary);font-size:13.5px;font-family:var(--font);cursor:pointer;transition:color 0.15s,border-color 0.15s}
+.changeModeBtn:hover:not(:disabled){color:var(--text-primary);border-color:var(--border-default)}
+.changeModeBtn:disabled{opacity:0.4;cursor:not-allowed}
+.doneBtn{display:block;text-align:center;padding:11px;border-radius:var(--r-md);border:none;background:none;color:var(--text-tertiary);font-size:13px;font-family:var(--font);text-decoration:none;transition:color 0.15s}
+.doneBtn:hover{color:var(--text-secondary)}

@@ -1,0 +1,41 @@
+.wrap{display:flex;flex-direction:column;gap:20px;max-width:580px;margin:0 auto;width:100%}
+
+/* Header */
+.cardHeader{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--r-lg);padding:28px 28px 24px;display:flex;flex-direction:column;gap:8px}
+.termLabel{font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-tertiary)}
+.term{font-size:26px;font-weight:700;color:var(--text-primary);letter-spacing:-0.03em;line-height:1.2}
+.definition{font-size:14px;color:var(--text-secondary);line-height:1.5;margin-top:2px}
+
+/* Input */
+.inputWrap{display:flex;flex-direction:column;gap:6px;position:relative}
+.inputDone .input{border-color:var(--border-default);background:var(--bg-raised);color:var(--text-secondary)}
+.input{width:100%;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-primary);font-size:15px;font-family:var(--font);line-height:1.5;resize:none;transition:border-color 0.15s;box-sizing:border-box}
+.input:focus{outline:none;border-color:var(--accent)}
+.input::placeholder{color:var(--text-tertiary)}
+.input:disabled{cursor:default}
+.hint{font-size:11.5px;color:var(--text-tertiary);text-align:right}
+
+/* Buttons */
+.submitBtn{width:100%;padding:13px;border-radius:var(--r-md);border:none;background:var(--text-primary);color:var(--bg-base);font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity 0.15s}
+.submitBtn:hover:not(:disabled){opacity:0.82}
+.submitBtn:disabled{opacity:0.35;cursor:not-allowed}
+
+/* Loading */
+.loading{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-secondary);padding:8px 0}
+.spinner{animation:spin 0.9s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Feedback */
+.feedback{display:flex;flex-direction:column;gap:14px;background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--r-lg);padding:22px}
+.scoreBadge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;width:fit-content}
+.score_great{background:rgba(132,204,22,0.12);color:var(--accent-text);border:1px solid var(--accent-border)}
+.score_good{background:rgba(59,130,246,0.1);color:#3b82f6;border:1px solid rgba(59,130,246,0.25)}
+.score_needs_work{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25)}
+.feedbackText{font-size:14px;color:var(--text-primary);line-height:1.6;margin:0}
+.improvedBox{background:var(--bg-overlay);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.improvedLabel{font-size:11px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-tertiary)}
+.improvedText{font-size:14px;color:var(--text-primary);line-height:1.5;font-style:italic}
+
+/* Next button */
+.nextBtn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-primary);font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;transition:border-color 0.15s,background 0.15s;margin-top:2px}
+.nextBtn:hover{border-color:var(--border-strong);background:var(--bg-overlay)}

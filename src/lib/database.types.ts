@@ -1,5 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
-export type StudyMode = 'flashcard' | 'multiple_choice' | 'typed'
+export type StudyMode = 'flashcard' | 'multiple_choice' | 'typed' | 'sentence'
+
+export interface SentenceEntry {
+  term: string; definition: string; sentence: string
+  feedback: string; improved: string | null
+  score: 'great' | 'good' | 'needs_work'
+}
 
 export interface Folder {
   id: string; user_id: string; name: string; color: string; position: number; created_at: string

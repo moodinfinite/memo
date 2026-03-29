@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import type { Card, StudyMode, SessionDraft } from '@/lib/database.types'
+import type { Card, StudyMode, SessionDraft, SentenceEntry } from '@/lib/database.types'
 import { generateMCQuestions, type MCQuestion } from '@/lib/multipleChoice'
 import { isFuzzyMatch } from '@/lib/fuzzy'
 import { useSRSStore } from './srsStore'
@@ -16,6 +16,14 @@ interface StudyState {
   persistError: string | null
   hasDraft: boolean; draftLoading: boolean
   isPersisting: boolean; persistSaved: boolean
+  sentenceInput: string
+  sentenceStatus: 'idle' | 'submitting' | 'reviewed'
+  sentenceFeedback: string; sentenceImproved: string | null
+  sentenceScore: 'great' | 'good' | 'needs_work' | null
+  sentenceEntries: SentenceEntry[]
+  setSentenceInput: (val: string) => void
+  submitSentence: () => Promise<void>
+  nextSentenceCard: () => void
   startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
   resumeSession: (draft: SessionDraft, cards: Card[]) => void
   saveProgress: () => Promise<void>
@@ -43,6 +51,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0,
   persistError: null,
   hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
+  sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null,
+  sentenceScore: null, sentenceEntries: [],
 
   startSession: (cards, mode, setId, opts = {}) => {
     const { shuffle = false, timerDurMin = 0 } = opts
@@ -130,7 +140,56 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     })
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false }),
+  setSentenceInput: (val) => set({ sentenceInput: val }),
+
+  submitSentence: async () => {
+    const { sessionCards, currentIndex, sentenceInput } = get()
+    const card = sessionCards[currentIndex]
+    if (!card || !sentenceInput.trim()) return
+    set({ sentenceStatus: 'submitting' })
+    try {
+      const res = await fetch('/api/review-sentence', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ term: card.term, definition: card.definition, sentence: sentenceInput.trim() }),
+      })
+      const data = await res.json()
+      set({
+        sentenceStatus: 'reviewed',
+        sentenceFeedback: data.feedback ?? '',
+        sentenceImproved: data.improved ?? null,
+        sentenceScore: ['great', 'good', 'needs_work'].includes(data.score) ? data.score : 'good',
+      })
+    } catch {
+      set({ sentenceStatus: 'reviewed', sentenceFeedback: 'Could not reach AI. Moving on.', sentenceImproved: null, sentenceScore: 'good' })
+    }
+  },
+
+  nextSentenceCard: () => {
+    const { sessionCards, currentIndex, sentenceInput, sentenceFeedback, sentenceImproved, sentenceScore, sentenceEntries, mode, setId } = get()
+    const card = sessionCards[currentIndex]
+    if (!card) return
+    const newEntries: SentenceEntry[] = [...sentenceEntries, {
+      term: card.term, definition: card.definition,
+      sentence: sentenceInput.trim(),
+      feedback: sentenceFeedback,
+      improved: sentenceImproved,
+      score: sentenceScore ?? 'good',
+    }]
+    const nextIndex = currentIndex + 1
+    const isComplete = nextIndex >= sessionCards.length
+    set({
+      sentenceEntries: newEntries, currentIndex: nextIndex, isComplete,
+      sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null,
+    })
+    if (isComplete) {
+      const goodCount = newEntries.filter(e => e.score !== 'needs_work').length
+      const badCount = newEntries.length - goodCount
+      get()._persist(Array(goodCount).fill(''), Array(badCount).fill(''), newEntries.length, mode, setId, true)
+    }
+  },
+
+  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] }),
 
   persistSession: async () => {
     const { known, unknown, sessionCards, mode, setId } = get()

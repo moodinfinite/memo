@@ -7,6 +7,8 @@ import type { StudyMode, SessionDraft } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
+import SentenceCard from '@/components/cards/SentenceCard'
+import SentenceSummary from '@/components/cards/SentenceSummary'
 import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
 
@@ -14,6 +16,7 @@ const MODES: { id: StudyMode; label: string; desc: string }[] = [
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
   { id: 'multiple_choice', label: 'Multiple choice', desc: 'Pick the right answer' },
   { id: 'typed', label: 'Typed answer', desc: 'Write the definition' },
+  { id: 'sentence', label: 'Write a sentence', desc: 'Use each word in a sentence' },
 ]
 const TIMER_OPTS = [{ label: '1 min', mins: 1 }, { label: '3 min', mins: 3 }, { label: '5 min', mins: 5 }, { label: '10 min', mins: 10 }]
 
@@ -22,7 +25,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, isPersisting, persistSaved, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -183,10 +186,12 @@ export default function StudyPage() {
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
             <div><div className={styles.sessionOptLabel}>Shuffle</div><div className={styles.sessionOptDesc}>Random order</div></div>
           </button>
+          {selectedMode !== 'sentence' && (
           <button className={[styles.sessionOpt, timerEnabled ? styles.sessionOptActive : ''].join(' ')} onClick={() => setTimerEnabled(!timerEnabled)}>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7.5" cy="8" r="5"/><path d="M7.5 5.5V8l2 1.5M5.5 1.5h4"/></svg>
             <div><div className={styles.sessionOptLabel}>Timer</div><div className={styles.sessionOptDesc}>{timerEnabled ? `${timerDur} min` : 'Off'}</div></div>
           </button>
+          )}
         </div>
         {timerEnabled && (
           <div className={styles.timerPicker}>
@@ -198,6 +203,19 @@ export default function StudyPage() {
       )}
     </div>
   )
+
+  if (isComplete && mode === 'sentence') {
+    return <SentenceSummary
+      entries={sentenceEntries}
+      setTitle={currentSet.title}
+      isPersisting={isPersisting}
+      persistSaved={persistSaved}
+      persistError={persistError}
+      onStudyAgain={() => { resetSession(); startSession(currentSet.cards!, 'sentence', id!) }}
+      onChangeMode={handleEnd}
+      backTo={`/sets/${id}`}
+    />
+  }
 
   if (isComplete) {
     const total = sessionCards.length, k = known.length, u = unknown.length
@@ -273,6 +291,7 @@ export default function StudyPage() {
       {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
+      {mode === 'sentence' && <SentenceCard />}
       {timerOn && (
         <div className={[styles.timerDisplay, timerSecsLeft <= 30 ? styles.timerUrgent : ''].join(' ')}>
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="7" r="4.5"/><path d="M6.5 4.5V7l1.5 1M4.5 1h4"/></svg>
