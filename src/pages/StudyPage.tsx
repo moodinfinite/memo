@@ -25,6 +25,7 @@ export default function StudyPage() {
   const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, isPersisting, persistSaved, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
+  const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
   const [doShuffle, setDoShuffle] = useState(false)
@@ -44,7 +45,7 @@ export default function StudyPage() {
 
   useEffect(() => {
     if (!id || !currentSet || !selecting) return
-    loadProgress(id).then(draft => { if (draft) setResumePrompt(draft) })
+    loadProgress(id).then(draft => { setCachedDraft(draft) })
   }, [id, currentSet, selecting])
 
   useEffect(() => {
@@ -108,23 +109,28 @@ export default function StudyPage() {
 
   const handleStart = () => {
     if (!currentSet?.cards?.length || !id) return
+    if (cachedDraft && cachedDraft.mode === selectedMode) {
+      const valid = cachedDraft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
+      if (valid.length > 0) { setResumePrompt(cachedDraft); return }
+      clearProgress(id); setCachedDraft(null)
+    }
     startSession(currentSet.cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
   }
 
   const handleResume = (draft: SessionDraft) => {
     if (!currentSet?.cards || !id) return
-    const valid = draft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
-    if (valid.length === 0) { clearProgress(id); setResumePrompt(null); return }
     resumeSession(draft, currentSet.cards)
-    setResumePrompt(null)
+    setResumePrompt(null); setCachedDraft(null)
     setSelecting(false)
   }
 
   const handleStartFresh = async () => {
     if (!id) return
     await clearProgress(id)
-    setResumePrompt(null)
+    setResumePrompt(null); setCachedDraft(null)
+    startSession(currentSet!.cards!, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    setSelecting(false)
   }
 
   const [isSaving, setIsSaving] = useState(false)
