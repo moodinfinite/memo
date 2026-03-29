@@ -26,7 +26,7 @@ interface StudyState {
   reshuffleRemaining: () => void
   tickTimer: () => void; resetSession: () => void
   persistSession: () => Promise<void>
-  _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => Promise<void>
+  _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft?: boolean) => Promise<void>
 }
 
 function shuffleArr<T>(arr: T[]): T[] {
@@ -68,7 +68,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, setId, true)
     set({ known: newKnown, currentIndex: nextIndex, isComplete })
-    if (isComplete) { get()._persist(newKnown, get().unknown, sessionCards.length, mode, setId) }
+    if (isComplete) { get()._persist(newKnown, get().unknown, sessionCards.length, mode, setId, true) }
     else { get().saveProgress() }
   },
 
@@ -81,7 +81,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, setId, false)
     set({ unknown: newUnknown, currentIndex: nextIndex, isComplete })
-    if (isComplete) { get()._persist(get().known, newUnknown, sessionCards.length, mode, setId) }
+    if (isComplete) { get()._persist(get().known, newUnknown, sessionCards.length, mode, setId, true) }
     else { get().saveProgress() }
   },
 
@@ -114,7 +114,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       const remaining = sessionCards.slice(currentIndex).map(c => c.id)
       const finalUnknown = [...unknown, ...remaining]
       set({ isComplete: true, unknown: finalUnknown })
-      get()._persist(known, finalUnknown, sessionCards.length, mode, setId)
+      get()._persist(known, finalUnknown, sessionCards.length, mode, setId, true)
     }
   },
 
@@ -192,7 +192,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     set({ hasDraft: false })
   },
 
-  _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string) => {
+  _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
     set({ persistError: null })
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -208,7 +208,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         set({ persistError: 'Failed to save session. Your progress may not be recorded.' })
         return
       }
-      await get().clearProgress(setId)
+      if (clearDraft) await get().clearProgress(setId)
       await useProgressStore.getState().fetchProgress()
     } catch (err) {
       console.error('study_sessions persist error:', err)

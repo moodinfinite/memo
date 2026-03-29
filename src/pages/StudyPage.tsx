@@ -43,9 +43,9 @@ export default function StudyPage() {
   }, [id])
 
   useEffect(() => {
-    if (!id || !currentSet) return
+    if (!id || !currentSet || !selecting) return
     loadProgress(id).then(draft => { if (draft) setResumePrompt(draft) })
-  }, [id, currentSet])
+  }, [id, currentSet, selecting])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -135,7 +135,6 @@ export default function StudyPage() {
       await persistSession()
       setIsSaving(false)
     }
-    if (id) await clearProgress(id)
     resetSession()
     setSelecting(true)
   }
