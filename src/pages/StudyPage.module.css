@@ -49,6 +49,14 @@
 .startBtn{width:100%;max-width:400px;padding:13px;border-radius:var(--r-md);border:none;background:var(--text-primary);color:var(--bg-base);font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
 .startBtn:hover{opacity:0.82}
 
+/* Mastery filter */
+.masteryFilterRow{display:flex;flex-direction:column;gap:6px;width:100%;max-width:400px}
+.masteryFilterLabel{font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-tertiary)}
+.masteryFilterOpts{display:flex;gap:6px}
+.masteryOpt{flex:1;padding:7px 4px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-raised);font-size:12px;font-weight:500;font-family:var(--font);color:var(--text-secondary);cursor:pointer;text-align:center;transition:border-color 0.15s,background 0.15s;white-space:nowrap}
+.masteryOpt:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.masteryOptActive{border-color:var(--accent)!important;background:var(--accent-subtle)!important;color:var(--accent-text)!important}
+
 /* Resume prompt */
 .resumePrompt{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 0;text-align:center}
 .resumeTitle{font-size:20px;font-weight:600;color:var(--text-primary);letter-spacing:-0.02em}

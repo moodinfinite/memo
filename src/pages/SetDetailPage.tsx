@@ -2,14 +2,38 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
+import { useSRSStore } from '@/store/srsStore'
+import { getMasteryLevel, MASTERY_INFO } from '@/lib/mastery'
 import { SetDetailSkeleton } from '@/components/ui/Skeleton'
 import styles from './SetDetailPage.module.css'
+
+function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
+  if (level === 0) return null
+  const { color, label } = MASTERY_INFO[level]
+  // 8-point starburst path (24×24 viewBox, outer r=11, inner r=5)
+  const pts: string[] = []
+  for (let i = 0; i < 16; i++) {
+    const angle = (i * Math.PI) / 8 - Math.PI / 2
+    const r = i % 2 === 0 ? 11 : 5
+    pts.push(`${12 + r * Math.cos(angle)},${12 + r * Math.sin(angle)}`)
+  }
+  const d = `M${pts.join('L')}Z`
+  return (
+    <div className={styles.starWrap} title={`${label} (level ${level})`}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill={color}>
+        <path d={d} />
+      </svg>
+      <span className={styles.starLevel} style={{ color }}>{level}</span>
+    </div>
+  )
+}
 
 export default function SetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentSet, fetchSet, deleteSet, moveToFolder, isLoading } = useSetsStore()
   const { folders } = useFoldersStore()
+  const { cardSRS, fetchSRS } = useSRSStore()
   const [showFolderPicker, setShowFolderPicker] = useState(false)
   const folderPickerRef = useRef<HTMLDivElement>(null)
 
@@ -21,7 +45,7 @@ export default function SetDetailPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  useEffect(() => { if (id) fetchSet(id) }, [id])
+  useEffect(() => { if (id) { fetchSet(id); fetchSRS(id) } }, [id])
 
   const handleMoveToFolder = async (folderId: string | null) => {
     if (!currentSet) return
@@ -85,16 +109,20 @@ export default function SetDetailPage() {
       <div className={styles.sectionLabel}>All cards</div>
 
       <div className={styles.cardList}>
-        {(currentSet.cards ?? []).map((card, i) => (
-          <div key={card.id} className={styles.cardRow}>
-            <span className={styles.rowNum}>{i + 1}</span>
-            <div className={styles.rowContent}>
-              <div className={styles.term}>{card.term}</div>
-              <div className={styles.divider} />
-              <div className={styles.definition}>{card.definition}</div>
+        {(currentSet.cards ?? []).map((card, i) => {
+          const level = getMasteryLevel(cardSRS[card.id])
+          return (
+            <div key={card.id} className={styles.cardRow}>
+              <span className={styles.rowNum}>{i + 1}</span>
+              <div className={styles.rowContent}>
+                <div className={styles.term}>{card.term}</div>
+                <div className={styles.divider} />
+                <div className={styles.definition}>{card.definition}</div>
+              </div>
+              <StarburstBadge level={level} />
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

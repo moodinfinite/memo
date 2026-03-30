@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useStudyStore } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
+import { getMasteryLevel } from '@/lib/mastery'
+import type { MasteryLevel } from '@/lib/mastery'
 import type { StudyMode, SessionDraft } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
@@ -24,7 +26,7 @@ export default function StudyPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
-  const { fetchSRS } = useSRSStore()
+  const { fetchSRS, cardSRS } = useSRSStore()
   const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
@@ -34,6 +36,8 @@ export default function StudyPage() {
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
+  // mastery filter: null = all cards, otherwise max level to include
+  const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
   const [flipKey, setFlipKey] = useState(0)
   const [shuffleActive, setShuffleActive] = useState(false)
   const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
@@ -110,6 +114,12 @@ export default function StudyPage() {
 
   const canMC = (currentSet?.cards?.length ?? 0) >= 4
 
+  const filteredCards = (cards: typeof currentSet.cards) => {
+    if (!cards) return []
+    if (masteryFilter === null) return cards
+    return cards.filter(c => getMasteryLevel(cardSRS[c.id]) <= masteryFilter)
+  }
+
   const handleStart = () => {
     if (!currentSet?.cards?.length || !id) return
     if (cachedDraft && cachedDraft.mode === selectedMode) {
@@ -117,7 +127,9 @@ export default function StudyPage() {
       if (valid.length > 0) { setResumePrompt(cachedDraft); return }
       clearProgress(id); setCachedDraft(null)
     }
-    startSession(currentSet.cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    const cards = filteredCards(currentSet.cards)
+    if (!cards.length) return
+    startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
   }
 
@@ -132,7 +144,9 @@ export default function StudyPage() {
     if (!id) return
     await clearProgress(id)
     setResumePrompt(null); setCachedDraft(null)
-    startSession(currentSet!.cards!, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    const cards = filteredCards(currentSet!.cards!)
+    if (!cards.length) return
+    startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
   }
 
@@ -198,6 +212,21 @@ export default function StudyPage() {
             {TIMER_OPTS.map((t) => <button key={t.mins} className={[styles.timerOpt, timerDur === t.mins ? styles.timerOptSelected : ''].join(' ')} onClick={() => setTimerDur(t.mins)}>{t.label}</button>)}
           </div>
         )}
+        <div className={styles.masteryFilterRow}>
+          <span className={styles.masteryFilterLabel}>Focus</span>
+          <div className={styles.masteryFilterOpts}>
+            {([null, 3, 2, 1] as (MasteryLevel | null)[]).map((val) => {
+              const label = val === null ? 'All cards' : val === 3 ? 'Not mastered' : val === 2 ? 'Still learning' : 'New only'
+              return (
+                <button
+                  key={String(val)}
+                  className={[styles.masteryOpt, masteryFilter === val ? styles.masteryOptActive : ''].join(' ')}
+                  onClick={() => setMasteryFilter(val)}
+                >{label}</button>
+              )
+            })}
+          </div>
+        </div>
         <button className={styles.startBtn} onClick={handleStart}>Start studying</button>
       </div>
       )}
