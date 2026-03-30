@@ -274,17 +274,13 @@ export default function StudyPage() {
               <button
                 className={styles.retryBtn}
                 onClick={() => startSession(currentSet.cards, mode, id!, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })}
-                disabled={isPersisting}
               >
                 Study again
               </button>
-              <button className={styles.changeModeBtn} onClick={handleEnd} disabled={isPersisting}>
+              <button className={styles.changeModeBtn} onClick={handleEnd}>
                 Change mode
               </button>
-              {isPersisting
-                ? <span className={styles.doneBtnDisabled}>Back to set</span>
-                : <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
-              }
+              <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
             </div>
           </div>
         </div>

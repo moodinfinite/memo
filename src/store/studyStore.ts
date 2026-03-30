@@ -44,6 +44,19 @@ function shuffleArr<T>(arr: T[]): T[] {
   return a
 }
 
+// Module-level debounce timer for saveProgress — prevents firing 1 upsert per card
+let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// Wrap any promise with a hard timeout
+function withTimeout<T>(promise: Promise<T>, ms: number, label = 'Request'): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+    ),
+  ])
+}
+
 export const useStudyStore = create<StudyState>((set, get) => ({
   mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],
   currentIndex: 0, known: [], unknown: [], isComplete: false,
@@ -214,19 +227,31 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     })
   },
 
-  saveProgress: async () => {
-    const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin } = get()
-    if (!setId || setId === '__master__' || sessionCards.length === 0) return
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    await supabase.from('session_drafts').upsert({
-      user_id: user.id, set_id: setId, mode,
-      card_order: sessionCards.map(c => c.id),
-      current_index: currentIndex,
-      known_ids: known, unknown_ids: unknown,
-      do_shuffle: doShuffle, timer_dur_min: timerDurMin,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,set_id' })
+  saveProgress: () => {
+    // Debounce: if cards are answered rapidly, collapse saves into one upsert
+    if (_saveDebounceTimer) clearTimeout(_saveDebounceTimer)
+    _saveDebounceTimer = setTimeout(async () => {
+      const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin } = get()
+      if (!setId || setId === '__master__' || mode === 'sentence' || sessionCards.length === 0) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await withTimeout(
+          supabase.from('session_drafts').upsert({
+            user_id: user.id, set_id: setId, mode,
+            card_order: sessionCards.map(c => c.id),
+            current_index: currentIndex,
+            known_ids: known, unknown_ids: unknown,
+            do_shuffle: doShuffle, timer_dur_min: timerDurMin,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id,set_id' }),
+          8000, 'Draft save'
+        )
+      } catch (err) {
+        // Draft save failure is non-critical — silently ignore
+        console.warn('Draft save failed (non-critical):', err)
+      }
+    }, 1500)
   },
 
   loadProgress: async (setId) => {
@@ -260,15 +285,18 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         set({ isPersisting: false })
         return
       }
-      const { error } = await supabase.from('study_sessions').insert({
-        user_id: user.id, set_id: setId, mode, total_cards: total,
-        known_count: known.length, unknown_count: unknown.length,
-        score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
-        completed_at: new Date().toISOString(),
-      })
+      const { error } = await withTimeout(
+        supabase.from('study_sessions').insert({
+          user_id: user.id, set_id: setId, mode, total_cards: total,
+          known_count: known.length, unknown_count: unknown.length,
+          score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
+          completed_at: new Date().toISOString(),
+        }),
+        10000, 'Session save'
+      )
       if (error) {
         console.error('study_sessions insert failed:', error.message, { setId, mode, total, known: known.length, unknown: unknown.length })
-        set({ persistError: `Could not save session: ${error.message}`, isPersisting: false })
+        set({ persistError: 'Session could not be saved — check your connection and try again.', isPersisting: false })
         return
       }
       if (clearDraft) await get().clearProgress(setId)
@@ -276,7 +304,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
       console.error('study_sessions persist error:', err)
-      set({ persistError: `Could not save session: ${err?.message ?? 'Network error'}`, isPersisting: false })
+      set({ persistError: 'Session could not be saved — check your connection and try again.', isPersisting: false })
     }
   },
 }))
