@@ -62,18 +62,37 @@ export default async function handler(req: any, res: any) {
         max_tokens: 300,
         messages: [{
           role: 'user',
-          content: `You are a language tutor reviewing a student's use of a vocabulary word.
+          content: `You are a strict but encouraging language tutor grading a student's sentence.
 
-Term: ${term}
+Term: "${term}"
 Definition: ${definition}
 Student's sentence: "${sentence}"
 
-Evaluate whether the word is used naturally and correctly. Be encouraging and specific. Keep feedback concise (2-3 sentences max).
+Step 1 — Check presence: Does the exact term (or a clear inflected form of it) appear in the sentence?
+- If NO → score MUST be "needs_work". Do not give "good" or "great" if the word is absent.
+
+Step 2 — Check meaning: Is the term used with the correct meaning as defined above?
+- If NO → score MUST be "needs_work".
+
+Step 3 — If the word is present and used correctly, score as:
+- "great" → correct usage, natural phrasing, solid sentence structure.
+- "good" → correct usage but the sentence is simple, slightly awkward, or could be richer.
+
+Scoring rules (strict):
+- Missing or wrong word = "needs_work", always.
+- Correct but plain/simple = "good".
+- Correct, natural, well-constructed = "great".
+
+For "needs_work": improved must show the correct usage.
+For "good": improved must give a richer or more natural version.
+For "great": improved is null.
+
+Keep feedback concise (2-3 sentences), specific, and encouraging even when correcting.
 
 Respond with JSON only, no extra text:
 {
   "feedback": "your feedback here",
-  "improved": "an improved version of their sentence if needed, or null if it is already great",
+  "improved": "a better version of the sentence, or null only if score is great",
   "score": "great" or "good" or "needs_work"
 }`,
         }],

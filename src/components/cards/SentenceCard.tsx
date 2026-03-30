@@ -16,6 +16,16 @@ export default function SentenceCard() {
     if (sentenceStatus === 'idle') inputRef.current?.focus()
   }, [currentIndex, sentenceStatus])
 
+  // Enter to advance after AI review
+  useEffect(() => {
+    if (sentenceStatus !== 'reviewed') return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); nextSentenceCard() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [sentenceStatus])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && sentenceStatus === 'idle') {
       e.preventDefault()
@@ -91,6 +101,7 @@ export default function SentenceCard() {
             Next
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 7h8M7 3l4 4-4 4"/></svg>
           </button>
+          <div className={styles.hint}>Press Enter to continue</div>
         </div>
       )}
     </div>
