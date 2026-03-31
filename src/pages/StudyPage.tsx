@@ -114,11 +114,25 @@ export default function StudyPage() {
 
   const canMC = (currentSet?.cards?.length ?? 0) >= 4
 
+  const filterCard = (cardId: string, filter: MasteryLevel | null): boolean => {
+    const level = getMasteryLevel(cardSRS[cardId])
+    if (filter === null) return true
+    if (filter === 3) return level < 4            // Not mastered: levels 0,1,2,3
+    if (filter === 2) return level >= 1 && level <= 2  // Still learning: seen but not confident
+    if (filter === 1) return level === 0          // New only: never studied
+    return true
+  }
+
   const filteredCards = (cards: typeof currentSet.cards) => {
     if (!cards) return []
     if (masteryFilter === null) return cards
-    return cards.filter(c => getMasteryLevel(cardSRS[c.id]) <= masteryFilter)
+    const filtered = cards.filter(c => filterCard(c.id, masteryFilter))
+    // If filter returns nothing (e.g. no cards in that tier), fall back to all cards
+    return filtered.length > 0 ? filtered : cards
   }
+
+  const filterCount = (filter: MasteryLevel | null) =>
+    (currentSet?.cards ?? []).filter(c => filterCard(c.id, filter)).length
 
   const handleStart = () => {
     if (!currentSet?.cards?.length || !id) return
@@ -216,13 +230,14 @@ export default function StudyPage() {
           <span className={styles.masteryFilterLabel}>Focus</span>
           <div className={styles.masteryFilterOpts}>
             {([null, 3, 2, 1] as (MasteryLevel | null)[]).map((val) => {
-              const label = val === null ? 'All cards' : val === 3 ? 'Not mastered' : val === 2 ? 'Still learning' : 'New only'
+              const label = val === null ? 'All' : val === 3 ? 'Not mastered' : val === 2 ? 'Still learning' : 'New only'
+              const count = filterCount(val)
               return (
                 <button
                   key={String(val)}
                   className={[styles.masteryOpt, masteryFilter === val ? styles.masteryOptActive : ''].join(' ')}
                   onClick={() => setMasteryFilter(val)}
-                >{label}</button>
+                >{label} <span className={styles.masteryOptCount}>({count})</span></button>
               )
             })}
           </div>

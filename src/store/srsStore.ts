@@ -21,6 +21,7 @@ interface SRSState {
   cardSRS: Record<string, CardSRS>   // keyed by card_id
   isLoading: boolean
   fetchSRS: (setId: string) => Promise<void>
+  fetchAllSRS: () => Promise<void>
   updateSRS: (cardId: string, setId: string, known: boolean) => Promise<void>
   getDueCards: (setId: string, allCards: { id: string }[]) => string[]
 }
@@ -84,6 +85,15 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       map[row.card_id] = row
     }
     set({ cardSRS: map, isLoading: false })
+  },
+
+  fetchAllSRS: async () => {
+    const { data } = await supabase.from('card_srs').select('*')
+    const map: Record<string, CardSRS> = {}
+    for (const row of data ?? []) {
+      map[row.card_id] = row
+    }
+    set({ cardSRS: map })
   },
 
   updateSRS: async (cardId, setId, known) => {

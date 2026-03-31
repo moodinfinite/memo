@@ -56,6 +56,7 @@
 .masteryOpt{flex:1;padding:7px 4px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-raised);font-size:12px;font-weight:500;font-family:var(--font);color:var(--text-secondary);cursor:pointer;text-align:center;transition:border-color 0.15s,background 0.15s;white-space:nowrap}
 .masteryOpt:hover{border-color:var(--border-strong);color:var(--text-primary)}
 .masteryOptActive{border-color:var(--accent)!important;background:var(--accent-subtle)!important;color:var(--accent-text)!important}
+.masteryOptCount{opacity:0.6;font-weight:400}
 
 /* Resume prompt */
 .resumePrompt{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 0;text-align:center}
