@@ -59,12 +59,15 @@ export const useSetsStore = create<SetsState>((set, get) => ({
       .select().single()
     if (setError) throw setError
     if (rawCards.length > 0) {
-      await supabase.from('cards').insert(
-        rawCards.map((c, i) => {
-          const safe = sanitizeCard(c)
-          return { set_id: setData.id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
-        })
-      )
+      const rows = rawCards.map((c, i) => {
+        const safe = sanitizeCard(c)
+        return { set_id: setData.id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
+      })
+      // Insert in chunks of 15 to avoid overwhelming the connection on large sets
+      for (let i = 0; i < rows.length; i += 15) {
+        const { error } = await supabase.from('cards').insert(rows.slice(i, i + 15))
+        if (error) throw error
+      }
     }
     const newSet = { ...setData, cardCount: rawCards.length }
     set((state) => ({ sets: [newSet, ...state.sets] }))
@@ -79,12 +82,14 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     await supabase.from('sets').update({ title: safeTitle, description: safeDesc, folder_id: folderId }).eq('id', id)
     await supabase.from('cards').delete().eq('set_id', id)
     if (rawCards.length > 0) {
-      await supabase.from('cards').insert(
-        rawCards.map((c, i) => {
-          const safe = sanitizeCard(c)
-          return { set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
-        })
-      )
+      const rows = rawCards.map((c, i) => {
+        const safe = sanitizeCard(c)
+        return { set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
+      })
+      for (let i = 0; i < rows.length; i += 15) {
+        const { error } = await supabase.from('cards').insert(rows.slice(i, i + 15))
+        if (error) throw error
+      }
     }
     await get().fetchSet(id)
   },

@@ -55,7 +55,7 @@ export default function NewSetPage() {
 
     setSaving(true)
     setError('')
-    const timer = setTimeout(() => { setSaving(false); setError('Save timed out — check your connection and try again') }, 15000)
+    const timer = setTimeout(() => { setSaving(false); setError('Save timed out — check your connection and try again') }, 30000)
     try {
       const set = await createSet(title.trim(), description.trim(), validCards)
       clearTimeout(timer)
