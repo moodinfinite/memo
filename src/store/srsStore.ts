@@ -75,11 +75,11 @@ export const useSRSStore = create<SRSState>((set, get) => ({
 
   fetchSRS: async (setId) => {
     set({ isLoading: true })
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('card_srs')
       .select('*')
       .eq('set_id', setId)
-
+    if (error) console.error('fetchSRS error:', error)
     const map: Record<string, CardSRS> = {}
     for (const row of data ?? []) {
       map[row.card_id] = row
@@ -89,15 +89,15 @@ export const useSRSStore = create<SRSState>((set, get) => ({
 
   fetchAllSRS: async () => {
     // A plain select('*') on card_srs can be blocked by RLS without a set_id filter.
-    // Instead, first get the user's set IDs then filter card_srs to those sets.
-    const { data: setsData } = await supabase.from('flashcard_sets').select('id')
+    // Fetch the user's set IDs first (from the correct 'sets' table), then filter.
+    const { data: setsData, error: setsError } = await supabase.from('sets').select('id')
+    if (setsError) { console.error('fetchAllSRS sets error:', setsError); return }
     const setIds = (setsData ?? []).map((s: { id: string }) => s.id)
     if (setIds.length === 0) return
-    const { data } = await supabase.from('card_srs').select('*').in('set_id', setIds)
+    const { data, error } = await supabase.from('card_srs').select('*').in('set_id', setIds)
+    if (error) { console.error('fetchAllSRS card_srs error:', error); return }
     const map: Record<string, CardSRS> = {}
-    for (const row of data ?? []) {
-      map[row.card_id] = row
-    }
+    for (const row of data ?? []) map[row.card_id] = row
     set({ cardSRS: map })
   },
 
@@ -113,7 +113,8 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       last_seen_at: now,
     }
 
-    await supabase.from('card_srs').upsert(upsertData)
+    const { error: upsertError } = await supabase.from('card_srs').upsert(upsertData)
+    if (upsertError) console.error('updateSRS upsert error:', upsertError)
 
     set((state) => ({
       cardSRS: { ...state.cardSRS, [cardId]: { ...upsertData, easiness: next.easiness, interval: next.interval, repetitions: next.repetitions } },
