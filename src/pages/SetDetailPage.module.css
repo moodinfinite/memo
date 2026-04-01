@@ -193,6 +193,61 @@
   min-width: 0;
 }
 
+/* ── Progress summary ── */
+.progressSummary {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.progressSummaryTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.progressSummaryTitle {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.progressSummaryPct {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.progressBar {
+  height: 8px;
+  background: var(--bg-overlay);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+}
+.progressBarMastered {
+  height: 100%;
+  background: #84cc16;
+  border-radius: 4px 0 0 4px;
+  transition: width 0.5s ease;
+  flex-shrink: 0;
+}
+.progressBarLearning {
+  height: 100%;
+  background: #f59e0b;
+  transition: width 0.5s ease;
+  flex-shrink: 0;
+}
+.progressLegend {
+  display: flex;
+  gap: 16px;
+}
+.legendMastered { font-size: 12px; color: #84cc16; }
+.legendLearning  { font-size: 12px; color: #f59e0b; }
+.legendUntouched { font-size: 12px; color: var(--text-tertiary); }
+
 /* ── Starburst badge ── */
 .starWrap {
   display: flex;

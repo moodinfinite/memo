@@ -63,6 +63,14 @@ export default function SetDetailPage() {
   if (isLoading && !currentSet) return <SetDetailSkeleton />
   if (!currentSet) return null
 
+  const cards = currentSet.cards ?? []
+  const total = cards.length
+  const masteredCount = cards.filter(c => getMasteryLevel(cardSRS[c.id]) >= 3).length
+  const learningCount = cards.filter(c => { const l = getMasteryLevel(cardSRS[c.id]); return l >= 1 && l <= 2 }).length
+  const untouchedCount = total - masteredCount - learningCount
+  const masteredPct = total > 0 ? (masteredCount / total) * 100 : 0
+  const learningPct = total > 0 ? (learningCount / total) * 100 : 0
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -103,6 +111,22 @@ export default function SetDetailPage() {
           <Link to={`/sets/${id}/study`} className={styles.studyBtn}>Study</Link>
           <Link to={`/sets/${id}/edit`} className={styles.editBtn}>Edit</Link>
           <button className={styles.deleteBtn} onClick={handleDelete}>Delete</button>
+        </div>
+      </div>
+
+      <div className={styles.progressSummary}>
+        <div className={styles.progressSummaryTop}>
+          <span className={styles.progressSummaryTitle}>Set progress</span>
+          <span className={styles.progressSummaryPct}>{Math.round(masteredPct + learningPct)}% studied</span>
+        </div>
+        <div className={styles.progressBar}>
+          <div className={styles.progressBarMastered} style={{ width: `${masteredPct}%` }} />
+          <div className={styles.progressBarLearning} style={{ width: `${learningPct}%` }} />
+        </div>
+        <div className={styles.progressLegend}>
+          <span className={styles.legendMastered}>● {masteredCount} mastered</span>
+          <span className={styles.legendLearning}>● {learningCount} learning</span>
+          <span className={styles.legendUntouched}>● {untouchedCount} not started</span>
         </div>
       </div>
 

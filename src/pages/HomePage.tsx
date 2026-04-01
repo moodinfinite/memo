@@ -104,15 +104,16 @@ function SetCard({ set, folders, cardSRS, onPin, onNavigate }: {
       <div className={styles.setTitle}>{set.title}</div>
       {set.description && <div className={styles.setDesc}>{set.description}</div>}
       {folder && <div className={styles.folderBadge}><span className={styles.folderDot} style={{ background: folder.color }} />{folder.name}</div>}
-      {mastery.pct > 0 && (
-        <div className={styles.masteryRow}>
-          <span className={styles.masteryLabel} style={{ color: info.color }}>{info.label}</span>
-          <div className={styles.masteryBarTrack}>
-            <div className={styles.masteryBarFill} style={{ width: `${mastery.pct}%`, background: info.color }} />
+      <div className={styles.masteryOverlay}>
+        <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
+        <div className={styles.masteryOverlayLabel}>{mastery.pct === 0 ? 'Not started' : `of ${cardCount} cards studied`}</div>
+        {mastery.pct > 0 && mastery.pct < 100 && (
+          <div className={styles.masteryOverlayBar}>
+            <div className={styles.masteryOverlayFill} style={{ width: `${mastery.pct}%` }} />
           </div>
-          <span className={styles.masteryPct}>{mastery.pct}%</span>
-        </div>
-      )}
+        )}
+        {mastery.pct === 100 && <div className={styles.masteryOverlayComplete}>All cards covered ✓</div>}
+      </div>
       <div className={styles.setMeta}>
         <span className={styles.setCount}>{cardCount} cards</span>
         <Link to={`/sets/${set.id}/study`} className={styles.studyBtn} onClick={(e) => e.stopPropagation()}>Study</Link>
