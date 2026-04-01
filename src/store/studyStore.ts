@@ -300,7 +300,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         return
       }
       if (clearDraft) await get().clearProgress(setId)
-      await useProgressStore.getState().fetchProgress()
+      useProgressStore.getState().fetchProgress() // refresh stats in background, don't block
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
       console.error('study_sessions persist error:', err)
