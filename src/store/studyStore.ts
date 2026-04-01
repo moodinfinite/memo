@@ -236,17 +236,17 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        await withTimeout(
-          Promise.resolve(supabase.from('session_drafts').upsert({
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(() => resolve(), 8000)
+          supabase.from('session_drafts').upsert({
             user_id: user.id, set_id: setId, mode,
             card_order: sessionCards.map(c => c.id),
             current_index: currentIndex,
             known_ids: known, unknown_ids: unknown,
             do_shuffle: doShuffle, timer_dur_min: timerDurMin,
             updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id,set_id' })),
-          8000, 'Draft save'
-        )
+          }, { onConflict: 'user_id,set_id' }).then(() => { clearTimeout(timer); resolve() })
+        })
       } catch (err) {
         // Draft save failure is non-critical — silently ignore
         console.warn('Draft save failed (non-critical):', err)
@@ -285,15 +285,15 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         set({ isPersisting: false })
         return
       }
-      const { error } = await withTimeout(
-        Promise.resolve(supabase.from('study_sessions').insert({
+      const { error } = await new Promise<{ error: { message: string } | null }>((resolve) => {
+        const timer = setTimeout(() => resolve({ error: { message: 'Session save timed out after 10s' } }), 10000)
+        supabase.from('study_sessions').insert({
           user_id: user.id, set_id: setId, mode, total_cards: total,
           known_count: known.length, unknown_count: unknown.length,
           score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
           completed_at: new Date().toISOString(),
-        })),
-        10000, 'Session save'
-      ) as { error: { message: string } | null }
+        }).then((res) => { clearTimeout(timer); resolve(res as any) })
+      })
       if (error) {
         console.error('study_sessions insert failed:', error.message, { setId, mode, total, known: known.length, unknown: unknown.length })
         set({ persistError: 'Session could not be saved — check your connection and try again.', isPersisting: false })
