@@ -88,7 +88,12 @@ export const useSRSStore = create<SRSState>((set, get) => ({
   },
 
   fetchAllSRS: async () => {
-    const { data } = await supabase.from('card_srs').select('*')
+    // A plain select('*') on card_srs can be blocked by RLS without a set_id filter.
+    // Instead, first get the user's set IDs then filter card_srs to those sets.
+    const { data: setsData } = await supabase.from('flashcard_sets').select('id')
+    const setIds = (setsData ?? []).map((s: { id: string }) => s.id)
+    if (setIds.length === 0) return
+    const { data } = await supabase.from('card_srs').select('*').in('set_id', setIds)
     const map: Record<string, CardSRS> = {}
     for (const row of data ?? []) {
       map[row.card_id] = row
