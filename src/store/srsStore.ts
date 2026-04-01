@@ -80,11 +80,10 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       .select('*')
       .eq('set_id', setId)
     if (error) console.error('fetchSRS error:', error)
-    const map: Record<string, CardSRS> = {}
-    for (const row of data ?? []) {
-      map[row.card_id] = row
-    }
-    set({ cardSRS: map, isLoading: false })
+    const updates: Record<string, CardSRS> = {}
+    for (const row of data ?? []) updates[row.card_id] = row
+    // Merge into existing map so other sets' data is preserved
+    set((state) => ({ cardSRS: { ...state.cardSRS, ...updates }, isLoading: false }))
   },
 
   fetchAllSRS: async () => {
