@@ -295,16 +295,20 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         }).then((res) => { clearTimeout(timer); resolve(res as any) })
       })
       if (error) {
-        console.error('study_sessions insert failed:', error.message, { setId, mode, total, known: known.length, unknown: unknown.length })
-        set({ persistError: 'Session could not be saved — check your connection and try again.', isPersisting: false })
+        const code = (error as any).code ?? 'unknown'
+        const msg = error.message ?? 'unknown error'
+        console.error('study_sessions insert failed:', code, msg)
+        set({ persistError: `Save error [${code}]: ${msg}`, isPersisting: false })
         return
       }
       if (clearDraft) await get().clearProgress(setId)
       useProgressStore.getState().fetchProgress() // refresh stats in background, don't block
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
-      console.error('study_sessions persist error:', err)
-      set({ persistError: 'Session could not be saved — check your connection and try again.', isPersisting: false })
+      const code = err?.code ?? 'unknown'
+      const msg = err?.message ?? 'unknown error'
+      console.error('study_sessions persist error:', code, msg)
+      set({ persistError: `Save error [${code}]: ${msg}`, isPersisting: false })
     }
   },
 }))
