@@ -26,7 +26,7 @@ interface StudyState {
   nextSentenceCard: () => void
   startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
   resumeSession: (draft: SessionDraft, cards: Card[]) => void
-  saveProgress: () => Promise<void>
+  saveProgress: () => void
   loadProgress: (setId: string) => Promise<SessionDraft | null>
   clearProgress: (setId: string) => Promise<void>
   markKnown: () => void; markUnknown: () => void
@@ -237,14 +237,14 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         await withTimeout(
-          supabase.from('session_drafts').upsert({
+          Promise.resolve(supabase.from('session_drafts').upsert({
             user_id: user.id, set_id: setId, mode,
             card_order: sessionCards.map(c => c.id),
             current_index: currentIndex,
             known_ids: known, unknown_ids: unknown,
             do_shuffle: doShuffle, timer_dur_min: timerDurMin,
             updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id,set_id' }),
+          }, { onConflict: 'user_id,set_id' })),
           8000, 'Draft save'
         )
       } catch (err) {
@@ -286,14 +286,14 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         return
       }
       const { error } = await withTimeout(
-        supabase.from('study_sessions').insert({
+        Promise.resolve(supabase.from('study_sessions').insert({
           user_id: user.id, set_id: setId, mode, total_cards: total,
           known_count: known.length, unknown_count: unknown.length,
           score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
           completed_at: new Date().toISOString(),
-        }),
+        })),
         10000, 'Session save'
-      )
+      ) as { error: { message: string } | null }
       if (error) {
         console.error('study_sessions insert failed:', error.message, { setId, mode, total, known: known.length, unknown: unknown.length })
         set({ persistError: 'Session could not be saved — check your connection and try again.', isPersisting: false })
