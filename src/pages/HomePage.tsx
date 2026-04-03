@@ -19,7 +19,13 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
 
-  useEffect(() => { fetchSets(); fetchProgress(); fetchAllSRS() }, [])
+  useEffect(() => {
+    fetchSets(); fetchProgress(); fetchAllSRS()
+    // Re-fetch SRS when the window regains focus (e.g. returning from a study session)
+    const onFocus = () => fetchAllSRS()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
