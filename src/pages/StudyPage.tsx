@@ -164,13 +164,9 @@ export default function StudyPage() {
     setSelecting(false)
   }
 
-  const [isSaving, setIsSaving] = useState(false)
-
-  const handleEnd = async () => {
+  const handleEnd = () => {
     if (!isComplete) {
-      setIsSaving(true)
-      await persistSession()
-      setIsSaving(false)
+      persistSession() // fire and forget — don't block the user leaving
     }
     resetSession()
     setSelecting(true)
@@ -321,7 +317,7 @@ export default function StudyPage() {
             </button>
           )}
           <div className={styles.modeTag}>{MODES.find((m) => m.id === mode)?.label}</div>
-          <button className={styles.exitBtn} onClick={handleEnd} disabled={isSaving}>{isSaving ? 'Saving…' : 'End session'}</button>
+          <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
         </div>
       </div>
       <div className={styles.progressRow}>
