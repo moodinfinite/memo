@@ -278,22 +278,24 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
+    if (!setId || setId === '__master__') return
     set({ persistError: null, isPersisting: true, persistSaved: false })
+    // Hard 12s deadline on the entire persist operation — no matter what hangs, spinner clears
+    const deadline = setTimeout(() => {
+      set({ isPersisting: false, persistError: 'Save timed out — session may not have been recorded.' })
+    }, 12000)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || !setId || setId === '__master__') {
-        set({ isPersisting: false })
-        return
-      }
+      if (!user) { clearTimeout(deadline); set({ isPersisting: false }); return }
       const { error } = await new Promise<{ error: { message: string } | null }>((resolve) => {
-        const timer = setTimeout(() => resolve({ error: { message: 'Session save timed out after 10s' } }), 10000)
         supabase.from('study_sessions').insert({
           user_id: user.id, set_id: setId, mode, total_cards: total,
           known_count: known.length, unknown_count: unknown.length,
           score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
           completed_at: new Date().toISOString(),
-        }).then((res) => { clearTimeout(timer); resolve(res as any) })
+        }).then((res) => resolve(res as any))
       })
+      clearTimeout(deadline)
       if (error) {
         const code = (error as any).code ?? 'unknown'
         const msg = error.message ?? 'unknown error'
@@ -301,11 +303,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         set({ persistError: `Save error [${code}]: ${msg}`, isPersisting: false })
         return
       }
-      // Both cleanup tasks run in background — don't block the "Session saved" confirmation
       if (clearDraft) get().clearProgress(setId)
       useProgressStore.getState().fetchProgress()
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
+      clearTimeout(deadline)
       const code = err?.code ?? 'unknown'
       const msg = err?.message ?? 'unknown error'
       console.error('study_sessions persist error:', code, msg)
