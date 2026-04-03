@@ -8,3 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Warm up the database connection as soon as the app loads.
+// This lightweight query wakes Supabase from cold start before any real saves happen.
+supabase.from('sets').select('id').limit(1).then(() => {})
