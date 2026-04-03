@@ -104,10 +104,13 @@ export const useSRSStore = create<SRSState>((set, get) => ({
     const current = get().cardSRS[cardId] ?? null
     const next = calcNextSRS(current, known)
     const now = new Date().toISOString()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
     const upsertData = {
       card_id: cardId,
       set_id: setId,
+      user_id: user.id,
       ...next,
       last_seen_at: now,
     }
