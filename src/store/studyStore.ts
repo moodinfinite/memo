@@ -301,8 +301,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         set({ persistError: `Save error [${code}]: ${msg}`, isPersisting: false })
         return
       }
-      if (clearDraft) await get().clearProgress(setId)
-      useProgressStore.getState().fetchProgress() // refresh stats in background, don't block
+      // Both cleanup tasks run in background — don't block the "Session saved" confirmation
+      if (clearDraft) get().clearProgress(setId)
+      useProgressStore.getState().fetchProgress()
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
       const code = err?.code ?? 'unknown'
