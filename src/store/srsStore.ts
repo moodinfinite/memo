@@ -21,7 +21,7 @@ interface SRSState {
   cardSRS: Record<string, CardSRS>   // keyed by card_id
   lastLocalUpdate: Record<string, number>  // setId -> timestamp of last local write
   isLoading: boolean
-  fetchSRS: (setId: string) => Promise<void>
+  fetchSRS: (setId: string, opts?: { force?: boolean }) => Promise<void>
   fetchAllSRS: () => Promise<void>
   updateSRS: (cardId: string, setId: string, known: boolean) => Promise<void>
   getDueCards: (setId: string, allCards: { id: string }[]) => string[]
@@ -75,11 +75,12 @@ export const useSRSStore = create<SRSState>((set, get) => ({
   lastLocalUpdate: {},
   isLoading: false,
 
-  fetchSRS: async (setId) => {
+  fetchSRS: async (setId, { force = false } = {}) => {
     // Skip fetch if we wrote local updates in the last 5 seconds — avoids
-    // overwriting optimistic state with stale DB data (race condition on navigation)
+    // overwriting optimistic state with stale DB data (race condition on navigation).
+    // Pass force:true to bypass this when we need fresh data (e.g. before starting a session).
     const lastUpdate = get().lastLocalUpdate[setId] ?? 0
-    if (Date.now() - lastUpdate < 5000) return
+    if (!force && Date.now() - lastUpdate < 5000) return
 
     set({ isLoading: true })
     const { data, error } = await supabase

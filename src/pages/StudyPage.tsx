@@ -134,21 +134,24 @@ export default function StudyPage() {
   const filterCount = (filter: MasteryLevel | null) =>
     (currentSet?.cards ?? []).filter(c => filterCard(c.id, filter)).length
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!currentSet?.cards?.length || !id) return
     if (cachedDraft && cachedDraft.mode === selectedMode) {
       const valid = cachedDraft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
       if (valid.length > 0) { setResumePrompt(cachedDraft); return }
       clearProgress(id); setCachedDraft(null)
     }
+    // Force-fetch latest SRS data so repetitions/intervals are current before session starts
+    await fetchSRS(id, { force: true })
     const cards = filteredCards(currentSet.cards)
     if (!cards.length) return
     startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
   }
 
-  const handleResume = (draft: SessionDraft) => {
+  const handleResume = async (draft: SessionDraft) => {
     if (!currentSet?.cards || !id) return
+    await fetchSRS(id, { force: true })
     resumeSession(draft, currentSet.cards)
     setResumePrompt(null); setCachedDraft(null)
     setSelecting(false)
@@ -157,6 +160,7 @@ export default function StudyPage() {
   const handleStartFresh = async () => {
     if (!id) return
     await clearProgress(id)
+    await fetchSRS(id, { force: true })
     setResumePrompt(null); setCachedDraft(null)
     const cards = filteredCards(currentSet!.cards!)
     if (!cards.length) return
