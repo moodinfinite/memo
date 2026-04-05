@@ -123,7 +123,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       last_seen_at: now,
     }
 
-    const { error: upsertError } = await supabase.from('card_srs').upsert(upsertData)
+    const { error: upsertError } = await supabase.from('card_srs').upsert(upsertData, { onConflict: 'card_id' })
     if (upsertError) console.error('updateSRS upsert error:', upsertError)
 
     set((state) => ({
