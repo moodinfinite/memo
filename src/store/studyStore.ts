@@ -47,16 +47,6 @@ function shuffleArr<T>(arr: T[]): T[] {
 // Module-level debounce timer for saveProgress — prevents firing 1 upsert per card
 let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
-// Wrap any promise with a hard timeout
-function withTimeout<T>(promise: Promise<T>, ms: number, label = 'Request'): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
-    ),
-  ])
-}
-
 export const useStudyStore = create<StudyState>((set, get) => ({
   mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],
   currentIndex: 0, known: [], unknown: [], isComplete: false,
@@ -280,8 +270,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
     if (!setId || setId === '__master__') return
     set({ persistError: null, isPersisting: true, persistSaved: false })
-    // Hard 12s deadline on the entire persist operation — no matter what hangs, spinner clears
+    // Hard 12s deadline — if Supabase hangs, unblock the UI. expired flag prevents
+    // a late-arriving response from overwriting the timeout error with a false "Saved!".
+    let expired = false
     const deadline = setTimeout(() => {
+      expired = true
       set({ isPersisting: false, persistError: 'Save timed out — session may not have been recorded.' })
     }, 12000)
     try {
@@ -296,6 +289,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         }).then((res) => resolve(res as any))
       })
       clearTimeout(deadline)
+      if (expired) return  // deadline already fired; don't overwrite the timeout error
       if (error) {
         const code = (error as any).code ?? 'unknown'
         const msg = error.message ?? 'unknown error'
@@ -308,6 +302,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
       clearTimeout(deadline)
+      if (expired) return
       const code = err?.code ?? 'unknown'
       const msg = err?.message ?? 'unknown error'
       console.error('study_sessions persist error:', code, msg)

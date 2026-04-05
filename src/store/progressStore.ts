@@ -12,50 +12,44 @@ interface ProgressState {
 
 /**
  * Streak = number of consecutive calendar weeks with at least one study session.
- * A "week" is Mon–Sun. Current week counts if already studied this week.
+ * A "week" is Mon–Sun (ISO 8601). Current week counts if already studied this week.
  */
+
+// Returns the timestamp (ms) of Monday 00:00 UTC for an ISO week string "YYYY-Www"
+function getMondayMs(weekStr: string): number {
+  const [year, week] = weekStr.split('-W').map(Number)
+  const jan4 = new Date(Date.UTC(year, 0, 4))
+  const dayOfWeek = jan4.getUTCDay() || 7  // Mon=1 … Sun=7
+  const week1Monday = jan4.getTime() - (dayOfWeek - 1) * 86400000
+  return week1Monday + (week - 1) * 7 * 86400000
+}
+
+function toISOWeekStr(d: Date): string {
+  // Shift to UTC noon to avoid DST edge cases
+  const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12))
+  const jan4 = new Date(Date.UTC(utc.getUTCFullYear(), 0, 4))
+  const dayOfWeek = jan4.getUTCDay() || 7
+  const week1Monday = jan4.getTime() - (dayOfWeek - 1) * 86400000
+  const weekNum = Math.floor((utc.getTime() - week1Monday) / (7 * 86400000)) + 1
+  return `${utc.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
+}
+
 function calculateWeekStreak(sessions: StudySession[]): number {
   if (sessions.length === 0) return 0
 
-  // Get unique ISO week strings "YYYY-Www"
-  const weekSet = new Set(
-    sessions.map((s) => {
-      const d = new Date(s.completed_at)
-      // ISO week calculation
-      const jan4 = new Date(d.getFullYear(), 0, 4)
-      const weekNum = Math.ceil(
-        ((d.getTime() - jan4.getTime()) / 86400000 + jan4.getDay() + 1) / 7
-      )
-      return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
-    })
-  )
-
+  const weekSet = new Set(sessions.map((s) => toISOWeekStr(new Date(s.completed_at))))
   const weeks = Array.from(weekSet).sort().reverse()
 
-  // Get current week
-  const now = new Date()
-  const jan4 = new Date(now.getFullYear(), 0, 4)
-  const currentWeekNum = Math.ceil(
-    ((now.getTime() - jan4.getTime()) / 86400000 + jan4.getDay() + 1) / 7
-  )
-  const currentWeek = `${now.getFullYear()}-W${String(currentWeekNum).padStart(2, '0')}`
+  const currentWeek = toISOWeekStr(new Date())
+  const lastWeek = toISOWeekStr(new Date(Date.now() - 7 * 86400000))
 
-  // Streak must include current or last week
-  if (weeks[0] !== currentWeek) {
-    // Check if last week
-    const lastWeekDate = new Date(now)
-    lastWeekDate.setDate(now.getDate() - 7)
-    const lastJan4 = new Date(lastWeekDate.getFullYear(), 0, 4)
-    const lastWeekNum = Math.ceil(
-      ((lastWeekDate.getTime() - lastJan4.getTime()) / 86400000 + lastWeekDate.getDay() + 1) / 7
-    )
-    const lastWeek = `${lastWeekDate.getFullYear()}-W${String(lastWeekNum).padStart(2, '0')}`
-    if (weeks[0] !== lastWeek) return 0
-  }
+  // Streak must start from current or last week
+  if (weeks[0] !== currentWeek && weeks[0] !== lastWeek) return 0
 
   let streak = 1
   for (let i = 1; i < weeks.length; i++) {
-    // Check if consecutive (simplistic: just count distinct weeks in order)
+    const diffDays = Math.round((getMondayMs(weeks[i - 1]) - getMondayMs(weeks[i])) / 86400000)
+    if (diffDays !== 7) break
     streak++
   }
 
