@@ -13,6 +13,7 @@ interface Props {
 
 export default function FlashCard({ card, index, total, onKnow, onDontKnow, flipKey }: Props) {
   const [flipped, setFlipped] = useState(false)
+  const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
   const handleFlip = () => setFlipped((f) => !f)
 
@@ -21,19 +22,22 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, flip
   }, [flipKey])
 
   const handleKnow = () => {
-    setFlipped(false)
-    setTimeout(onKnow, 100)
+    setFlash('correct')
+    setTimeout(() => { setFlash(null); setFlipped(false) }, 320)
+    setTimeout(onKnow, 320)
   }
 
   const handleDontKnow = () => {
-    setFlipped(false)
-    setTimeout(onDontKnow, 100)
+    setFlash('incorrect')
+    setTimeout(() => { setFlash(null); setFlipped(false) }, 320)
+    setTimeout(onDontKnow, 320)
   }
 
   return (
     <div className={styles.wrap}>
       {/* Card */}
       <div className={styles.cardArea} onClick={handleFlip}>
+        {flash && <div className={[styles.flashOverlay, flash === 'correct' ? styles.flashCorrect : styles.flashIncorrect].join(' ')} />}
         <div className={[styles.scene, flipped ? styles.flipped : ''].join(' ')}>
           <div className={[styles.face, styles.front].join(' ')}>
             <div className={styles.sideLabel}>Term</div>

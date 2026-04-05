@@ -125,6 +125,22 @@
   opacity: 0.5;
 }
 
+/* Result flash overlay */
+.flashOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  pointer-events: none;
+  z-index: 10;
+  animation: flashFade 0.32s ease-out forwards;
+}
+.flashCorrect { background: rgba(132, 204, 22, 0.25); border: 2px solid var(--accent-border); }
+.flashIncorrect { background: rgba(239, 68, 68, 0.18); border: 2px solid var(--red-border); }
+@keyframes flashFade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Action buttons */
 .actions {
   display: flex;

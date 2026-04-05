@@ -18,12 +18,17 @@ function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
     pts.push(`${12 + r * Math.cos(angle)},${12 + r * Math.sin(angle)}`)
   }
   const d = `M${pts.join('L')}Z`
+  const { description } = MASTERY_INFO[level]
   return (
-    <div className={styles.starWrap} title={`${label} (level ${level})`}>
+    <div className={styles.starWrap}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill={color}>
         <path d={d} />
       </svg>
       <span className={styles.starLevel} style={{ color }}>{level}</span>
+      <div className={styles.starTooltip}>
+        <strong>{label}</strong> · Level {level}<br />
+        <span>{description}</span>
+      </div>
     </div>
   )
 }

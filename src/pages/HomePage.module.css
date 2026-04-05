@@ -39,6 +39,9 @@
 .setCount{font-size:12px;color:var(--text-tertiary)}
 .studyBtn{font-size:12px;font-weight:500;color:var(--accent-text);background:var(--accent-subtle);border:1px solid var(--accent-border);border-radius:var(--r-sm);padding:3px 10px;transition:background var(--t-fast)}
 .studyBtn:hover{background:var(--accent-border)}
+.dataErrorBanner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--red-subtle);border:1px solid var(--red-border);border-radius:var(--r-md);font-size:12.5px;color:var(--red-text)}
+.dataErrorBanner button{background:none;border:none;color:var(--red-text);cursor:pointer;font-size:14px;opacity:0.7;flex-shrink:0}
+.dataErrorBanner button:hover{opacity:1}
 .masteryOverlay{
   position:absolute;inset:0;border-radius:var(--r-lg);
   background:rgba(15,40,15,0.82);

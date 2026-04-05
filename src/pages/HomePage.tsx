@@ -18,10 +18,17 @@ export default function HomePage() {
   const { cardSRS, fetchAllSRS } = useSRSStore()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const [dataError, setDataError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchSets(); fetchProgress(); fetchAllSRS()
-    // Re-fetch SRS when the window regains focus (e.g. returning from a study session)
+    const load = async () => {
+      try {
+        await Promise.all([fetchSets(), fetchProgress(), fetchAllSRS()])
+      } catch (err: any) {
+        setDataError(`Load error [${err?.code ?? 'unknown'}]: ${err?.message ?? 'Failed to load data'}`)
+      }
+    }
+    load()
     const onFocus = () => fetchAllSRS()
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
@@ -40,8 +47,26 @@ export default function HomePage() {
   const rest = sets.filter((s) => !s.pinned)
   const totalCards = sets.reduce((a, s) => a + (s.cardCount ?? 0), 0)
 
+  // Bootstrap validation: if sets have cards but SRS is empty, retry once then warn
+  useEffect(() => {
+    if (isLoading) return
+    if (totalCards > 0 && Object.keys(cardSRS).length === 0) {
+      fetchAllSRS().then(() => {
+        if (Object.keys(useSRSStore.getState().cardSRS).length === 0) {
+          setDataError('Mastery data failed to load [SRS_EMPTY] — send this to support.')
+        }
+      })
+    }
+  }, [isLoading])
+
   return (
     <div className={styles.page}>
+      {dataError && (
+        <div className={styles.dataErrorBanner}>
+          <span>{dataError}</span>
+          <button onClick={() => setDataError(null)}>✕</button>
+        </div>
+      )}
       <div className={styles.header}>
         <div>
           <h1 className={styles.greeting}>{greeting}, {firstName}</h1>
@@ -110,12 +135,16 @@ function SetCard({ set, folders, cardSRS, onPin, onNavigate }: {
       <div className={styles.setTitle}>{set.title}</div>
       {set.description && <div className={styles.setDesc}>{set.description}</div>}
       {folder && <div className={styles.folderBadge}><span className={styles.folderDot} style={{ background: folder.color }} />{folder.name}</div>}
-      <div className={styles.masteryOverlay}>
+      <div className={styles.masteryOverlay} style={{
+        background: mastery.pct === 0
+          ? 'rgba(15,15,15,0.78)'
+          : `rgba(${Math.round(15 - mastery.pct * 0.1)}, ${Math.round(25 + mastery.pct * 0.18)}, ${Math.round(10 - mastery.pct * 0.05)}, ${0.72 + mastery.pct * 0.002})`
+      }}>
         <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
         <div className={styles.masteryOverlayLabel}>{mastery.pct === 0 ? 'Not started' : `of ${cardCount} cards studied`}</div>
         {mastery.pct > 0 && mastery.pct < 100 && (
           <div className={styles.masteryOverlayBar}>
-            <div className={styles.masteryOverlayFill} style={{ width: `${mastery.pct}%` }} />
+            <div className={styles.masteryOverlayFill} style={{ width: `${mastery.pct}%`, background: `hsl(${80 + mastery.pct * 0.2}, ${60 + mastery.pct * 0.3}%, 50%)` }} />
           </div>
         )}
         {mastery.pct === 100 && <div className={styles.masteryOverlayComplete}>All cards covered ✓</div>}
