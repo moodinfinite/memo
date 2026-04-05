@@ -19,6 +19,7 @@ export interface CardSRS {
 
 interface SRSState {
   cardSRS: Record<string, CardSRS>   // keyed by card_id
+  lastLocalUpdate: Record<string, number>  // setId -> timestamp of last local write
   isLoading: boolean
   fetchSRS: (setId: string) => Promise<void>
   fetchAllSRS: () => Promise<void>
@@ -71,9 +72,15 @@ function isToday(dateStr: string): boolean {
 
 export const useSRSStore = create<SRSState>((set, get) => ({
   cardSRS: {},
+  lastLocalUpdate: {},
   isLoading: false,
 
   fetchSRS: async (setId) => {
+    // Skip fetch if we wrote local updates in the last 5 seconds — avoids
+    // overwriting optimistic state with stale DB data (race condition on navigation)
+    const lastUpdate = get().lastLocalUpdate[setId] ?? 0
+    if (Date.now() - lastUpdate < 5000) return
+
     set({ isLoading: true })
     const { data, error } = await supabase
       .from('card_srs')
@@ -120,6 +127,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
 
     set((state) => ({
       cardSRS: { ...state.cardSRS, [cardId]: { ...upsertData, easiness: next.easiness, interval: next.interval, repetitions: next.repetitions } },
+      lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
     }))
   },
 
