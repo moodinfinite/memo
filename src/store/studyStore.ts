@@ -172,12 +172,14 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const { sessionCards, currentIndex, sentenceInput, sentenceFeedback, sentenceImproved, sentenceScore, sentenceEntries, mode, setId } = get()
     const card = sessionCards[currentIndex]
     if (!card) return
+    const score = sentenceScore ?? 'good'
+    useSRSStore.getState().updateSRS(card.id, setId, score !== 'needs_work')
     const newEntries: SentenceEntry[] = [...sentenceEntries, {
       term: card.term, definition: card.definition,
       sentence: sentenceInput.trim(),
       feedback: sentenceFeedback,
       improved: sentenceImproved,
-      score: sentenceScore ?? 'good',
+      score,
     }]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
@@ -250,10 +252,16 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     if (!user) { set({ draftLoading: false }); return null }
     const { data } = await supabase.from('session_drafts').select('*')
       .eq('user_id', user.id).eq('set_id', setId).maybeSingle()
-    if (data && Date.now() - new Date(data.updated_at).getTime() > 7 * 24 * 60 * 60 * 1000) {
-      await get().clearProgress(setId)
-      set({ draftLoading: false, hasDraft: false })
-      return null
+    if (data) {
+      // Clear if expired (7 days old)
+      const expired = Date.now() - new Date(data.updated_at).getTime() > 7 * 24 * 60 * 60 * 1000
+      // Clear if session was already fully completed
+      const completed = data.current_index >= data.card_order.length
+      if (expired || completed) {
+        get().clearProgress(setId)
+        set({ draftLoading: false, hasDraft: false })
+        return null
+      }
     }
     set({ draftLoading: false, hasDraft: !!data })
     return (data as SessionDraft) ?? null

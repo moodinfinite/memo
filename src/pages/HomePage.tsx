@@ -50,7 +50,7 @@ export default function HomePage() {
   // Bootstrap validation: if sets have cards but SRS is empty, retry once then warn
   useEffect(() => {
     if (isLoading) return
-    if (totalCards > 0 && Object.keys(cardSRS).length === 0) {
+    if (totalCards > 0 && totalCardsStudied > 0 && Object.keys(cardSRS).length === 0) {
       fetchAllSRS().then(() => {
         if (Object.keys(useSRSStore.getState().cardSRS).length === 0) {
           setDataError('Mastery data failed to load [SRS_EMPTY] — send this to support.')

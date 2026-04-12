@@ -49,7 +49,7 @@ function calcNextSRS(current: CardSRS | null, known: boolean): Omit<CardSRS, 'ca
   else if (newReps === 2) newInterval = 6
   else newInterval = Math.round(interval * ef)
 
-  const newEF = Math.max(1.3, ef + 0.1 - (5 - 4) * (0.08 + (5 - 4) * 0.02))
+  const newEF = Math.max(1.3, ef + 0.1)
 
   return {
     easiness: newEF,
