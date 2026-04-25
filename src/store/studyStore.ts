@@ -230,17 +230,16 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       try {
         const user = useAuthStore.getState().user
         if (!user) return
-        await new Promise<void>((resolve) => {
-          const timer = setTimeout(() => resolve(), 8000)
-          supabase.from('session_drafts').upsert({
-            user_id: user.id, set_id: setId, mode,
-            card_order: sessionCards.map(c => c.id),
-            current_index: currentIndex,
-            known_ids: known, unknown_ids: unknown,
-            do_shuffle: doShuffle, timer_dur_min: timerDurMin,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id,set_id' }).then(() => { clearTimeout(timer); resolve() })
-        })
+        const upsert = supabase.from('session_drafts').upsert({
+          user_id: user.id, set_id: setId, mode,
+          card_order: sessionCards.map(c => c.id),
+          current_index: currentIndex,
+          known_ids: known, unknown_ids: unknown,
+          do_shuffle: doShuffle, timer_dur_min: timerDurMin,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,set_id' })
+        const timeout = new Promise<void>(r => setTimeout(r, 8000))
+        await Promise.race([upsert, timeout])
       } catch (err) {
         // Draft save failure is non-critical — silently ignore
         console.warn('Draft save failed (non-critical):', err)

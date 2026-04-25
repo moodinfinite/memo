@@ -87,9 +87,15 @@ export const useSetsStore = create<SetsState>((set, get) => ({
         const safe = sanitizeCard(c)
         return { set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
       })
-      for (let i = 0; i < rows.length; i += 15) {
-        const { error } = await supabase.from('cards').insert(rows.slice(i, i + 15))
-        if (error) throw error
+      try {
+        for (let i = 0; i < rows.length; i += 15) {
+          const { error } = await supabase.from('cards').insert(rows.slice(i, i + 15))
+          if (error) throw error
+        }
+      } catch (err) {
+        // Re-fetch so UI reflects actual DB state (partial write may have occurred)
+        await get().fetchSet(id)
+        throw err
       }
     }
     await get().fetchSet(id)

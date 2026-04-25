@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { StudySession } from '@/lib/database.types'
+import { useAuthStore } from './authStore'
 
 interface ProgressState {
   sessions: StudySession[]
@@ -64,7 +65,7 @@ export const useProgressStore = create<ProgressState>((set) => ({
 
   fetchProgress: async () => {
     set({ isLoading: true })
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) { set({ isLoading: false }); return }
 
     const { data: sessions } = await supabase
