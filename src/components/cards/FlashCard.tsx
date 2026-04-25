@@ -15,22 +15,26 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, flip
   const [flipped, setFlipped] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
-  const handleFlip = () => setFlipped((f) => !f)
+  const answering = flash !== null
+
+  const handleFlip = () => { if (!answering) setFlipped((f) => !f) }
 
   useEffect(() => {
     if ((flipKey ?? 0) > 0) setFlipped((f) => !f)
   }, [flipKey])
 
   const handleKnow = () => {
+    if (answering) return
     setFlash('correct')
-    setTimeout(() => { setFlash(null); setFlipped(false) }, 320)
-    setTimeout(onKnow, 320)
+    // Component remounts (key={currentIndex} in StudyPage) after onKnow triggers
+    // currentIndex change — no need to manually reset state
+    setTimeout(onKnow, 650)
   }
 
   const handleDontKnow = () => {
+    if (answering) return
     setFlash('incorrect')
-    setTimeout(() => { setFlash(null); setFlipped(false) }, 320)
-    setTimeout(onDontKnow, 320)
+    setTimeout(onDontKnow, 650)
   }
 
   return (
@@ -54,13 +58,13 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, flip
 
       {/* Actions */}
       <div className={styles.actions}>
-        <button className={styles.dontKnow} onClick={handleDontKnow}>
+        <button className={`${styles.dontKnow}${answering ? ' ' + styles.answeringBtn : ''}`} onClick={handleDontKnow} disabled={answering}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 2l12 12M14 2L2 14" />
           </svg>
           Still learning
         </button>
-        <button className={styles.know} onClick={handleKnow}>
+        <button className={`${styles.know}${answering ? ' ' + styles.answeringBtn : ''}`} onClick={handleKnow} disabled={answering}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 8l4 4 8-8" />
           </svg>

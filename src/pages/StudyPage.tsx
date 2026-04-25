@@ -27,7 +27,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -88,7 +88,7 @@ export default function StudyPage() {
   useEffect(() => { setFlipKey(0) }, [currentIndex])
   useEffect(() => { shownMilestones.current = new Set() }, [sessionCards.length])
 
-  // MC streak burst — fires whenever mcStreak hits a multiple of 5
+  // Streak burst — fires whenever mcStreak or flashStreak hits a multiple of 5
   const BURST_MSGS = ['On a roll!', 'Unstoppable!', 'On fire!', 'Legendary!']
   useEffect(() => {
     if (mcStreak === 0 || mcStreak % 5 !== 0) return
@@ -96,6 +96,12 @@ export default function StudyPage() {
     setBurstMsg(BURST_MSGS[Math.min(idx, BURST_MSGS.length - 1)])
     setTimeout(() => setBurstMsg(null), 2000)
   }, [mcStreak])
+  useEffect(() => {
+    if (flashStreak === 0 || flashStreak % 5 !== 0) return
+    const idx = Math.floor(flashStreak / 5) - 1
+    setBurstMsg(BURST_MSGS[Math.min(idx, BURST_MSGS.length - 1)])
+    setTimeout(() => setBurstMsg(null), 2000)
+  }, [flashStreak])
 
   // Milestone toasts
   useEffect(() => {
@@ -328,7 +334,7 @@ export default function StudyPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} />}
+      {mode === 'flashcard' && <FlashCard key={currentIndex} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {mode === 'sentence' && <SentenceCard />}
@@ -351,7 +357,7 @@ export default function StudyPage() {
         </div>
       )}
       {milestoneMsg && <div className={styles.milestoneToast}>{milestoneMsg}</div>}
-      {burstMsg && <StreakBurst msg={burstMsg} streak={mcStreak} />}
+      {burstMsg && <StreakBurst msg={burstMsg} streak={mode === 'flashcard' ? flashStreak : mcStreak} />}
     </div>
   )
 }
