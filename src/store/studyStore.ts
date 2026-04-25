@@ -5,6 +5,7 @@ import { generateMCQuestions, type MCQuestion } from '@/lib/multipleChoice'
 import { isFuzzyMatch } from '@/lib/fuzzy'
 import { useSRSStore } from './srsStore'
 import { useProgressStore } from './progressStore'
+import { useAuthStore } from './authStore'
 
 interface StudyState {
   mode: StudyMode; setId: string
@@ -175,6 +176,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const score = sentenceScore ?? 'good'
     useSRSStore.getState().updateSRS(card.id, setId, score !== 'needs_work')
     const newEntries: SentenceEntry[] = [...sentenceEntries, {
+      card_id: card.id,
       term: card.term, definition: card.definition,
       sentence: sentenceInput.trim(),
       feedback: sentenceFeedback,
@@ -188,9 +190,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null,
     })
     if (isComplete) {
-      const goodCount = newEntries.filter(e => e.score !== 'needs_work').length
-      const badCount = newEntries.length - goodCount
-      get()._persist(Array(goodCount).fill(''), Array(badCount).fill(''), newEntries.length, mode, setId, true)
+      const goodIds = newEntries.filter(e => e.score !== 'needs_work').map(e => e.card_id)
+      const badIds  = newEntries.filter(e => e.score === 'needs_work').map(e => e.card_id)
+      get()._persist(goodIds, badIds, newEntries.length, mode, setId, true)
     }
   },
 
@@ -226,7 +228,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin } = get()
       if (!setId || setId === '__master__' || mode === 'sentence' || sessionCards.length === 0) return
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const user = useAuthStore.getState().user
         if (!user) return
         await new Promise<void>((resolve) => {
           const timer = setTimeout(() => resolve(), 8000)
@@ -248,7 +250,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   loadProgress: async (setId) => {
     set({ draftLoading: true, hasDraft: false })
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) { set({ draftLoading: false }); return null }
     const { data } = await supabase.from('session_drafts').select('*')
       .eq('user_id', user.id).eq('set_id', setId).maybeSingle()
@@ -268,7 +270,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   clearProgress: async (setId) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) return
     await supabase.from('session_drafts').delete()
       .eq('user_id', user.id).eq('set_id', setId)
@@ -286,15 +288,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ isPersisting: false, persistError: 'Save timed out — session may not have been recorded.' })
     }, 12000)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = useAuthStore.getState().user
       if (!user) { clearTimeout(deadline); set({ isPersisting: false }); return }
-      const { error } = await new Promise<{ error: { message: string } | null }>((resolve) => {
-        supabase.from('study_sessions').insert({
-          user_id: user.id, set_id: setId, mode, total_cards: total,
-          known_count: known.length, unknown_count: unknown.length,
-          score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
-          completed_at: new Date().toISOString(),
-        }).then((res) => resolve(res as any))
+      const { error } = await supabase.from('study_sessions').insert({
+        user_id: user.id, set_id: setId, mode, total_cards: total,
+        known_count: known.length, unknown_count: unknown.length,
+        score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
+        completed_at: new Date().toISOString(),
       })
       clearTimeout(deadline)
       if (expired) return  // deadline already fired; don't overwrite the timeout error

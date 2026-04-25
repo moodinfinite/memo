@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { FlashcardSet, Card } from '@/lib/database.types'
 import { sanitizeText, sanitizeCard, escapeIlike } from '@/lib/sanitize'
+import { useAuthStore } from './authStore'
 
 interface SetsState {
   sets: FlashcardSet[]
@@ -49,7 +50,7 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   },
 
   createSet: async (title, description, rawCards, folderId = null) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) throw new Error('Not authenticated')
     const safeTitle = sanitizeText(title, 200)
     const safeDesc = sanitizeText(description, 1000)
@@ -75,7 +76,7 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   },
 
   updateSet: async (id, title, description, rawCards, folderId = null) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) throw new Error('Not authenticated')
     const safeTitle = sanitizeText(title, 200)
     const safeDesc = sanitizeText(description, 1000)
@@ -119,7 +120,7 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   },
 
   importCards: async (setId, rawCards) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) throw new Error('Not authenticated')
     const existing = get().currentSet?.cards ?? []
     await supabase.from('cards').insert(

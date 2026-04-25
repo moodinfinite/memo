@@ -2,6 +2,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 export type StudyMode = 'flashcard' | 'multiple_choice' | 'typed' | 'sentence'
 
 export interface SentenceEntry {
+  card_id: string
   term: string; definition: string; sentence: string
   feedback: string; improved: string | null
   score: 'great' | 'good' | 'needs_work'

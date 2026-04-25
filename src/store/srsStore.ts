@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from './authStore'
 
 /**
  * Simplified SM-2 spaced repetition algorithm.
@@ -112,7 +113,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
     const current = get().cardSRS[cardId] ?? null
     const next = calcNextSRS(current, known)
     const now = new Date().toISOString()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = useAuthStore.getState().user
     if (!user) return
 
     const upsertData = {
