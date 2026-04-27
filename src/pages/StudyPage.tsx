@@ -27,7 +27,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -44,6 +44,7 @@ export default function StudyPage() {
   const [burstMsg, setBurstMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const shownMilestones = useRef(new Set<number>())
+  const lastKeyActionTime = useRef<number>(0)
 
   useEffect(() => {
     if (id) { fetchSet(id); fetchSRS(id) }
@@ -61,8 +62,15 @@ export default function StudyPage() {
       if (selecting || isComplete) return
       if (mode === 'flashcard') {
         if (e.code === 'Space') { e.preventDefault(); setFlipKey((k) => k + 1) }
-        if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
-        if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
+        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+          e.preventDefault()
+          // Throttle to match the flash window (900ms) so rapid presses can't skip cards
+          const now = Date.now()
+          if (now - lastKeyActionTime.current < 950) return
+          lastKeyActionTime.current = now
+          if (e.code === 'ArrowLeft') markUnknown()
+          else markKnown()
+        }
       }
       if (mode === 'multiple_choice') {
         if (e.code === 'Digit1') { e.preventDefault(); selectMCOption(0) }
@@ -334,7 +342,7 @@ export default function StudyPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard key={currentIndex} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} />}
+      {mode === 'flashcard' && <FlashCard key={currentIndex} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onUndo={undoLast} canUndo={!!lastAction} flipKey={flipKey} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {mode === 'sentence' && <SentenceCard />}

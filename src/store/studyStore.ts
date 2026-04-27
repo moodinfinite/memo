@@ -14,6 +14,7 @@ interface StudyState {
   doShuffle: boolean; timerOn: boolean; timerDurMin: number; timerSecsLeft: number
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number; flashStreak: number
+  lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number } | null
   persistError: string | null
   hasDraft: boolean; draftLoading: boolean
   isPersisting: boolean; persistSaved: boolean
@@ -30,7 +31,7 @@ interface StudyState {
   saveProgress: () => void
   loadProgress: (setId: string) => Promise<SessionDraft | null>
   clearProgress: (setId: string) => Promise<void>
-  markKnown: () => void; markUnknown: () => void
+  markKnown: () => void; markUnknown: () => void; undoLast: () => void
   submitTyped: () => void; setTypedAnswer: (val: string) => void
   selectMCOption: (idx: number) => void
   reshuffleRemaining: () => void
@@ -53,6 +54,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   currentIndex: 0, known: [], unknown: [], isComplete: false,
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
+  lastAction: null,
   persistError: null,
   hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
   sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null,
@@ -70,34 +72,49 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       currentIndex: 0, known: [], unknown: [], isComplete: false,
       doShuffle: shuffle, timerOn: timerDurMin > 0,
       timerDurMin, timerSecsLeft: timerDurMin * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
+      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, lastAction: null,
     })
   },
 
   markKnown: () => {
-    const { sessionCards, currentIndex, known, mode, setId, flashStreak } = get()
+    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak } = get()
     const card = sessionCards[currentIndex]
     if (!card) return
+    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak }
     const newKnown = [...known, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, setId, true)
-    set({ known: newKnown, currentIndex: nextIndex, isComplete, flashStreak: mode === 'flashcard' ? flashStreak + 1 : flashStreak })
+    set({ known: newKnown, currentIndex: nextIndex, isComplete, flashStreak: mode === 'flashcard' ? flashStreak + 1 : flashStreak, lastAction: snapshot })
     if (isComplete) { get()._persist(newKnown, get().unknown, sessionCards.length, mode, setId, true) }
     else { get().saveProgress() }
   },
 
   markUnknown: () => {
-    const { sessionCards, currentIndex, unknown, mode, setId } = get()
+    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak } = get()
     const card = sessionCards[currentIndex]
     if (!card) return
+    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak }
     const newUnknown = [...unknown, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
     useSRSStore.getState().updateSRS(card.id, setId, false)
-    set({ unknown: newUnknown, currentIndex: nextIndex, isComplete, flashStreak: mode === 'flashcard' ? 0 : get().flashStreak })
+    set({ unknown: newUnknown, currentIndex: nextIndex, isComplete, flashStreak: mode === 'flashcard' ? 0 : flashStreak, lastAction: snapshot })
     if (isComplete) { get()._persist(get().known, newUnknown, sessionCards.length, mode, setId, true) }
     else { get().saveProgress() }
+  },
+
+  undoLast: () => {
+    const { lastAction } = get()
+    if (!lastAction) return
+    set({
+      currentIndex: lastAction.prevIndex,
+      known: lastAction.prevKnown,
+      unknown: lastAction.prevUnknown,
+      flashStreak: lastAction.prevFlashStreak,
+      isComplete: false,
+      lastAction: null,
+    })
   },
 
   submitTyped: () => {
@@ -196,7 +213,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] }),
+  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, lastAction: null, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] }),
 
   persistSession: async () => {
     const { known, unknown, sessionCards, mode, setId } = get()
@@ -216,7 +233,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       isComplete: false, doShuffle: draft.do_shuffle,
       timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,
       timerSecsLeft: draft.timer_dur_min * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
+      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, lastAction: null,
       persistError: null,
     })
   },

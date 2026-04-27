@@ -135,7 +135,7 @@
   opacity: 0.5;
 }
 
-/* Result flash overlay */
+/* Result flash overlay — 0.9s total; component unmounts at that point */
 .flashOverlay {
   position: absolute;
   inset: 0;
@@ -214,6 +214,30 @@
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Undo last button */
+.undoBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-tertiary);
+  background: none;
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.undoBtn:hover:not(:disabled) {
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+  background: var(--bg-overlay);
 }
 
 /* ── Mobile ── */

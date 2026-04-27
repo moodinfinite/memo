@@ -8,10 +8,12 @@ interface Props {
   total: number
   onKnow: () => void
   onDontKnow: () => void
+  onUndo?: () => void
+  canUndo?: boolean
   flipKey?: number
 }
 
-export default function FlashCard({ card, index, total, onKnow, onDontKnow, flipKey }: Props) {
+export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUndo, canUndo, flipKey }: Props) {
   const [flipped, setFlipped] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
@@ -26,15 +28,13 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, flip
   const handleKnow = () => {
     if (answering) return
     setFlash('correct')
-    // Component remounts (key={currentIndex} in StudyPage) after onKnow triggers
-    // currentIndex change — no need to manually reset state
-    setTimeout(onKnow, 650)
+    setTimeout(onKnow, 900)
   }
 
   const handleDontKnow = () => {
     if (answering) return
     setFlash('incorrect')
-    setTimeout(onDontKnow, 650)
+    setTimeout(onDontKnow, 900)
   }
 
   return (
@@ -71,6 +71,21 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, flip
           Got it
         </button>
       </div>
+
+      {/* Undo last card */}
+      {canUndo && (
+        <button
+          className={`${styles.undoBtn}${answering ? ' ' + styles.answeringBtn : ''}`}
+          onClick={!answering ? onUndo : undefined}
+          disabled={answering}
+          title="Undo last answer"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2 5h6a4 4 0 0 1 0 8H5M2 5l3-3M2 5l3 3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Undo last
+        </button>
+      )}
     </div>
   )
 }
