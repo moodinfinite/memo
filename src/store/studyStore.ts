@@ -14,6 +14,7 @@ interface StudyState {
   doShuffle: boolean; timerOn: boolean; timerDurMin: number; timerSecsLeft: number
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number; flashStreak: number
+  isAdvancing: boolean
   lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number } | null
   persistError: string | null
   hasDraft: boolean; draftLoading: boolean
@@ -54,7 +55,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   currentIndex: 0, known: [], unknown: [], isComplete: false,
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
-  lastAction: null,
+  isAdvancing: false, lastAction: null,
   persistError: null,
   hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
   sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null,
@@ -72,14 +73,18 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       currentIndex: 0, known: [], unknown: [], isComplete: false,
       doShuffle: shuffle, timerOn: timerDurMin > 0,
       timerDurMin, timerSecsLeft: timerDurMin * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, lastAction: null,
+      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
+      isAdvancing: false, lastAction: null,
     })
   },
 
   markKnown: () => {
-    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak } = get()
+    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak, isAdvancing } = get()
+    if (isAdvancing) return   // block rapid advances from keyboard or double-tap
     const card = sessionCards[currentIndex]
     if (!card) return
+    set({ isAdvancing: true })
+    setTimeout(() => set({ isAdvancing: false }), 950)
     const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak }
     const newKnown = [...known, card.id]
     const nextIndex = currentIndex + 1
@@ -91,9 +96,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   markUnknown: () => {
-    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak } = get()
+    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak, isAdvancing } = get()
+    if (isAdvancing) return   // block rapid advances from keyboard or double-tap
     const card = sessionCards[currentIndex]
     if (!card) return
+    set({ isAdvancing: true })
+    setTimeout(() => set({ isAdvancing: false }), 950)
     const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak }
     const newUnknown = [...unknown, card.id]
     const nextIndex = currentIndex + 1
@@ -213,7 +221,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, lastAction: null, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] }),
+  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] }),
 
   persistSession: async () => {
     const { known, unknown, sessionCards, mode, setId } = get()
@@ -233,7 +241,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       isComplete: false, doShuffle: draft.do_shuffle,
       timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,
       timerSecsLeft: draft.timer_dur_min * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, lastAction: null,
+      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
+      isAdvancing: false, lastAction: null,
       persistError: null,
     })
   },

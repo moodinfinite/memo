@@ -44,7 +44,6 @@ export default function StudyPage() {
   const [burstMsg, setBurstMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const shownMilestones = useRef(new Set<number>())
-  const lastKeyActionTime = useRef<number>(0)
 
   useEffect(() => {
     if (id) { fetchSet(id); fetchSRS(id) }
@@ -62,15 +61,10 @@ export default function StudyPage() {
       if (selecting || isComplete) return
       if (mode === 'flashcard') {
         if (e.code === 'Space') { e.preventDefault(); setFlipKey((k) => k + 1) }
-        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
-          e.preventDefault()
-          // Throttle to match the flash window (900ms) so rapid presses can't skip cards
-          const now = Date.now()
-          if (now - lastKeyActionTime.current < 950) return
-          lastKeyActionTime.current = now
-          if (e.code === 'ArrowLeft') markUnknown()
-          else markKnown()
-        }
+        // markKnown/markUnknown have an isAdvancing guard in the store,
+        // so rapid presses are automatically blocked at the source
+        if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
+        if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
       }
       if (mode === 'multiple_choice') {
         if (e.code === 'Digit1') { e.preventDefault(); selectMCOption(0) }
