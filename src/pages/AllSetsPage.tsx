@@ -87,13 +87,36 @@ export default function AllSetsPage() {
         </div>
       )}
 
-      {!isLoading && displayed.length > 0 && (
+      {!isLoading && (
         <div className={homeStyles.grid}>
+          {!query && !activeFolder && (
+            <MasterDeckCard totalCards={totalCards} setCount={sets.length} onNavigate={() => navigate('/master')} />
+          )}
           {displayed.map((s) => (
             <SetCard key={s.id} set={s} folders={folders} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function MasterDeckCard({ totalCards, setCount, onNavigate }: {
+  totalCards: number
+  setCount: number
+  onNavigate: () => void
+}) {
+  return (
+    <div className={styles.masterCard} onClick={onNavigate}>
+      <div className={styles.masterBadge}>
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1l1.2 2.8L10 4.3l-2 2 .5 2.7L6 7.6 3.5 9l.5-2.7-2-2 2.8-.5z"/></svg>
+        Master Deck
+      </div>
+      <div className={styles.masterTitle}>All Sets</div>
+      <div className={styles.masterMeta}>{totalCards} cards across {setCount} set{setCount === 1 ? '' : 's'} · auto-synced</div>
+      <div className={styles.masterFooter}>
+        <span className={styles.masterStudyBtn}>Study all →</span>
+      </div>
     </div>
   )
 }
