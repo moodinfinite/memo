@@ -105,16 +105,12 @@ export default function HomePage() {
         <div className={styles.empty}><div className={styles.emptyTitle}>No sets match "{query}"</div><div className={styles.emptySub}>Try a different search term</div></div>
       )}
 
-      {!isLoading && sets.length > 0 && !query && (
-        <MasterDeckCard totalCards={totalCards} setCount={sets.length} onNavigate={() => navigate('/master')} />
-      )}
-
       {!isLoading && pinned.length > 0 && !query && (
         <><div className={styles.sectionLabel}>Pinned</div><div className={styles.grid}>{pinned.map((s) => <SetCard key={s.id} set={s} folders={folders} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
       )}
 
       {!isLoading && rest.length > 0 && (
-        <><div className={styles.sectionLabel}>{pinned.length > 0 && !query ? 'Other sets' : query ? `Results for "${query}"` : 'Your sets'}</div><div className={styles.grid}>{rest.map((s) => <SetCard key={s.id} set={s} folders={folders} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
+        <><div className={styles.sectionLabel}>{pinned.length > 0 && !query ? 'Other sets' : query ? `Results for "${query}"` : 'Your sets'}</div><div className={styles.grid}>{!query && <MasterDeckCard totalCards={totalCards} setCount={sets.length} onNavigate={() => navigate('/master')} />}{rest.map((s) => <SetCard key={s.id} set={s} folders={folders} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
       )}
     </div>
   )
