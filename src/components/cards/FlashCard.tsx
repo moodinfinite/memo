@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
 import styles from './FlashCard.module.css'
 
@@ -17,11 +17,13 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUn
   const [flipped, setFlipped] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
+  const mounted = useRef(false)
   const answering = flash !== null
 
   const handleFlip = () => { if (!answering) setFlipped((f) => !f) }
 
   useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return }
     if ((flipKey ?? 0) > 0) setFlipped((f) => !f)
   }, [flipKey])
 
