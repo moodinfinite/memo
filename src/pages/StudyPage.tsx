@@ -38,6 +38,7 @@ export default function StudyPage() {
   const [timerDur, setTimerDur] = useState(5)
   // mastery filter: null = all cards, otherwise max level to include
   const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
+  const [isStarting, setIsStarting] = useState(false)
   const [flipKey, setFlipKey] = useState(0)
   const [shuffleActive, setShuffleActive] = useState(false)
   const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
@@ -143,37 +144,43 @@ export default function StudyPage() {
     (currentSet?.cards ?? []).filter(c => filterCard(c.id, filter)).length
 
   const handleStart = async () => {
-    if (!currentSet?.cards?.length || !id) return
+    if (!currentSet?.cards?.length || !id || isStarting) return
     if (cachedDraft && cachedDraft.mode === selectedMode) {
       const valid = cachedDraft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
       if (valid.length > 0) { setResumePrompt(cachedDraft); return }
       clearProgress(id); setCachedDraft(null)
     }
+    setIsStarting(true)
     // Force-fetch latest SRS data so repetitions/intervals are current before session starts
     await fetchSRS(id, { force: true })
     const cards = filteredCards(currentSet.cards)
-    if (!cards.length) return
+    if (!cards.length) { setIsStarting(false); return }
     startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
+    setIsStarting(false)
   }
 
   const handleResume = async (draft: SessionDraft) => {
-    if (!currentSet?.cards || !id) return
+    if (!currentSet?.cards || !id || isStarting) return
+    setIsStarting(true)
     await fetchSRS(id, { force: true })
     resumeSession(draft, currentSet.cards)
     setResumePrompt(null); setCachedDraft(null)
     setSelecting(false)
+    setIsStarting(false)
   }
 
   const handleStartFresh = async () => {
-    if (!id) return
+    if (!id || isStarting) return
+    setIsStarting(true)
     await clearProgress(id)
     await fetchSRS(id, { force: true })
     setResumePrompt(null); setCachedDraft(null)
     const cards = filteredCards(currentSet!.cards!)
-    if (!cards.length) return
+    if (!cards.length) { setIsStarting(false); return }
     startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
+    setIsStarting(false)
   }
 
   const handleEnd = () => {
@@ -204,8 +211,8 @@ export default function StudyPage() {
             · {MODES.find(m => m.id === resumePrompt.mode)?.label}
           </div>
           <div className={styles.resumeActions}>
-            <button className={styles.startBtn} onClick={() => handleResume(resumePrompt)}>Resume session</button>
-            <button className={styles.changeModeBtn} onClick={handleStartFresh}>Start fresh</button>
+            <button className={styles.startBtn} onClick={() => handleResume(resumePrompt)} disabled={isStarting}>{isStarting ? 'Loading…' : 'Resume session'}</button>
+            <button className={styles.changeModeBtn} onClick={handleStartFresh} disabled={isStarting}>{isStarting ? 'Loading…' : 'Start fresh'}</button>
           </div>
         </div>
       ) : (
@@ -250,7 +257,7 @@ export default function StudyPage() {
             })}
           </div>
         </div>
-        <button className={styles.startBtn} onClick={handleStart}>Start studying</button>
+        <button className={styles.startBtn} onClick={handleStart} disabled={isStarting}>{isStarting ? 'Loading…' : 'Start studying'}</button>
       </div>
       )}
     </div>
