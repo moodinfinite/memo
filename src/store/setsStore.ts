@@ -64,11 +64,12 @@ export const useSetsStore = create<SetsState>((set, get) => ({
         const safe = sanitizeCard(c)
         return { set_id: setData.id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
       })
-      // Insert in chunks of 15 to avoid overwhelming the connection on large sets
-      for (let i = 0; i < rows.length; i += 15) {
-        const { error } = await supabase.from('cards').insert(rows.slice(i, i + 15))
-        if (error) throw error
-      }
+      // Insert all chunks in parallel to avoid sequential latency on large sets
+      const chunks: typeof rows[] = []
+      for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
+      const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
+      const chunkErr = results.find(r => r.error)?.error
+      if (chunkErr) throw chunkErr
     }
     const newSet = { ...setData, cardCount: rawCards.length }
     set((state) => ({ sets: [newSet, ...state.sets] }))
@@ -88,10 +89,11 @@ export const useSetsStore = create<SetsState>((set, get) => ({
         return { set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
       })
       try {
-        for (let i = 0; i < rows.length; i += 15) {
-          const { error } = await supabase.from('cards').insert(rows.slice(i, i + 15))
-          if (error) throw error
-        }
+        const chunks: typeof rows[] = []
+        for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
+        const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
+        const chunkErr = results.find(r => r.error)?.error
+        if (chunkErr) throw chunkErr
       } catch (err) {
         // Re-fetch so UI reflects actual DB state (partial write may have occurred)
         await get().fetchSet(id)
