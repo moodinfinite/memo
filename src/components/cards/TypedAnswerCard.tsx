@@ -28,8 +28,8 @@ export default function TypedAnswerCard() {
   return (
     <div className={styles.typedWrap}>
       <div className={styles.typedQuestion}>
-        <div className={styles.typedLabel}>Define this term</div>
-        <div className={styles.typedTerm}>{card.term}</div>
+        <div className={styles.typedLabel}>What's the term?</div>
+        <div className={styles.typedTerm}>{card.definition}</div>
       </div>
 
       <div className={[styles.typedInputWrap, typedResult !== 'idle' ? styles[`typed-${typedResult}`] : ''].join(' ')}>
@@ -63,7 +63,7 @@ export default function TypedAnswerCard() {
       {typedResult === 'incorrect' && (
         <div className={styles.typedCorrectAnswer}>
           <div className={styles.typedCorrectLabel}>Correct answer</div>
-          <div className={styles.typedCorrectText}>{card.definition}</div>
+          <div className={styles.typedCorrectText}>{card.term}</div>
         </div>
       )}
 

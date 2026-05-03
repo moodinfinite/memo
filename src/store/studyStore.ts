@@ -130,7 +130,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   submitTyped: () => {
     const { sessionCards, currentIndex, typedAnswer } = get()
-    const correct = isFuzzyMatch(typedAnswer, sessionCards[currentIndex].definition)
+    const correct = isFuzzyMatch(typedAnswer, sessionCards[currentIndex].term)
     set({ typedResult: correct ? 'correct' : 'incorrect' })
     setTimeout(() => { if (correct) get().markKnown(); else get().markUnknown(); set({ typedAnswer: '', typedResult: 'idle' }) }, 1200)
   },
