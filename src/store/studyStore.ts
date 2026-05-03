@@ -15,7 +15,7 @@ interface StudyState {
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number; flashStreak: number
   isAdvancing: boolean
-  lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number } | null
+  lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number; cardId: string; prevCardSRS: import('./srsStore').CardSRS | null } | null
   persistError: string | null
   hasDraft: boolean; draftLoading: boolean
   isPersisting: boolean; persistSaved: boolean
@@ -85,7 +85,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     if (!card) return
     set({ isAdvancing: true })
     setTimeout(() => set({ isAdvancing: false }), 950)
-    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak }
+    const prevCardSRS = useSRSStore.getState().cardSRS[card.id] ?? null
+    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak, cardId: card.id, prevCardSRS }
     const newKnown = [...known, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
@@ -102,7 +103,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     if (!card) return
     set({ isAdvancing: true })
     setTimeout(() => set({ isAdvancing: false }), 950)
-    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak }
+    const prevCardSRS = useSRSStore.getState().cardSRS[card.id] ?? null
+    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak, cardId: card.id, prevCardSRS }
     const newUnknown = [...unknown, card.id]
     const nextIndex = currentIndex + 1
     const isComplete = nextIndex >= sessionCards.length
@@ -113,8 +115,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   undoLast: () => {
-    const { lastAction } = get()
+    const { lastAction, setId } = get()
     if (!lastAction) return
+    useSRSStore.getState().revertSRS(lastAction.cardId, setId, lastAction.prevCardSRS)
     set({
       currentIndex: lastAction.prevIndex,
       known: lastAction.prevKnown,
@@ -251,8 +254,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     // Debounce: if cards are answered rapidly, collapse saves into one upsert
     if (_saveDebounceTimer) clearTimeout(_saveDebounceTimer)
     _saveDebounceTimer = setTimeout(async () => {
-      const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin } = get()
-      if (!setId || setId === '__master__' || mode === 'sentence' || sessionCards.length === 0) return
+      const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin, isComplete } = get()
+      if (isComplete || !setId || setId === '__master__' || mode === 'sentence' || sessionCards.length === 0) return
       try {
         const user = useAuthStore.getState().user
         if (!user) return

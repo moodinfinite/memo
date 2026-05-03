@@ -25,6 +25,7 @@ interface SRSState {
   fetchSRS: (setId: string, opts?: { force?: boolean }) => Promise<void>
   fetchAllSRS: () => Promise<void>
   updateSRS: (cardId: string, setId: string, known: boolean) => Promise<void>
+  revertSRS: (cardId: string, setId: string, prevState: CardSRS | null) => void
   getDueCards: (setId: string, allCards: { id: string }[]) => string[]
 }
 
@@ -131,6 +132,29 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       cardSRS: { ...state.cardSRS, [cardId]: { ...upsertData, easiness: next.easiness, interval: next.interval, repetitions: next.repetitions } },
       lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
     }))
+  },
+
+  revertSRS: (cardId, setId, prevState) => {
+    const user = useAuthStore.getState().user
+    if (prevState) {
+      set((state) => ({
+        cardSRS: { ...state.cardSRS, [cardId]: prevState },
+        lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
+      }))
+      if (!user) return
+      supabase.from('card_srs').upsert({ ...prevState, user_id: user.id }, { onConflict: 'card_id' })
+        .then(({ error }) => { if (error) console.error('revertSRS upsert error:', error) })
+    } else {
+      // Card had no SRS record before this session — delete the row we created
+      set((state) => {
+        const next = { ...state.cardSRS }
+        delete next[cardId]
+        return { cardSRS: next, lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() } }
+      })
+      if (!user) return
+      supabase.from('card_srs').delete().eq('card_id', cardId)
+        .then(({ error }) => { if (error) console.error('revertSRS delete error:', error) })
+    }
   },
 
   getDueCards: (setId, allCards) => {
