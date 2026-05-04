@@ -9,7 +9,7 @@
 /* Input */
 .inputWrap{display:flex;flex-direction:column;gap:6px;position:relative}
 .inputDone .input{border-color:var(--border-default);background:var(--bg-raised);color:var(--text-secondary)}
-.input{width:100%;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-primary);font-size:15px;font-family:var(--font);line-height:1.5;resize:none;transition:border-color 0.15s;box-sizing:border-box}
+.input{width:100%;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-primary);font-size:19px;font-family:var(--font);line-height:1.5;resize:none;transition:border-color 0.15s;box-sizing:border-box}
 .input:focus{outline:none;border-color:var(--accent)}
 .input::placeholder{color:var(--text-tertiary)}
 .input:disabled{cursor:default}
