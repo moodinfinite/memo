@@ -56,15 +56,18 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
   },
 
   updateFolder: async (id, name) => {
-    await supabase.from('folders').update({ name }).eq('id', id)
-    set((state) => ({
-      folders: state.folders.map((f) => f.id === id ? { ...f, name } : f),
-    }))
+    // Optimistic: rename immediately, sync in background
+    const prev = get().folders
+    set((state) => ({ folders: state.folders.map((f) => f.id === id ? { ...f, name } : f) }))
+    const { error } = await supabase.from('folders').update({ name }).eq('id', id)
+    if (error) set({ folders: prev }) // rollback on failure
   },
 
   deleteFolder: async (id) => {
-    // Sets in this folder will have folder_id set to null (cascade on delete set null)
-    await supabase.from('folders').delete().eq('id', id)
+    // Optimistic: remove immediately, sync in background
+    const prev = get().folders
     set((state) => ({ folders: state.folders.filter((f) => f.id !== id) }))
+    const { error } = await supabase.from('folders').delete().eq('id', id)
+    if (error) set({ folders: prev }) // rollback on failure
   },
 }))

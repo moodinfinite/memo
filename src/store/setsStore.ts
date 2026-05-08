@@ -81,13 +81,20 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     if (!user) throw new Error('Not authenticated')
     const safeTitle = sanitizeText(title, 200)
     const safeDesc = sanitizeText(description, 1000)
+    const safeCards = rawCards.map((c, i) => ({ ...sanitizeCard(c), position: i }))
+    // Optimistic: update UI immediately so navigation back feels instant
+    set((state) => ({
+      sets: state.sets.map((s) => s.id === id ? { ...s, title: safeTitle, description: safeDesc, folder_id: folderId, cardCount: safeCards.length } : s),
+      currentSet: state.currentSet?.id === id
+        ? { ...state.currentSet, title: safeTitle, description: safeDesc, folder_id: folderId, cardCount: safeCards.length,
+            cards: safeCards.map((c) => ({ ...c, id: (c as any).id ?? '', set_id: id, user_id: user.id })) }
+        : state.currentSet,
+    }))
+    // Sync to DB in background
     await supabase.from('sets').update({ title: safeTitle, description: safeDesc, folder_id: folderId }).eq('id', id)
     await supabase.from('cards').delete().eq('set_id', id)
     if (rawCards.length > 0) {
-      const rows = rawCards.map((c, i) => {
-        const safe = sanitizeCard(c)
-        return { set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
-      })
+      const rows = safeCards.map((c) => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
       try {
         const chunks: typeof rows[] = []
         for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
@@ -100,31 +107,43 @@ export const useSetsStore = create<SetsState>((set, get) => ({
         throw err
       }
     }
-    await get().fetchSet(id)
+    // Refresh in background to get server-assigned card IDs
+    get().fetchSet(id)
   },
 
   deleteSet: async (id) => {
-    await supabase.from('sets').delete().eq('id', id)
+    // Optimistic: remove from UI immediately, sync in background
+    const prev = get().sets
     set((state) => ({ sets: state.sets.filter((s) => s.id !== id), currentSet: null }))
+    const { error } = await supabase.from('sets').delete().eq('id', id)
+    if (error) set({ sets: prev }) // rollback on failure
   },
 
   togglePin: async (id) => {
     const s = get().sets.find((x) => x.id === id)
     if (!s) return
     const pinned = !s.pinned
-    await supabase.from('sets').update({ pinned }).eq('id', id)
+    // Optimistic: flip pin state immediately, sync in background
     set((state) => ({
       sets: state.sets.map((x) => x.id === id ? { ...x, pinned } : x),
       currentSet: state.currentSet?.id === id ? { ...state.currentSet, pinned } : state.currentSet,
     }))
+    const { error } = await supabase.from('sets').update({ pinned }).eq('id', id)
+    if (error) set((state) => ({ // rollback on failure
+      sets: state.sets.map((x) => x.id === id ? { ...x, pinned: !pinned } : x),
+      currentSet: state.currentSet?.id === id ? { ...state.currentSet, pinned: !pinned } : state.currentSet,
+    }))
   },
 
   moveToFolder: async (id, folderId) => {
-    await supabase.from('sets').update({ folder_id: folderId }).eq('id', id)
+    // Optimistic: update folder immediately, sync in background
+    const prev = { sets: get().sets, currentSet: get().currentSet }
     set((state) => ({
       sets: state.sets.map((s) => s.id === id ? { ...s, folder_id: folderId } : s),
       currentSet: state.currentSet?.id === id ? { ...state.currentSet, folder_id: folderId } : state.currentSet,
     }))
+    const { error } = await supabase.from('sets').update({ folder_id: folderId }).eq('id', id)
+    if (error) set(prev) // rollback on failure
   },
 
   importCards: async (setId, rawCards) => {
