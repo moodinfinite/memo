@@ -27,6 +27,13 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUn
     if ((flipKey ?? 0) > 0) setFlipped((f) => !f)
   }, [flipKey])
 
+  // Safety net: if the component somehow doesn't unmount after a flash, clear it
+  useEffect(() => {
+    if (!flash) return
+    const t = setTimeout(() => setFlash(null), 1100)
+    return () => clearTimeout(t)
+  }, [flash])
+
   const handleKnow = () => {
     if (answering) return
     setFlash('correct')

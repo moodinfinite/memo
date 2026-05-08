@@ -84,7 +84,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const card = sessionCards[currentIndex]
     if (!card) return
     set({ isAdvancing: true })
-    setTimeout(() => set({ isAdvancing: false }), 950)
+    setTimeout(() => set({ isAdvancing: false }), 400)
     const prevCardSRS = useSRSStore.getState().cardSRS[card.id] ?? null
     const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak, cardId: card.id, prevCardSRS }
     const newKnown = [...known, card.id]
@@ -102,7 +102,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const card = sessionCards[currentIndex]
     if (!card) return
     set({ isAdvancing: true })
-    setTimeout(() => set({ isAdvancing: false }), 950)
+    setTimeout(() => set({ isAdvancing: false }), 400)
     const prevCardSRS = useSRSStore.getState().cardSRS[card.id] ?? null
     const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak, cardId: card.id, prevCardSRS }
     const newUnknown = [...unknown, card.id]
