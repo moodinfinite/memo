@@ -12,15 +12,18 @@ import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
 import SentenceCard from '@/components/cards/SentenceCard'
 import SentenceSummary from '@/components/cards/SentenceSummary'
 import LearnCard from '@/components/cards/LearnCard'
+import StoryCard from '@/components/cards/StoryCard'
 import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
+import type { Card } from '@/lib/database.types'
 
-const MODES: { id: StudyMode | 'learn'; label: string; desc: string }[] = [
+const MODES: { id: StudyMode | 'learn' | 'story'; label: string; desc: string }[] = [
   { id: 'learn', label: 'Learn', desc: 'Guided batches — flashcards & quizzes' },
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
   { id: 'multiple_choice', label: 'Multiple choice', desc: 'Pick the right answer' },
   { id: 'typed', label: 'Typed answer', desc: 'Write the definition' },
   { id: 'sentence', label: 'Write a sentence', desc: 'Use each word in a sentence' },
+  { id: 'story', label: 'Story', desc: 'Read your words in a generated story' },
 ]
 const TIMER_OPTS = [{ label: '1 min', mins: 1 }, { label: '3 min', mins: 3 }, { label: '5 min', mins: 5 }, { label: '10 min', mins: 10 }]
 
@@ -34,7 +37,8 @@ export default function StudyPage() {
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
-  const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn'>('flashcard')
+  const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn' | 'story'>('flashcard')
+  const [storyTerms, setStoryTerms] = useState<Card[]>([])
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
@@ -148,6 +152,17 @@ export default function StudyPage() {
 
   const handleStart = async () => {
     if (!currentSet?.cards?.length || !id || isStarting) return
+    // Story mode: pick up to 8 lowest-mastery terms, no session tracking
+    if (selectedMode === 'story') {
+      setIsStarting(true)
+      await fetchSRS(id, { force: true })
+      const cards = filteredCards(currentSet.cards)
+      const sorted = [...cards].sort((a, b) => getMasteryLevel(cardSRS[a.id]) - getMasteryLevel(cardSRS[b.id]))
+      setStoryTerms(sorted.slice(0, 8))
+      setSelecting(false)
+      setIsStarting(false)
+      return
+    }
     // Learn mode: skip draft/resume, just start a fresh learn session
     if (selectedMode === 'learn') {
       setIsStarting(true)
@@ -198,6 +213,11 @@ export default function StudyPage() {
   }
 
   const handleEnd = () => {
+    if (storyTerms.length > 0) {
+      setStoryTerms([])
+      setSelecting(true)
+      return
+    }
     if (learnActive) {
       resetLearn()
       setSelecting(true)
@@ -269,10 +289,10 @@ export default function StudyPage() {
                 </div>
               )
             }
-            return <button key={m.id} className={[styles.modeOption, isSelected ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')} onClick={() => !disabled && setSelectedMode(m.id as StudyMode | 'learn')} disabled={disabled}><div className={styles.modeLabel}>{m.label}</div><div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div></button>
+            return <button key={m.id} className={[styles.modeOption, isSelected ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')} onClick={() => !disabled && setSelectedMode(m.id as StudyMode | 'learn' | 'story')} disabled={disabled}><div className={styles.modeLabel}>{m.label}</div><div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div></button>
           })}
         </div>
-        {selectedMode !== 'learn' && (
+        {selectedMode !== 'learn' && selectedMode !== 'story' && (
         <div className={styles.sessionOpts}>
           <button className={[styles.sessionOpt, doShuffle ? styles.sessionOptActive : ''].join(' ')} onClick={() => setDoShuffle(!doShuffle)}>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
@@ -286,7 +306,7 @@ export default function StudyPage() {
           )}
         </div>
         )}
-        {timerEnabled && selectedMode !== 'learn' && (
+        {timerEnabled && selectedMode !== 'learn' && selectedMode !== 'story' && (
           <div className={styles.timerPicker}>
             {TIMER_OPTS.map((t) => <button key={t.mins} className={[styles.timerOpt, timerDur === t.mins ? styles.timerOptSelected : ''].join(' ')} onClick={() => setTimerDur(t.mins)}>{t.label}</button>)}
           </div>
@@ -348,6 +368,26 @@ export default function StudyPage() {
             </div>
           </div>
         </div>
+      </div>
+    )
+  }
+  // ─────────────────────────────────────────────────────────────
+
+  // ── Story mode ───────────────────────────────────────────────
+  if (storyTerms.length > 0) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.topBar}>
+          <button className={styles.backBtn} onClick={handleEnd}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
+            {currentSet.title}
+          </button>
+          <div className={styles.topBarRight}>
+            <div className={styles.modeTag}>Story</div>
+            <button className={styles.exitBtn} onClick={handleEnd}>Done</button>
+          </div>
+        </div>
+        <StoryCard terms={storyTerms} setTitle={currentSet.title} />
       </div>
     )
   }

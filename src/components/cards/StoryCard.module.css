@@ -1,0 +1,170 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  animation: entrance 0.24s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+@keyframes entrance { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ── Story card ── */
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl, 16px);
+  padding: 32px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+.spinner {
+  animation: spin 0.9s linear infinite;
+  color: var(--accent);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.errorState {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--red-text, #ef4444);
+  font-size: 14px;
+}
+
+.storyText {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: left;
+}
+
+/* ── Highlighted terms ── */
+.highlight {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-style: normal;
+  cursor: pointer;
+  border-bottom: 1.5px solid var(--accent-border);
+  transition: background 0.15s;
+}
+.highlight:hover, .highlightActive {
+  background: rgba(132, 204, 22, 0.22);
+}
+
+/* ── Definition tooltip card ── */
+.tooltipCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--r-lg, 12px);
+  padding: 14px 16px;
+  cursor: pointer;
+  animation: tooltipIn 0.18s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+  position: relative;
+}
+@keyframes tooltipIn { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: none; } }
+.tooltipTerm {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-text);
+  white-space: nowrap;
+  padding-top: 1px;
+}
+.tooltipDef {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+.tooltipClose {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  margin-top: 1px;
+}
+
+/* ── Terms chips row ── */
+.termsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.termsLabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.termChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.termChip {
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-raised);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.termChip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.termChipActive {
+  border-color: var(--accent-border) !important;
+  background: var(--accent-subtle) !important;
+  color: var(--accent-text) !important;
+}
+
+/* ── Regenerate button ── */
+.regenBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
+  padding: 10px 20px;
+  border-radius: var(--r-lg, 12px);
+  border: 1px solid var(--border-default);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.regenBtn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-overlay);
+}
+.regenBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .card { padding: 24px 18px; }
+  .storyText { font-size: 15px; }
+}
