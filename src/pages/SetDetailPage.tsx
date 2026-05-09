@@ -40,6 +40,7 @@ export default function SetDetailPage() {
   const { folders } = useFoldersStore()
   const { cardSRS, fetchSRS } = useSRSStore()
   const [showFolderPicker, setShowFolderPicker] = useState(false)
+  const [exported, setExported] = useState(false)
   const folderPickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -56,6 +57,22 @@ export default function SetDetailPage() {
     if (!currentSet) return
     await moveToFolder(currentSet.id, folderId)
     setShowFolderPicker(false)
+  }
+
+  const handleExport = () => {
+    if (!currentSet?.cards?.length) return
+    const esc = (s: string) => `"${s.replace(/"/g, '""')}"`
+    const rows = [['Term', 'Definition'], ...currentSet.cards.map(c => [esc(c.term), esc(c.definition)])]
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${currentSet.title.replace(/[^a-z0-9]/gi, '_')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    setExported(true)
+    setTimeout(() => setExported(false), 2000)
   }
 
   const handleDelete = async () => {
@@ -115,6 +132,12 @@ export default function SetDetailPage() {
         <div className={styles.actions}>
           <Link to={`/sets/${id}/study`} className={styles.studyBtn}>Study</Link>
           <Link to={`/sets/${id}/edit`} className={styles.editBtn}>Edit</Link>
+          <button className={styles.exportBtn} onClick={handleExport} title="Export as CSV">
+            {exported
+              ? <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8l3.5 3.5 7.5-7"/></svg>
+              : <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7.5 1v9M4 7l3.5 3.5L11 7"/><path d="M2 11.5v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1"/></svg>
+            }
+          </button>
           <button className={styles.deleteBtn} onClick={handleDelete}>Delete</button>
         </div>
       </div>
