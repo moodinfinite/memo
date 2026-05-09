@@ -15,9 +15,19 @@ interface Props {
 }
 
 export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUndo, canUndo, flipKey, startSide = 'term' }: Props) {
-  const [flipped, setFlipped] = useState(() =>
-    startSide === 'definition' ? true : startSide === 'random' ? Math.random() > 0.5 : false
-  )
+  // Decide once on mount which content goes on which face.
+  // Always start flipped=false so the front face (neutral styling) is shown first.
+  // When definition-first, we put definition content on the front face and term on the back.
+  const defFirst = useRef(
+    startSide === 'definition' || (startSide === 'random' && Math.random() > 0.5)
+  ).current
+
+  const frontLabel    = defFirst ? 'Definition' : 'Term'
+  const frontContent  = defFirst ? card.definition : card.term
+  const backLabel     = defFirst ? 'Term' : 'Definition'
+  const backContent   = defFirst ? card.term : card.definition
+
+  const [flipped, setFlipped] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
   const mounted = useRef(false)
@@ -56,13 +66,13 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUn
         {flash && <div className={[styles.flashOverlay, flash === 'correct' ? styles.flashCorrect : styles.flashIncorrect].join(' ')} />}
         <div className={[styles.scene, flipped ? styles.flipped : ''].join(' ')}>
           <div className={[styles.face, styles.front].join(' ')}>
-            <div className={styles.sideLabel}>Term</div>
-            <div className={styles.content}>{card.term}</div>
+            <div className={styles.sideLabel}>{frontLabel}</div>
+            <div className={styles.content}>{frontContent}</div>
             <div className={styles.tapHint}>tap to flip</div>
           </div>
           <div className={[styles.face, styles.back].join(' ')}>
-            <div className={styles.sideLabel}>Definition</div>
-            <div className={styles.content}>{card.definition}</div>
+            <div className={styles.sideLabel}>{backLabel}</div>
+            <div className={styles.content}>{backContent}</div>
             <div className={styles.tapHint}>tap to flip back</div>
           </div>
         </div>
