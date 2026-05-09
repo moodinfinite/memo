@@ -18,8 +18,11 @@ interface StudyState {
   learnBatchIdx: number
   learnComplete: boolean
   learnSetId: string
+  learnBatchComplete: boolean
+  learnBatchSummary: Card[]             // cards that graduated in the just-finished batch
   startLearnSession: (cards: Card[], setId: string) => void
   answerLearnCard: (correct: boolean) => void
+  advanceToNextBatch: () => void
   resetLearn: () => void
   // ────────────────────────────────────────────────────────────
   mode: StudyMode; setId: string
@@ -68,6 +71,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   // ── Learn mode initial state ─────────────────────────────────
   learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
   learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
+  learnBatchComplete: false, learnBatchSummary: [],
 
   startLearnSession: (cards, setId) => {
     const BATCH = 5
@@ -77,41 +81,59 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       learnBatch: shuffled.slice(0, BATCH), learnQueue: shuffled.slice(BATCH),
       learnGraduated: [], learnScores: {}, learnBatchIdx: 0,
       learnComplete: false, learnSetId: setId,
+      learnBatchComplete: false, learnBatchSummary: [],
     })
   },
 
   answerLearnCard: (correct) => {
-    const { learnBatch, learnQueue, learnGraduated, learnScores, learnBatchIdx, learnSetId } = get()
+    const { learnBatch, learnQueue, learnGraduated, learnScores, learnBatchIdx, learnSetId, learnBatchSummary } = get()
     const card = learnBatch[learnBatchIdx]
     if (!card) return
     useSRSStore.getState().updateSRS(card.id, learnSetId, correct)  // update long-term mastery
     const newScores = { ...learnScores, [card.id]: correct ? (learnScores[card.id] ?? 0) + 1 : 0 }
     const didGraduate = (newScores[card.id] ?? 0) >= 2
-    let newBatch = [...learnBatch], newQueue = [...learnQueue]
+    let newBatch = [...learnBatch]
     const newGraduated = [...learnGraduated]
+    let newBatchSummary = [...learnBatchSummary]
     let nextIdx: number
     if (didGraduate) {
+      // Graduate: shrink batch (no queue refill until batch is done)
       newGraduated.push(card.id)
-      if (newQueue.length > 0) {
-        newBatch[learnBatchIdx] = newQueue[0]; newQueue = newQueue.slice(1)
-        nextIdx = learnBatchIdx
-      } else {
-        newBatch = newBatch.filter((_, i) => i !== learnBatchIdx)
-        nextIdx = newBatch.length === 0 ? 0 : learnBatchIdx % newBatch.length
-      }
+      newBatchSummary.push(card)
+      newBatch = newBatch.filter((_, i) => i !== learnBatchIdx)
+      nextIdx = newBatch.length === 0 ? 0 : learnBatchIdx % newBatch.length
     } else {
       nextIdx = (learnBatchIdx + 1) % newBatch.length
     }
     if (newBatch.length === 0) {
-      set({ learnBatch: [], learnQueue: [], learnGraduated: newGraduated, learnScores: newScores, learnComplete: true })
+      if (learnQueue.length > 0) {
+        // Batch done, more cards waiting — show batch summary screen
+        set({ learnBatch: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnBatchComplete: true })
+      } else {
+        // All done
+        set({ learnBatch: [], learnQueue: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnComplete: true })
+      }
       return
     }
-    set({ learnBatch: newBatch, learnQueue: newQueue, learnGraduated: newGraduated, learnScores: newScores, learnBatchIdx: nextIdx })
+    set({ learnBatch: newBatch, learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnBatchIdx: nextIdx })
+  },
+
+  advanceToNextBatch: () => {
+    const { learnQueue } = get()
+    const BATCH = 5
+    const nextBatch = learnQueue.slice(0, BATCH)
+    const nextQueue = learnQueue.slice(BATCH)
+    set({
+      learnBatch: nextBatch, learnQueue: nextQueue,
+      learnBatchComplete: false, learnBatchSummary: [],
+      learnBatchIdx: 0, learnScores: {},
+    })
   },
 
   resetLearn: () => set({
     learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
     learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
+    learnBatchComplete: false, learnBatchSummary: [],
   }),
   // ─────────────────────────────────────────────────────────────
   mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],

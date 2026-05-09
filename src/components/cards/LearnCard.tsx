@@ -14,6 +14,7 @@ function makeMCOptions(card: Card, allCards: Card[]) {
 export default function LearnCard() {
   const {
     learnBatch, learnBatchIdx, learnScores, learnGraduated, learnCards, learnQueue, answerLearnCard,
+    learnBatchComplete, learnBatchSummary, advanceToNextBatch,
   } = useStudyStore()
 
   const card = learnBatch[learnBatchIdx]
@@ -81,6 +82,36 @@ export default function LearnCard() {
     const t = setTimeout(() => setFlash(null), 950)
     return () => clearTimeout(t)
   }, [flash])
+
+  // ── Batch complete screen ──────────────────────────────────────
+  if (learnBatchComplete) {
+    const totalCards = learnGraduated.length + learnQueue.length
+    return (
+      <div className={styles.batchCompleteWrap}>
+        <div className={styles.batchCompleteIcon}>
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 13l6 6L22 7"/></svg>
+        </div>
+        <div className={styles.batchCompleteTitle}>Batch complete!</div>
+        <div className={styles.batchCompleteSub}>You locked in {learnBatchSummary.length} {learnBatchSummary.length === 1 ? 'word' : 'words'} this round</div>
+        <div className={styles.chipGrid}>
+          {learnBatchSummary.map((c, i) => (
+            <div key={c.id} className={styles.chip} style={{ animationDelay: `${i * 55}ms` }}>
+              {c.term}
+            </div>
+          ))}
+        </div>
+        <div className={styles.batchProgressBar}>
+          <div className={styles.batchProgressFill} style={{ width: `${(learnGraduated.length / totalCards) * 100}%` }} />
+        </div>
+        <div className={styles.batchProgressLabel}>{learnGraduated.length} of {totalCards} words learned</div>
+        <button className={styles.continueBtn} onClick={advanceToNextBatch}>
+          Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 7h8M7 3l4 4-4 4"/></svg>
+        </button>
+      </div>
+    )
+  }
+  // ──────────────────────────────────────────────────────────────
 
   if (!card) return null
 
