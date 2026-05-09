@@ -240,7 +240,36 @@ export default function StudyPage() {
         <div className={styles.modeOptions}>
           {MODES.map((m) => {
             const disabled = m.id === 'multiple_choice' && !canMC
-            return <button key={m.id} className={[styles.modeOption, selectedMode === m.id ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')} onClick={() => !disabled && setSelectedMode(m.id as StudyMode | 'learn')} disabled={disabled}><div className={styles.modeLabel}>{m.label}</div><div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div></button>
+            const isSelected = selectedMode === m.id
+            // Flashcard gets a special expandable card (div not button, so it can contain buttons)
+            if (m.id === 'flashcard') {
+              return (
+                <div
+                  key={m.id}
+                  className={[styles.modeOption, isSelected ? styles.modeSelected : ''].join(' ')}
+                  onClick={() => setSelectedMode('flashcard')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && setSelectedMode('flashcard')}
+                >
+                  <div className={styles.modeLabel}>{m.label}</div>
+                  <div className={styles.modeDesc}>{m.desc}</div>
+                  <div className={styles.startSideRow}>
+                    <span className={styles.startSideLabel}>Start on</span>
+                    {(['term', 'definition', 'random'] as const).map((s) => (
+                      <button
+                        key={s}
+                        className={[styles.startSidePill, startSide === s ? styles.startSidePillActive : ''].join(' ')}
+                        onClick={e => { e.stopPropagation(); setStartSide(s) }}
+                      >
+                        {s === 'term' ? 'Term' : s === 'definition' ? 'Definition' : 'Random'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+            return <button key={m.id} className={[styles.modeOption, isSelected ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')} onClick={() => !disabled && setSelectedMode(m.id as StudyMode | 'learn')} disabled={disabled}><div className={styles.modeLabel}>{m.label}</div><div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div></button>
           })}
         </div>
         {selectedMode !== 'learn' && (
@@ -260,18 +289,6 @@ export default function StudyPage() {
         {timerEnabled && selectedMode !== 'learn' && (
           <div className={styles.timerPicker}>
             {TIMER_OPTS.map((t) => <button key={t.mins} className={[styles.timerOpt, timerDur === t.mins ? styles.timerOptSelected : ''].join(' ')} onClick={() => setTimerDur(t.mins)}>{t.label}</button>)}
-          </div>
-        )}
-        {selectedMode === 'flashcard' && (
-          <div className={styles.masteryFilterRow}>
-            <span className={styles.masteryFilterLabel}>Start on</span>
-            <div className={styles.masteryFilterOpts}>
-              {(['term', 'definition', 'random'] as const).map((s) => (
-                <button key={s} className={[styles.masteryOpt, startSide === s ? styles.masteryOptActive : ''].join(' ')} onClick={() => setStartSide(s)}>
-                  {s === 'term' ? 'Term' : s === 'definition' ? 'Definition' : 'Random'}
-                </button>
-              ))}
-            </div>
           </div>
         )}
         <div className={styles.masteryFilterRow}>
