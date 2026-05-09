@@ -9,6 +9,8 @@ interface SetsState {
   currentSet: FlashcardSet | null
   isLoading: boolean
   error: string | null
+  setsLastFetched: number        // timestamp — skip refetch if recent
+  currentSetFetchedAt: number    // timestamp — skip refetch if same ID + recent
   fetchSets: () => Promise<void>
   fetchSet: (id: string) => Promise<void>
   createSet: (title: string, description: string, cards: Omit<Card, 'id' | 'set_id' | 'user_id'>[], folderId?: string | null) => Promise<FlashcardSet>
@@ -25,8 +27,12 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   currentSet: null,
   isLoading: false,
   error: null,
+  setsLastFetched: 0,
+  currentSetFetchedAt: 0,
 
   fetchSets: async () => {
+    // Skip refetch if data is fresh (< 30s old) — avoids re-hitting Supabase on every navigation back to home
+    if (get().sets.length > 0 && Date.now() - get().setsLastFetched < 30_000) return
     if (get().sets.length === 0) set({ isLoading: true })
     set({ error: null })
     const { data, error } = await supabase
@@ -36,17 +42,25 @@ export const useSetsStore = create<SetsState>((set, get) => ({
       .order('updated_at', { ascending: false })
     if (error) { set({ error: error.message, isLoading: false }); return }
     const sets = (data ?? []).map((s: any) => ({ ...s, cardCount: s.cards?.[0]?.count ?? 0 }))
-    set({ sets, isLoading: false })
+    set({ sets, isLoading: false, setsLastFetched: Date.now() })
   },
 
   fetchSet: async (id) => {
-    if (get().currentSet?.id !== id) set({ isLoading: true })
+    const { currentSet, currentSetFetchedAt, sets } = get()
+    // Return cached data if same set fetched < 60s ago — covers Study ↔ Back ↔ Study
+    if (currentSet?.id === id && currentSetFetchedAt > 0 && Date.now() - currentSetFetchedAt < 60_000) return
+    // Show partial data from the sets list immediately so the page isn't blank while cards load
+    if (currentSet?.id !== id) {
+      const fromList = sets.find(s => s.id === id)
+      if (fromList) set({ currentSet: { ...fromList, cards: [] }, isLoading: false })
+      else set({ isLoading: true })
+    }
     set({ error: null })
     const { data, error } = await supabase
       .from('sets').select('*, cards(*)').eq('id', id).single()
     if (error) { set({ error: error.message, isLoading: false }); return }
     const cards = (data.cards ?? []).sort((a: Card, b: Card) => a.position - b.position)
-    set({ currentSet: { ...data, cards, cardCount: cards.length }, isLoading: false })
+    set({ currentSet: { ...data, cards, cardCount: cards.length }, isLoading: false, currentSetFetchedAt: Date.now() })
   },
 
   createSet: async (title, description, rawCards, folderId = null) => {
@@ -107,7 +121,8 @@ export const useSetsStore = create<SetsState>((set, get) => ({
         throw err
       }
     }
-    // Refresh in background to get server-assigned card IDs
+    // Invalidate cache then refresh to get server-assigned card IDs
+    set({ currentSetFetchedAt: 0, setsLastFetched: 0 })
     get().fetchSet(id)
   },
 
@@ -156,6 +171,7 @@ export const useSetsStore = create<SetsState>((set, get) => ({
         return { set_id: setId, user_id: user.id, term: safe.term, definition: safe.definition, position: existing.length + i }
       })
     )
+    set({ currentSetFetchedAt: 0 })
     await get().fetchSet(setId)
   },
 

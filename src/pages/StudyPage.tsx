@@ -54,14 +54,13 @@ export default function StudyPage() {
   const shownMilestones = useRef(new Set<number>())
 
   useEffect(() => {
-    if (id) { fetchSet(id); fetchSRS(id) }
+    if (!id) return
+    // All three fire in parallel — no waterfall
+    fetchSet(id)
+    fetchSRS(id)
+    loadProgress(id).then(draft => { setCachedDraft(draft) })
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [id])
-
-  useEffect(() => {
-    if (!id || !currentSet || !selecting) return
-    loadProgress(id).then(draft => { setCachedDraft(draft) })
-  }, [id, currentSet, selecting])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
