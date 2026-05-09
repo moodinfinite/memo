@@ -11,10 +11,13 @@ interface Props {
   onUndo?: () => void
   canUndo?: boolean
   flipKey?: number
+  startSide?: 'term' | 'definition' | 'random'
 }
 
-export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUndo, canUndo, flipKey }: Props) {
-  const [flipped, setFlipped] = useState(false)
+export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUndo, canUndo, flipKey, startSide = 'term' }: Props) {
+  const [flipped, setFlipped] = useState(() =>
+    startSide === 'definition' ? true : startSide === 'random' ? Math.random() > 0.5 : false
+  )
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
   const mounted = useRef(false)

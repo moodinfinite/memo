@@ -38,6 +38,7 @@ export default function StudyPage() {
   const [timerDur, setTimerDur] = useState(5)
   // mastery filter: null = all cards, otherwise max level to include
   const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
+  const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
   const [isStarting, setIsStarting] = useState(false)
   const [flipKey, setFlipKey] = useState(0)
   const [shuffleActive, setShuffleActive] = useState(false)
@@ -241,6 +242,18 @@ export default function StudyPage() {
             {TIMER_OPTS.map((t) => <button key={t.mins} className={[styles.timerOpt, timerDur === t.mins ? styles.timerOptSelected : ''].join(' ')} onClick={() => setTimerDur(t.mins)}>{t.label}</button>)}
           </div>
         )}
+        {selectedMode === 'flashcard' && (
+          <div className={styles.masteryFilterRow}>
+            <span className={styles.masteryFilterLabel}>Start on</span>
+            <div className={styles.masteryFilterOpts}>
+              {(['term', 'definition', 'random'] as const).map((s) => (
+                <button key={s} className={[styles.masteryOpt, startSide === s ? styles.masteryOptActive : ''].join(' ')} onClick={() => setStartSide(s)}>
+                  {s === 'term' ? 'Term' : s === 'definition' ? 'Definition' : 'Random'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className={styles.masteryFilterRow}>
           <span className={styles.masteryFilterLabel}>Focus</span>
           <div className={styles.masteryFilterOpts}>
@@ -326,7 +339,25 @@ export default function StudyPage() {
           {currentSet.title}
         </button>
         <div className={styles.topBarRight}>
-          {(mode === 'flashcard' || mode === 'multiple_choice') && (
+          {mode === 'flashcard' && (
+            <button
+              className={[styles.shuffleBtn, startSide === 'definition' ? styles.shuffleBtnActive : ''].join(' ')}
+              onClick={() => setStartSide(s => s === 'definition' ? 'term' : 'definition')}
+              title={startSide === 'definition' ? 'Definition first — tap for term first' : 'Term first — tap for definition first'}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5h9M7 2l3 3-3 3M14 10H5M8 7l-3 3 3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
+          {mode === 'multiple_choice' && (
+            <button
+              className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
+              onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
+              title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
+            </button>
+          )}
+          {mode === 'flashcard' && (
             <button
               className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
               onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
@@ -343,7 +374,7 @@ export default function StudyPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard key={currentIndex} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onUndo={undoLast} canUndo={!!lastAction} flipKey={flipKey} />}
+      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onUndo={undoLast} canUndo={!!lastAction} flipKey={flipKey} startSide={startSide} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {mode === 'sentence' && <SentenceCard />}
