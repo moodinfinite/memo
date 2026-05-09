@@ -23,7 +23,7 @@ export default function LearnCard() {
 
   const canMC = learnCards.length >= 4
 
-  const [revealed, setRevealed] = useState(false)
+  const [showDef, setShowDef] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [mcResult, setMcResult] = useState<'idle' | 'correct' | 'incorrect'>('idle')
@@ -32,7 +32,12 @@ export default function LearnCard() {
   const handleFlashAnswer = (correct: boolean) => {
     if (flash) return
     setFlash(correct ? 'correct' : 'incorrect')
-    setTimeout(() => answerLearnCard(correct), 800)
+    if (!correct) {
+      setShowDef(true)
+      setTimeout(() => answerLearnCard(false), 2000)
+    } else {
+      setTimeout(() => answerLearnCard(true), 800)
+    }
   }
 
   const handleMCSelect = (idx: number, correct: boolean) => {
@@ -44,7 +49,7 @@ export default function LearnCard() {
 
   // Reset local UI state when card or view type changes
   useEffect(() => {
-    setRevealed(false)
+    setShowDef(false)
     setFlash(null)
     setSelectedIdx(null)
     setMcResult('idle')
@@ -105,12 +110,7 @@ export default function LearnCard() {
             {flash && <div className={[styles.flashOverlay, flash === 'correct' ? styles.flashCorrect : styles.flashIncorrect].join(' ')} />}
             <div className={styles.cardSideLabel}>Term</div>
             <div className={styles.cardTerm}>{card.term}</div>
-            {!revealed ? (
-              <button className={styles.revealBtn} onClick={() => setRevealed(true)}>
-                See Definition
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6.5 1v11M1 6.5h11"/></svg>
-              </button>
-            ) : (
+            {showDef && (
               <div className={styles.definitionReveal}>
                 <div className={styles.defDivider} />
                 <div className={styles.defLabel}>Definition</div>
@@ -118,18 +118,16 @@ export default function LearnCard() {
               </div>
             )}
           </div>
-          {revealed && (
-            <div className={styles.flashActions}>
-              <button className={styles.dontKnowBtn} onClick={() => handleFlashAnswer(false)} disabled={!!flash}>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 2l11 11M13 2L2 13"/></svg>
-                Still learning
-              </button>
-              <button className={styles.knowBtn} onClick={() => handleFlashAnswer(true)} disabled={!!flash}>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7.5l3.5 3.5 7-7"/></svg>
-                Got it
-              </button>
-            </div>
-          )}
+          <div className={styles.flashActions}>
+            <button className={styles.dontKnowBtn} onClick={() => handleFlashAnswer(false)} disabled={!!flash}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 2l11 11M13 2L2 13"/></svg>
+              Still learning
+            </button>
+            <button className={styles.knowBtn} onClick={() => handleFlashAnswer(true)} disabled={!!flash}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7.5l3.5 3.5 7-7"/></svg>
+              Got it
+            </button>
+          </div>
         </div>
       ) : (
         /* ── Multiple choice view ── */
