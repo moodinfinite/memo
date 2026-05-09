@@ -21,32 +21,13 @@ export default function LearnCard() {
   const isFlashcard = score === 0
   const totalCards = learnGraduated.length + learnBatch.length + learnQueue.length
 
+  const canMC = learnCards.length >= 4
+
   const [revealed, setRevealed] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [mcResult, setMcResult] = useState<'idle' | 'correct' | 'incorrect'>('idle')
   const [mcOptions, setMcOptions] = useState<{ text: string; correct: boolean }[]>([])
-
-  // Reset local UI state when card or view type changes
-  useEffect(() => {
-    setRevealed(false)
-    setFlash(null)
-    setSelectedIdx(null)
-    setMcResult('idle')
-    if (!isFlashcard && card && learnCards.length >= 4) {
-      setMcOptions(makeMCOptions(card, learnCards))
-    }
-  }, [card?.id, isFlashcard])
-
-  // Auto-clear flash (safety net)
-  useEffect(() => {
-    if (!flash) return
-    const t = setTimeout(() => setFlash(null), 950)
-    return () => clearTimeout(t)
-  }, [flash])
-
-  if (!card) return null
-  const canMC = learnCards.length >= 4
 
   const handleFlashAnswer = (correct: boolean) => {
     if (flash) return
@@ -60,6 +41,43 @@ export default function LearnCard() {
     setMcResult(correct ? 'correct' : 'incorrect')
     setTimeout(() => answerLearnCard(correct), 1000)
   }
+
+  // Reset local UI state when card or view type changes
+  useEffect(() => {
+    setRevealed(false)
+    setFlash(null)
+    setSelectedIdx(null)
+    setMcResult('idle')
+    if (!isFlashcard && card && canMC) {
+      setMcOptions(makeMCOptions(card, learnCards))
+    }
+  }, [card?.id, isFlashcard])
+
+  // Keyboard shortcuts for MC (1-4)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
+      if (isFlashcard || !canMC) return
+      if (selectedIdx !== null) return
+      const map: Record<string, number> = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3 }
+      const idx = map[e.code]
+      if (idx !== undefined && idx < mcOptions.length) {
+        e.preventDefault()
+        handleMCSelect(idx, mcOptions[idx].correct)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isFlashcard, canMC, selectedIdx, mcOptions])
+
+  // Auto-clear flash (safety net)
+  useEffect(() => {
+    if (!flash) return
+    const t = setTimeout(() => setFlash(null), 950)
+    return () => clearTimeout(t)
+  }, [flash])
+
+  if (!card) return null
 
   return (
     <div className={styles.wrap}>
