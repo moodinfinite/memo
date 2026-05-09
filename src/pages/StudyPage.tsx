@@ -11,10 +11,12 @@ import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
 import SentenceCard from '@/components/cards/SentenceCard'
 import SentenceSummary from '@/components/cards/SentenceSummary'
+import LearnCard from '@/components/cards/LearnCard'
 import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
 
-const MODES: { id: StudyMode; label: string; desc: string }[] = [
+const MODES: { id: StudyMode | 'learn'; label: string; desc: string }[] = [
+  { id: 'learn', label: 'Learn', desc: 'Guided batches — flashcards & quizzes' },
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
   { id: 'multiple_choice', label: 'Multiple choice', desc: 'Pick the right answer' },
   { id: 'typed', label: 'Typed answer', desc: 'Write the definition' },
@@ -27,12 +29,12 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, startLearnSession, resetLearn } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
-  const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
+  const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn'>('flashcard')
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
@@ -146,6 +148,17 @@ export default function StudyPage() {
 
   const handleStart = async () => {
     if (!currentSet?.cards?.length || !id || isStarting) return
+    // Learn mode: skip draft/resume, just start a fresh learn session
+    if (selectedMode === 'learn') {
+      setIsStarting(true)
+      await fetchSRS(id, { force: true })
+      const cards = filteredCards(currentSet.cards)
+      if (!cards.length) { setIsStarting(false); return }
+      startLearnSession(cards, id)
+      setSelecting(false)
+      setIsStarting(false)
+      return
+    }
     if (cachedDraft && cachedDraft.mode === selectedMode) {
       const valid = cachedDraft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
       if (valid.length > 0) { setResumePrompt(cachedDraft); return }
@@ -179,12 +192,17 @@ export default function StudyPage() {
     setResumePrompt(null); setCachedDraft(null)
     const cards = filteredCards(currentSet!.cards!)
     if (!cards.length) { setIsStarting(false); return }
-    startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    startSession(cards, selectedMode as StudyMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
     setIsStarting(false)
   }
 
   const handleEnd = () => {
+    if (learnActive) {
+      resetLearn()
+      setSelecting(true)
+      return
+    }
     if (!isComplete) {
       persistSession() // fire and forget — don't block the user leaving
     }
@@ -222,9 +240,10 @@ export default function StudyPage() {
         <div className={styles.modeOptions}>
           {MODES.map((m) => {
             const disabled = m.id === 'multiple_choice' && !canMC
-            return <button key={m.id} className={[styles.modeOption, selectedMode === m.id ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')} onClick={() => !disabled && setSelectedMode(m.id)} disabled={disabled}><div className={styles.modeLabel}>{m.label}</div><div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div></button>
+            return <button key={m.id} className={[styles.modeOption, selectedMode === m.id ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')} onClick={() => !disabled && setSelectedMode(m.id as StudyMode | 'learn')} disabled={disabled}><div className={styles.modeLabel}>{m.label}</div><div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div></button>
           })}
         </div>
+        {selectedMode !== 'learn' && (
         <div className={styles.sessionOpts}>
           <button className={[styles.sessionOpt, doShuffle ? styles.sessionOptActive : ''].join(' ')} onClick={() => setDoShuffle(!doShuffle)}>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
@@ -237,7 +256,8 @@ export default function StudyPage() {
           </button>
           )}
         </div>
-        {timerEnabled && (
+        )}
+        {timerEnabled && selectedMode !== 'learn' && (
           <div className={styles.timerPicker}>
             {TIMER_OPTS.map((t) => <button key={t.mins} className={[styles.timerOpt, timerDur === t.mins ? styles.timerOptSelected : ''].join(' ')} onClick={() => setTimerDur(t.mins)}>{t.label}</button>)}
           </div>
@@ -275,6 +295,46 @@ export default function StudyPage() {
       )}
     </div>
   )
+
+  // ── Learn session active ──────────────────────────────────────
+  if (learnActive && !learnComplete) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.topBar}>
+          <button className={styles.backBtn} onClick={handleEnd}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
+            {currentSet.title}
+          </button>
+          <div className={styles.topBarRight}>
+            <div className={styles.modeTag}>Learn</div>
+            <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
+          </div>
+        </div>
+        <LearnCard />
+      </div>
+    )
+  }
+
+  // ── Learn session complete ────────────────────────────────────
+  if (learnActive && learnComplete) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.summaryWrap}>
+          <div className={styles.summary}>
+            <div className={styles.countScore}>🎉</div>
+            <div className={styles.summaryTitle}>All cards learned!</div>
+            <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards graduated</div>
+            <div className={styles.summaryActions}>
+              <button className={styles.retryBtn} onClick={() => startLearnSession(learnCards, id!)}>Study again</button>
+              <button className={styles.changeModeBtn} onClick={() => { resetLearn(); setSelecting(true) }}>Change mode</button>
+              <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  // ─────────────────────────────────────────────────────────────
 
   if (isComplete && mode === 'sentence') {
     return <SentenceSummary

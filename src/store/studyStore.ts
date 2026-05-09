@@ -8,6 +8,20 @@ import { useProgressStore } from './progressStore'
 import { useAuthStore } from './authStore'
 
 interface StudyState {
+  // ── Learn mode ──────────────────────────────────────────────
+  learnActive: boolean
+  learnCards: Card[]
+  learnBatch: Card[]
+  learnQueue: Card[]
+  learnGraduated: string[]
+  learnScores: Record<string, number>   // session correct-streak per card
+  learnBatchIdx: number
+  learnComplete: boolean
+  learnSetId: string
+  startLearnSession: (cards: Card[], setId: string) => void
+  answerLearnCard: (correct: boolean) => void
+  resetLearn: () => void
+  // ────────────────────────────────────────────────────────────
   mode: StudyMode; setId: string
   sessionCards: Card[]; mcQuestions: MCQuestion[]
   currentIndex: number; known: string[]; unknown: string[]; isComplete: boolean
@@ -51,6 +65,55 @@ function shuffleArr<T>(arr: T[]): T[] {
 let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 export const useStudyStore = create<StudyState>((set, get) => ({
+  // ── Learn mode initial state ─────────────────────────────────
+  learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
+  learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
+
+  startLearnSession: (cards, setId) => {
+    const BATCH = 5
+    const shuffled = shuffleArr([...cards])
+    set({
+      learnActive: true, learnCards: cards,
+      learnBatch: shuffled.slice(0, BATCH), learnQueue: shuffled.slice(BATCH),
+      learnGraduated: [], learnScores: {}, learnBatchIdx: 0,
+      learnComplete: false, learnSetId: setId,
+    })
+  },
+
+  answerLearnCard: (correct) => {
+    const { learnBatch, learnQueue, learnGraduated, learnScores, learnBatchIdx, learnSetId } = get()
+    const card = learnBatch[learnBatchIdx]
+    if (!card) return
+    useSRSStore.getState().updateSRS(card.id, learnSetId, correct)  // update long-term mastery
+    const newScores = { ...learnScores, [card.id]: correct ? (learnScores[card.id] ?? 0) + 1 : 0 }
+    const didGraduate = (newScores[card.id] ?? 0) >= 2
+    let newBatch = [...learnBatch], newQueue = [...learnQueue]
+    const newGraduated = [...learnGraduated]
+    let nextIdx: number
+    if (didGraduate) {
+      newGraduated.push(card.id)
+      if (newQueue.length > 0) {
+        newBatch[learnBatchIdx] = newQueue[0]; newQueue = newQueue.slice(1)
+        nextIdx = learnBatchIdx
+      } else {
+        newBatch = newBatch.filter((_, i) => i !== learnBatchIdx)
+        nextIdx = newBatch.length === 0 ? 0 : learnBatchIdx % newBatch.length
+      }
+    } else {
+      nextIdx = (learnBatchIdx + 1) % newBatch.length
+    }
+    if (newBatch.length === 0) {
+      set({ learnBatch: [], learnQueue: [], learnGraduated: newGraduated, learnScores: newScores, learnComplete: true })
+      return
+    }
+    set({ learnBatch: newBatch, learnQueue: newQueue, learnGraduated: newGraduated, learnScores: newScores, learnBatchIdx: nextIdx })
+  },
+
+  resetLearn: () => set({
+    learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
+    learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
+  }),
+  // ─────────────────────────────────────────────────────────────
   mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],
   currentIndex: 0, known: [], unknown: [], isComplete: false,
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
