@@ -132,13 +132,13 @@ export default function SetDetailPage() {
         <div className={styles.actions}>
           <Link to={`/sets/${id}/study`} className={styles.studyBtn}>Study</Link>
           <Link to={`/sets/${id}/edit`} className={styles.editBtn}>Edit</Link>
+          <button className={styles.deleteBtn} onClick={handleDelete}>Delete</button>
           <button className={styles.exportBtn} onClick={handleExport} title="Export as CSV">
             {exported
               ? <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8l3.5 3.5 7.5-7"/></svg>
               : <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7.5 1v9M4 7l3.5 3.5L11 7"/><path d="M2 11.5v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1"/></svg>
             }
           </button>
-          <button className={styles.deleteBtn} onClick={handleDelete}>Delete</button>
         </div>
       </div>
 
