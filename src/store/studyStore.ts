@@ -86,7 +86,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   answerLearnCard: (correct) => {
-    const { learnBatch, learnQueue, learnGraduated, learnScores, learnBatchIdx, learnSetId, learnBatchSummary } = get()
+    const { learnBatch, learnQueue, learnGraduated, learnScores, learnBatchIdx, learnSetId, learnBatchSummary, learnCards } = get()
     const card = learnBatch[learnBatchIdx]
     if (!card) return
     useSRSStore.getState().updateSRS(card.id, learnSetId, correct)  // update long-term mastery
@@ -112,6 +112,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       } else {
         // All done
         set({ learnBatch: [], learnQueue: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnComplete: true })
+        get()._persist(newGraduated, [], learnCards.length, 'learn', learnSetId, false)
       }
       return
     }

@@ -85,7 +85,6 @@ export default function LearnCard() {
 
   // ── Batch complete screen ──────────────────────────────────────
   if (learnBatchComplete) {
-    const totalCards = learnGraduated.length + learnQueue.length
     return (
       <div className={styles.batchCompleteWrap}>
         <div className={styles.batchCompleteIcon}>

@@ -417,24 +417,24 @@ export default function StudyPage() {
         </button>
         <div className={styles.topBarRight}>
           {mode === 'flashcard' && (
-            <button
-              className={[styles.shuffleBtn, startSide === 'definition' ? styles.shuffleBtnActive : ''].join(' ')}
-              onClick={() => setStartSide(s => s === 'definition' ? 'term' : 'definition')}
-              title={startSide === 'definition' ? 'Definition first — tap for term first' : 'Term first — tap for definition first'}
-            >
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5h9M7 2l3 3-3 3M14 10H5M8 7l-3 3 3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
+            <>
+              <button
+                className={[styles.shuffleBtn, startSide === 'definition' ? styles.shuffleBtnActive : ''].join(' ')}
+                onClick={() => setStartSide(s => s === 'definition' ? 'term' : 'definition')}
+                title={startSide === 'definition' ? 'Definition first — tap for term first' : 'Term first — tap for definition first'}
+              >
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5h9M7 2l3 3-3 3M14 10H5M8 7l-3 3 3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button
+                className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
+                onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
+                title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
+              >
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
+              </button>
+            </>
           )}
           {mode === 'multiple_choice' && (
-            <button
-              className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
-              onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
-              title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
-            >
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
-            </button>
-          )}
-          {mode === 'flashcard' && (
             <button
               className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
               onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}

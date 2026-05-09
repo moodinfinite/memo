@@ -1,5 +1,5 @@
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
-export type StudyMode = 'flashcard' | 'multiple_choice' | 'typed' | 'sentence'
+export type StudyMode = 'flashcard' | 'multiple_choice' | 'typed' | 'sentence' | 'learn'
 
 export interface SentenceEntry {
   card_id: string
