@@ -74,7 +74,7 @@ Set subject: "${setTitle || 'General vocabulary'}"
 Vocabulary words to include:
 ${termList}
 
-Write entirely in Traditional Chinese (繁體中文) at an HSK 3 reading level. Write a cohesive 4–6 sentence paragraph. Requirements:
+Write entirely in Traditional Chinese (繁體中文) at an HSK 3 reading level. Write a cohesive 6–8 sentence paragraph. Requirements:
 - Use simple, everyday vocabulary and short sentence structures throughout — HSK 3 level for all words EXCEPT the vocabulary terms listed above
 - The target vocabulary terms should be the hardest words in the story; everything else should be easy to read
 - Weave each vocabulary term in naturally so its meaning is clear from context
