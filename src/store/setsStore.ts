@@ -101,7 +101,7 @@ export const useSetsStore = create<SetsState>((set, get) => ({
       sets: state.sets.map((s) => s.id === id ? { ...s, title: safeTitle, description: safeDesc, folder_id: folderId, cardCount: safeCards.length } : s),
       currentSet: state.currentSet?.id === id
         ? { ...state.currentSet, title: safeTitle, description: safeDesc, folder_id: folderId, cardCount: safeCards.length,
-            cards: safeCards.map((c) => ({ ...c, id: (c as any).id ?? '', set_id: id, user_id: user.id })) }
+            cards: safeCards.filter((c) => (c as any).id).map((c) => ({ ...(c as any), set_id: id, user_id: user.id })) }
         : state.currentSet,
     }))
     // Sync to DB in background
@@ -128,10 +128,10 @@ export const useSetsStore = create<SetsState>((set, get) => ({
 
   deleteSet: async (id) => {
     // Optimistic: remove from UI immediately, sync in background
-    const prev = get().sets
+    const deleted = get().sets.find((s) => s.id === id)
     set((state) => ({ sets: state.sets.filter((s) => s.id !== id), currentSet: null }))
     const { error } = await supabase.from('sets').delete().eq('id', id)
-    if (error) set({ sets: prev }) // rollback on failure
+    if (error && deleted) set((state) => ({ sets: [...state.sets, deleted] })) // rollback only the removed item
   },
 
   togglePin: async (id) => {

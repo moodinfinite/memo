@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './TitleAI.module.css'
+import { supabase } from '@/lib/supabase'
 
 interface Props {
   cards: { term: string; definition: string }[]
@@ -20,9 +21,10 @@ export default function TitleAI({ cards, onSelect }: Props) {
     setError(null)
     setSuggestions([])
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/generate-title', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ cards: filledCards.slice(0, 12) }),
       })
       const data = await res.json()

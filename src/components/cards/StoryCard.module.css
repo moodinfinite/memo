@@ -140,6 +140,15 @@
   color: var(--accent-text) !important;
 }
 
+/* ── Action row ── */
+.actionRow {
+  display: flex;
+  gap: 8px;
+  align-self: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* ── Regenerate button ── */
 .regenBtn {
   display: inline-flex;
@@ -163,6 +172,27 @@
   background: var(--bg-overlay);
 }
 .regenBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.newBatchBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--r-lg, 12px);
+  border: 1px solid var(--border-default);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.newBatchBtn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-overlay);
+}
 
 @media (max-width: 768px) {
   .card { padding: 24px 18px; }

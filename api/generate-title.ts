@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js'
+
 // In-memory rate limiter (per-IP, resets on cold start)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_MAX = 10       // max requests per window
@@ -35,6 +37,16 @@ export default async function handler(req: any, res: any) {
   if (isRateLimited(clientIp)) {
     return res.status(429).json({ error: 'Too many requests. Please wait a minute.' })
   }
+
+  const authHeader = (req.headers['authorization'] as string) ?? ''
+  const token = authHeader.replace('Bearer ', '').trim()
+  if (!token) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.VITE_SUPABASE_ANON_KEY!,
+  )
+  const { error: authError } = await supabase.auth.getUser(token)
+  if (authError) return res.status(401).json({ error: 'Unauthorized' })
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {

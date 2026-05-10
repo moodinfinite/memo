@@ -149,6 +149,17 @@ export default function StudyPage() {
   const filterCount = (filter: MasteryLevel | null) =>
     (currentSet?.cards ?? []).filter(c => filterCard(c.id, filter)).length
 
+  const handleNewBatch = () => {
+    if (!currentSet?.cards?.length) return
+    const cards = filteredCards(currentSet.cards)
+    const currentIds = new Set(storyTerms.map(t => t.id))
+    const sorted = [...cards].sort((a, b) => getMasteryLevel(cardSRS[a.id]) - getMasteryLevel(cardSRS[b.id]))
+    // Prefer cards not in the current batch; fall back to all if not enough
+    const fresh = sorted.filter(c => !currentIds.has(c.id))
+    const pool = fresh.length >= 4 ? fresh : sorted
+    setStoryTerms(pool.slice(0, 8))
+  }
+
   const handleStart = async () => {
     if (!currentSet?.cards?.length || !id || isStarting) return
     // Story mode: pick up to 8 lowest-mastery terms, no session tracking
@@ -386,7 +397,7 @@ export default function StudyPage() {
             <button className={styles.exitBtn} onClick={handleEnd}>Done</button>
           </div>
         </div>
-        <StoryCard terms={storyTerms} setId={currentSet.id} setTitle={currentSet.title} />
+        <StoryCard terms={storyTerms} setId={currentSet.id} setTitle={currentSet.title} onNewBatch={handleNewBatch} />
       </div>
     )
   }

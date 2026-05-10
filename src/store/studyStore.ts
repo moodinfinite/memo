@@ -266,9 +266,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     if (!card || !sentenceInput.trim()) return
     set({ sentenceStatus: 'submitting' })
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/review-sentence', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ term: card.term, definition: card.definition, sentence: sentenceInput.trim() }),
       })
       const data = await res.json()
