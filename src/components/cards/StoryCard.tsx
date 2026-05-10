@@ -73,7 +73,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     }
   }, [terms, setTitle])
 
-  useEffect(() => { generate() }, [])
+  useEffect(() => { generate() }, [generate])
 
   const segments = story ? buildSegments(story, terms) : []
 
