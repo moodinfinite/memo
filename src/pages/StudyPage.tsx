@@ -39,6 +39,7 @@ export default function StudyPage() {
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
   const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn' | 'story'>('flashcard')
   const [storyTerms, setStoryTerms] = useState<Card[]>([])
+  const [storyBatchOffset, setStoryBatchOffset] = useState(0)
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
@@ -152,12 +153,10 @@ export default function StudyPage() {
   const handleNewBatch = () => {
     if (!currentSet?.cards?.length) return
     const cards = filteredCards(currentSet.cards)
-    const currentIds = new Set(storyTerms.map(t => t.id))
     const sorted = [...cards].sort((a, b) => getMasteryLevel(cardSRS[a.id]) - getMasteryLevel(cardSRS[b.id]))
-    // Prefer cards not in the current batch; fall back to all if not enough
-    const fresh = sorted.filter(c => !currentIds.has(c.id))
-    const pool = fresh.length >= 4 ? fresh : sorted
-    setStoryTerms(pool.slice(0, 8))
+    const nextOffset = (storyBatchOffset + 1) % Math.ceil(sorted.length / 8)
+    setStoryBatchOffset(nextOffset)
+    setStoryTerms(sorted.slice(nextOffset * 8, nextOffset * 8 + 8))
   }
 
   const handleStart = async () => {
@@ -168,6 +167,7 @@ export default function StudyPage() {
       await fetchSRS(id, { force: true })
       const cards = filteredCards(currentSet.cards)
       const sorted = [...cards].sort((a, b) => getMasteryLevel(cardSRS[a.id]) - getMasteryLevel(cardSRS[b.id]))
+      setStoryBatchOffset(0)
       setStoryTerms(sorted.slice(0, 8))
       setSelecting(false)
       setIsStarting(false)
