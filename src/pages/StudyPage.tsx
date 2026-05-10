@@ -386,7 +386,7 @@ export default function StudyPage() {
             <button className={styles.exitBtn} onClick={handleEnd}>Done</button>
           </div>
         </div>
-        <StoryCard terms={storyTerms} setTitle={currentSet.title} />
+        <StoryCard terms={storyTerms} setId={currentSet.id} setTitle={currentSet.title} />
       </div>
     )
   }

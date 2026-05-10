@@ -74,14 +74,14 @@ Set subject: "${setTitle || 'General vocabulary'}"
 Vocabulary words to include:
 ${termList}
 
-Write a cohesive 4–6 sentence paragraph. Requirements:
-- Match the tone and setting of the subject matter (medical vocab → a medical scenario, French cuisine → a dining scene, history → a historical moment, etc.)
+Write entirely in Traditional Chinese (繁體中文). Write a cohesive 4–6 sentence paragraph. Requirements:
+- Match the tone and setting of the subject matter
 - Take genuine creative liberty to make the story vivid, specific, and memorable
 - Weave each vocabulary term in naturally so its meaning is clear from context
 - Use the exact spelling of every term as listed above
 - Use ALL the terms provided
 
-Return only the story paragraph — no title, no quotes, no explanation, no extra formatting.`,
+Return only the story paragraph in Traditional Chinese — no title, no quotes, no explanation, no extra formatting.`,
         }],
       }),
     })

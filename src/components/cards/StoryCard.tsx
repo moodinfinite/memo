@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
+import { useSRSStore } from '@/store/srsStore'
 import styles from './StoryCard.module.css'
 
 interface Props {
   terms: Card[]
   setTitle: string
+  setId: string
 }
 
 /** Split `text` into plain/highlighted segments for the given terms */
@@ -27,13 +29,26 @@ function buildSegments(text: string, terms: Card[]): { text: string; highlighted
   })
 }
 
-export default function StoryCard({ terms, setTitle }: Props) {
+export default function StoryCard({ terms, setId, setTitle }: Props) {
   const [story, setStory] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
+  const tappedIds = useRef<Set<string>>(new Set())
+  const storyRef = useRef('')
+  useEffect(() => { storyRef.current = story }, [story])
+
+  // On unmount: log mastery — tapped terms needed help (false), untapped didn't (true)
+  useEffect(() => {
+    return () => {
+      if (!storyRef.current) return
+      const updateSRS = useSRSStore.getState().updateSRS
+      terms.forEach(t => updateSRS(t.id, setId, !tappedIds.current.has(t.id)))
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const generate = useCallback(async () => {
+    tappedIds.current.clear()
     setLoading(true)
     setError(null)
     setStory('')
@@ -87,7 +102,11 @@ export default function StoryCard({ terms, setTitle }: Props) {
                 <mark
                   key={i}
                   className={[styles.highlight, tooltip?.term === seg.text.toLowerCase() ? styles.highlightActive : ''].join(' ')}
-                  onClick={() => setTooltip(t => t?.term === seg.text.toLowerCase() ? null : { term: seg.text.toLowerCase(), def: seg.definition! })}
+                  onClick={() => {
+                    const termObj = terms.find(t => t.term.toLowerCase() === seg.text.toLowerCase())
+                    if (termObj) tappedIds.current.add(termObj.id)
+                    setTooltip(t => t?.term === seg.text.toLowerCase() ? null : { term: seg.text.toLowerCase(), def: seg.definition! })
+                  }}
                 >
                   {seg.text}
                 </mark>
@@ -119,7 +138,10 @@ export default function StoryCard({ terms, setTitle }: Props) {
               <button
                 key={t.id}
                 className={[styles.termChip, tooltip?.term === t.term.toLowerCase() ? styles.termChipActive : ''].join(' ')}
-                onClick={() => setTooltip(v => v?.term === t.term.toLowerCase() ? null : { term: t.term.toLowerCase(), def: t.definition })}
+                onClick={() => {
+                  tappedIds.current.add(t.id)
+                  setTooltip(v => v?.term === t.term.toLowerCase() ? null : { term: t.term.toLowerCase(), def: t.definition })
+                }}
               >
                 {t.term}
               </button>
