@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useStudyStore } from '@/store/studyStore'
