@@ -10,10 +10,10 @@ export default function FolderPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { sets, fetchSets, togglePin, moveToFolder } = useSetsStore()
-  const { folders, deleteFolder } = useFoldersStore()
+  const { folders, fetchFolders, deleteFolder } = useFoldersStore()
   const [showAddSets, setShowAddSets] = useState(false)
 
-  useEffect(() => { fetchSets() }, [])
+  useEffect(() => { fetchSets(); fetchFolders() }, [])
 
   const folder = folders.find((f) => f.id === id)
   const folderSets = sets.filter((s) => s.folder_id === id)

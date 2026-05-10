@@ -18,6 +18,8 @@ const FOLDER_COLORS = [
 interface FoldersState {
   folders: Folder[]
   isLoading: boolean
+  error: string | null
+  foldersLastFetched: number
   fetchFolders: () => Promise<void>
   createFolder: (name: string) => Promise<Folder>
   updateFolder: (id: string, name: string) => Promise<void>
@@ -27,14 +29,20 @@ interface FoldersState {
 export const useFoldersStore = create<FoldersState>((set, get) => ({
   folders: [],
   isLoading: false,
+  error: null,
+  foldersLastFetched: 0,
 
   fetchFolders: async () => {
-    set({ isLoading: true })
-    const { data } = await supabase
+    // Skip refetch if data is fresh (< 30s old)
+    if (get().folders.length > 0 && Date.now() - get().foldersLastFetched < 30_000) return
+    if (get().folders.length === 0) set({ isLoading: true })
+    set({ error: null })
+    const { data, error } = await supabase
       .from('folders')
       .select('*')
       .order('position', { ascending: true })
-    set({ folders: data ?? [], isLoading: false })
+    if (error) { set({ error: error.message, isLoading: false }); return }
+    set({ folders: data ?? [], isLoading: false, foldersLastFetched: Date.now() })
   },
 
   createFolder: async (name) => {

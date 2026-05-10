@@ -30,7 +30,7 @@ const TIMER_OPTS = [{ label: '1 min', mins: 1 }, { label: '3 min', mins: 3 }, { 
 export default function StudyPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentSet, fetchSet } = useSetsStore()
+  const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
   const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, startLearnSession, resetLearn } = useStudyStore()
 
@@ -242,6 +242,12 @@ export default function StudyPage() {
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60 < 10 ? '0' : '')}${s % 60}`
 
+  if (!currentSet && error) return (
+    <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <p style={{ marginBottom: 16 }}>Failed to load set — {error}</p>
+      <button onClick={() => id && fetchSet(id)} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-default)', background: 'var(--bg-raised)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13 }}>Try again</button>
+    </div>
+  )
   if (!currentSet) return <StudyPageSkeleton />
 
   if (selecting) return (

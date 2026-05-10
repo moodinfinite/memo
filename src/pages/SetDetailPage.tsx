@@ -36,7 +36,7 @@ function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
 export default function SetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentSet, fetchSet, deleteSet, moveToFolder, isLoading } = useSetsStore()
+  const { currentSet, fetchSet, deleteSet, moveToFolder, isLoading, error } = useSetsStore()
   const { folders } = useFoldersStore()
   const { cardSRS, fetchSRS } = useSRSStore()
   const [showFolderPicker, setShowFolderPicker] = useState(false)
@@ -83,6 +83,12 @@ export default function SetDetailPage() {
   }
 
   if (isLoading && !currentSet) return <SetDetailSkeleton />
+  if (error && !currentSet) return (
+    <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <p style={{ marginBottom: 16 }}>Failed to load set — {error}</p>
+      <button onClick={() => id && fetchSet(id)} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-default)', background: 'var(--bg-raised)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13 }}>Try again</button>
+    </div>
+  )
   if (!currentSet) return null
 
   const cards = currentSet.cards ?? []

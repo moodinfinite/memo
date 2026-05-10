@@ -24,20 +24,26 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   // Call once on app mount — restores session from localStorage automatically
   init: async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user ?? null
 
-    let profile = null
-    if (user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', user.id)
-        .single()
-      profile = data
+      let profile = null
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single()
+        profile = data
+      }
+
+      set({ user, profile, initialised: true })
+    } catch {
+      // Network failure on startup — mark as initialised so the app renders
+      // (user will see login screen or be redirected appropriately)
+      set({ initialised: true })
     }
-
-    set({ user, profile, initialised: true })
 
     // Listen for auth changes (token refresh, logout from another tab, etc.)
     supabase.auth.onAuthStateChange(async (_event, session) => {

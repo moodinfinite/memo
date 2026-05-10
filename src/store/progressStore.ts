@@ -68,12 +68,14 @@ export const useProgressStore = create<ProgressState>((set) => ({
     const user = useAuthStore.getState().user
     if (!user) { set({ isLoading: false }); return }
 
-    const { data: sessions } = await supabase
+    const { data: sessions, error } = await supabase
       .from('study_sessions')
       .select('*')
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
       .limit(200)
+
+    if (error) { console.error('fetchProgress error:', error.message); set({ isLoading: false }); return }
 
     const s = sessions ?? []
     const totalCardsStudied = s.reduce((acc, sess) => acc + sess.total_cards, 0)
