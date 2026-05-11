@@ -92,6 +92,7 @@ export default function SetDetailPage() {
   if (!currentSet) return null
 
   const cards = currentSet.cards ?? []
+  const cardsLoading = cards.length === 0 && (currentSet.cardCount ?? 0) > 0
   const total = cards.length
   const masteredCount = cards.filter(c => getMasteryLevel(cardSRS[c.id]) >= 3).length
   const learningCount = cards.filter(c => { const l = getMasteryLevel(cardSRS[c.id]); return l >= 1 && l <= 2 }).length
@@ -105,7 +106,7 @@ export default function SetDetailPage() {
         <div>
           <h1 className={styles.title}>{currentSet.title}</h1>
           {currentSet.description && <p className={styles.desc}>{currentSet.description}</p>}
-          <p className={styles.meta}>{currentSet.cards?.length ?? 0} cards</p>
+          <p className={styles.meta}>{currentSet.cardCount ?? currentSet.cards?.length ?? 0} cards</p>
           <div className={styles.folderRow} ref={folderPickerRef}>
             {(() => {
               const folder = folders.find(f => f.id === currentSet.folder_id)
@@ -167,7 +168,17 @@ export default function SetDetailPage() {
       <div className={styles.sectionLabel}>All cards</div>
 
       <div className={styles.cardList}>
-        {(currentSet.cards ?? []).map((card, i) => {
+        {cardsLoading && Array.from({ length: Math.min(currentSet.cardCount ?? 3, 8) }).map((_, i) => (
+          <div key={i} className={styles.cardRow} style={{ opacity: 0.4 + i * 0.02 }}>
+            <span className={styles.rowNum}>{i + 1}</span>
+            <div className={styles.rowContent}>
+              <div className={styles.term} style={{ background: 'var(--bg-overlay)', borderRadius: 4, color: 'transparent', userSelect: 'none' }}>loading</div>
+              <div className={styles.divider} />
+              <div className={styles.definition} style={{ background: 'var(--bg-overlay)', borderRadius: 4, color: 'transparent', userSelect: 'none' }}>loading placeholder text here</div>
+            </div>
+          </div>
+        ))}
+        {!cardsLoading && (currentSet.cards ?? []).map((card, i) => {
           const level = getMasteryLevel(cardSRS[card.id])
           return (
             <div key={card.id} className={styles.cardRow}>
