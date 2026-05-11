@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useStudyStore } from '@/store/studyStore'
+import { useSRSStore } from '@/store/srsStore'
+import { getMasteryLevel } from '@/lib/mastery'
+import type { MasteryLevel } from '@/lib/mastery'
 import type { Card, StudyMode } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
@@ -33,10 +36,13 @@ export default function MasterDeckPage() {
   const [setCount, setSetCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [selecting, setSelecting] = useState(true)
+  const { cardSRS } = useSRSStore()
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
+  const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
+  const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
   const [flipKey, setFlipKey] = useState(0)
   const [shuffleActive, setShuffleActive] = useState(false)
   const [burstMsg, setBurstMsg] = useState<string | null>(null)
@@ -104,8 +110,23 @@ export default function MasterDeckPage() {
     setTimeout(() => setBurstMsg(null), 2000)
   }, [mcStreak])
 
+  const filterCard = (cardId: string, filter: MasteryLevel | null): boolean => {
+    const level = getMasteryLevel(cardSRS[cardId])
+    if (filter === null) return true
+    if (filter === 3) return level < 4
+    if (filter === 2) return level >= 1 && level <= 2
+    if (filter === 1) return level === 0
+    return true
+  }
+  const filteredCards = masteryFilter === null ? allCards
+    : (allCards.filter(c => filterCard(c.id, masteryFilter)).length > 0
+        ? allCards.filter(c => filterCard(c.id, masteryFilter))
+        : allCards)
+  const filterCount = (filter: MasteryLevel | null) =>
+    filter === null ? allCards.length : allCards.filter(c => filterCard(c.id, filter)).length
+
   const handleStart = () => {
-    startSession(allCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
   }
 
@@ -139,12 +160,30 @@ export default function MasterDeckPage() {
         <div className={styles.modeOptions}>
           {MODES.map((m) => {
             const disabled = m.id === 'multiple_choice' && !canMC
+            const isSelected = selectedMode === m.id
+            if (m.id === 'flashcard') return (
+              <div key={m.id} className={[styles.modeOption, isSelected ? styles.modeSelected : ''].join(' ')}
+                onClick={() => setSelectedMode('flashcard')} role="button" tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && setSelectedMode('flashcard')}>
+                <div className={styles.modeLabel}>{m.label}</div>
+                <div className={styles.modeDesc}>{m.desc}</div>
+                <div className={styles.startSideRow}>
+                  <span className={styles.startSideLabel}>Start on</span>
+                  {(['term', 'definition', 'random'] as const).map(s => (
+                    <button key={s}
+                      className={[styles.startSidePill, startSide === s ? styles.startSidePillActive : ''].join(' ')}
+                      onClick={e => { e.stopPropagation(); setStartSide(s) }}>
+                      {s === 'term' ? 'Term' : s === 'definition' ? 'Definition' : 'Random'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
             return (
               <button key={m.id}
-                className={[styles.modeOption, selectedMode === m.id ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')}
+                className={[styles.modeOption, isSelected ? styles.modeSelected : '', disabled ? styles.modeDisabled : ''].join(' ')}
                 onClick={() => !disabled && setSelectedMode(m.id)}
-                disabled={disabled}
-              >
+                disabled={disabled}>
                 <div className={styles.modeLabel}>{m.label}</div>
                 <div className={styles.modeDesc}>{disabled ? 'Needs 4+ cards' : m.desc}</div>
               </button>
@@ -168,6 +207,21 @@ export default function MasterDeckPage() {
             ))}
           </div>
         )}
+        <div className={styles.masteryFilterRow}>
+          <span className={styles.masteryFilterLabel}>Focus</span>
+          <div className={styles.masteryFilterOpts}>
+            {([null, 3, 2, 1] as (MasteryLevel | null)[]).map(val => {
+              const label = val === null ? 'All' : val === 3 ? 'Not mastered' : val === 2 ? 'Still learning' : 'New only'
+              return (
+                <button key={String(val)}
+                  className={[styles.masteryOpt, masteryFilter === val ? styles.masteryOptActive : ''].join(' ')}
+                  onClick={() => setMasteryFilter(val)}>
+                  {label} <span className={styles.masteryOptCount}>({filterCount(val)})</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <button className={styles.startBtn} onClick={handleStart}>Start studying</button>
       </div>
     </div>
@@ -185,7 +239,7 @@ export default function MasterDeckPage() {
               : <CountUpScore pct={pct} total={total} known={k} unknown={u} />
             }
             <div className={styles.summaryActions}>
-              <button className={styles.retryBtn} onClick={() => { startSession(allCards, mode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 }) }}>Study again</button>
+              <button className={styles.retryBtn} onClick={() => { startSession(filteredCards, mode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 }) }}>Study again</button>
               <button className={styles.changeModeBtn} onClick={handleEnd}>Change mode</button>
             </div>
           </div>
@@ -219,7 +273,7 @@ export default function MasterDeckPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} />}
+      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} startSide={startSide} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {timerOn && (
