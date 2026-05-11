@@ -8,6 +8,7 @@ interface ProgressState {
   weekStreak: number
   totalCardsStudied: number
   isLoading: boolean
+  progressLastFetched: number
   fetchProgress: () => Promise<void>
 }
 
@@ -57,20 +58,23 @@ function calculateWeekStreak(sessions: StudySession[]): number {
   return streak
 }
 
-export const useProgressStore = create<ProgressState>((set) => ({
+export const useProgressStore = create<ProgressState>((set, get) => ({
   sessions: [],
   weekStreak: 0,
   totalCardsStudied: 0,
   isLoading: false,
+  progressLastFetched: 0,
 
   fetchProgress: async () => {
+    // Skip refetch if data is fresh (< 60s old)
+    if (Date.now() - get().progressLastFetched < 60_000) return
     set({ isLoading: true })
     const user = useAuthStore.getState().user
     if (!user) { set({ isLoading: false }); return }
 
     const { data: sessions, error } = await supabase
       .from('study_sessions')
-      .select('*')
+      .select('completed_at, total_cards')
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
       .limit(200)
@@ -81,6 +85,6 @@ export const useProgressStore = create<ProgressState>((set) => ({
     const totalCardsStudied = s.reduce((acc, sess) => acc + sess.total_cards, 0)
     const weekStreak = calculateWeekStreak(s)
 
-    set({ sessions: s, weekStreak, totalCardsStudied, isLoading: false })
+    set({ sessions: s, weekStreak, totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
   },
 }))

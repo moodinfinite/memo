@@ -1,7 +1,7 @@
-import * as XLSX from 'xlsx'
 import type { SentenceEntry } from './database.types'
 
-export function exportSentencesToExcel(entries: SentenceEntry[], setTitle: string) {
+export async function exportSentencesToExcel(entries: SentenceEntry[], setTitle: string) {
+  const XLSX = await import('xlsx')
   const rows = entries.map((e, i) => ({
     '#': i + 1,
     'Term': e.term,

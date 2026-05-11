@@ -14,7 +14,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-xlsx': ['xlsx'],
+          // xlsx is dynamically imported in exportSentences.ts — Vite auto-splits it
         }
       }
     }

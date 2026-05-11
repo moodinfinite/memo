@@ -73,7 +73,7 @@ export default function SentenceSummary({ entries, setTitle, isPersisting, persi
         <div className={styles.actions}>
           <button
             className={styles.exportBtn}
-            onClick={() => exportSentencesToExcel(entries, setTitle)}
+            onClick={() => void exportSentencesToExcel(entries, setTitle)}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 1v8M4 6l3 3 3-3M2 10v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2"/></svg>
             Export to Excel

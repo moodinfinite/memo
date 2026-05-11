@@ -10,6 +10,10 @@ import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
 import mStyles from './MasterDeckPage.module.css'
 
+// Module-level cache — persists across navigations, resets after 30s
+let _masterCards: Card[] = []
+let _masterFetchedAt = 0
+
 const MODES: { id: StudyMode; label: string; desc: string }[] = [
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
   { id: 'multiple_choice', label: 'Multiple choice', desc: 'Pick the right answer' },
@@ -44,9 +48,17 @@ export default function MasterDeckPage() {
   }, [])
 
   const fetchAll = async () => {
+    if (_masterCards.length > 0 && Date.now() - _masterFetchedAt < 30_000) {
+      setAllCards(_masterCards)
+      setSetCount(new Set(_masterCards.map((c: Card) => c.set_id)).size)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     const { data } = await supabase.from('cards').select('*').order('set_id')
     if (data) {
+      _masterCards = data
+      _masterFetchedAt = Date.now()
       setAllCards(data)
       setSetCount(new Set(data.map((c: Card) => c.set_id)).size)
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useSetsStore } from '@/store/setsStore'
@@ -43,6 +43,7 @@ export default function HomePage() {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const firstName = profile?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there'
+  const folderMap = useMemo(() => new Map(folders.map(f => [f.id, f])), [folders])
   const pinned = sets.filter((s) => s.pinned)
   const rest = sets.filter((s) => !s.pinned)
   const totalCards = sets.reduce((a, s) => a + (s.cardCount ?? 0), 0)
@@ -106,11 +107,11 @@ export default function HomePage() {
       )}
 
       {!isLoading && pinned.length > 0 && !query && (
-        <><div className={styles.sectionLabel}>Pinned</div><div className={styles.grid}>{pinned.map((s) => <SetCard key={s.id} set={s} folders={folders} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
+        <><div className={styles.sectionLabel}>Pinned</div><div className={styles.grid}>{pinned.map((s) => <SetCard key={s.id} set={s} folderMap={folderMap} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
       )}
 
       {!isLoading && (rest.length > 0 || (!query && sets.length > 0)) && (
-        <><div className={styles.sectionLabel}>{pinned.length > 0 && !query ? 'Other sets' : query ? `Results for "${query}"` : 'Your sets'}</div><div className={styles.grid}>{!query && <MasterDeckCard totalCards={totalCards} setCount={sets.length} onNavigate={() => navigate('/master')} />}{rest.map((s) => <SetCard key={s.id} set={s} folders={folders} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
+        <><div className={styles.sectionLabel}>{pinned.length > 0 && !query ? 'Other sets' : query ? `Results for "${query}"` : 'Your sets'}</div><div className={styles.grid}>{!query && <MasterDeckCard totalCards={totalCards} setCount={sets.length} onNavigate={() => navigate('/master')} />}{rest.map((s) => <SetCard key={s.id} set={s} folderMap={folderMap} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
       )}
     </div>
   )
@@ -136,14 +137,14 @@ function MasterDeckCard({ totalCards, setCount, onNavigate }: {
   )
 }
 
-function SetCard({ set, folders, cardSRS, onPin, onNavigate }: {
+function SetCard({ set, folderMap, cardSRS, onPin, onNavigate }: {
   set: FlashcardSet
-  folders: { id: string; name: string; color: string }[]
+  folderMap: Map<string, { id: string; name: string; color: string }>
   cardSRS: Record<string, import('@/store/srsStore').CardSRS>
   onPin: () => void
   onNavigate: () => void
 }) {
-  const folder = folders.find((f) => f.id === set.folder_id)
+  const folder = set.folder_id ? folderMap.get(set.folder_id) : undefined
   const cardCount = set.cardCount ?? 0
   const mastery = getSetMastery(set.id, cardCount, cardSRS)
   const info = MASTERY_INFO[mastery.level]

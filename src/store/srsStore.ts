@@ -21,6 +21,7 @@ export interface CardSRS {
 interface SRSState {
   cardSRS: Record<string, CardSRS>   // keyed by card_id
   lastLocalUpdate: Record<string, number>  // setId -> timestamp of last local write
+  srsAllFetchedAt: number
   isLoading: boolean
   fetchSRS: (setId: string, opts?: { force?: boolean }) => Promise<void>
   fetchAllSRS: () => Promise<void>
@@ -75,6 +76,7 @@ function isToday(dateStr: string): boolean {
 export const useSRSStore = create<SRSState>((set, get) => ({
   cardSRS: {},
   lastLocalUpdate: {},
+  srsAllFetchedAt: 0,
   isLoading: false,
 
   fetchSRS: async (setId, { force = false } = {}) => {
@@ -97,17 +99,26 @@ export const useSRSStore = create<SRSState>((set, get) => ({
   },
 
   fetchAllSRS: async () => {
-    // A plain select('*') on card_srs can be blocked by RLS without a set_id filter.
-    // Fetch the user's set IDs first (from the correct 'sets' table), then filter.
-    const { data: setsData, error: setsError } = await supabase.from('sets').select('id')
-    if (setsError) { console.error('fetchAllSRS sets error:', setsError); return }
-    const setIds = (setsData ?? []).map((s: { id: string }) => s.id)
+    // Skip refetch if data is fresh (< 30s old)
+    if (Date.now() - get().srsAllFetchedAt < 30_000 && Object.keys(get().cardSRS).length > 0) return
+
+    // Re-use set IDs already in setsStore — avoids a redundant round-trip to 'sets' table
+    const { useSetsStore } = await import('./setsStore')
+    const cachedSetIds = useSetsStore.getState().sets.map(s => s.id)
+    let setIds: string[]
+    if (cachedSetIds.length > 0) {
+      setIds = cachedSetIds
+    } else {
+      const { data: setsData, error: setsError } = await supabase.from('sets').select('id')
+      if (setsError) { console.error('fetchAllSRS sets error:', setsError); return }
+      setIds = (setsData ?? []).map((s: { id: string }) => s.id)
+    }
     if (setIds.length === 0) return
     const { data, error } = await supabase.from('card_srs').select('*').in('set_id', setIds)
     if (error) { console.error('fetchAllSRS card_srs error:', error); return }
     const map: Record<string, CardSRS> = {}
     for (const row of data ?? []) map[row.card_id] = row
-    set({ cardSRS: map })
+    set({ cardSRS: map, srsAllFetchedAt: Date.now() })
   },
 
   updateSRS: async (cardId, setId, known) => {
@@ -125,13 +136,15 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       last_seen_at: now,
     }
 
-    const { error: upsertError } = await supabase.from('card_srs').upsert(upsertData, { onConflict: 'card_id' })
-    if (upsertError) console.error('updateSRS upsert error:', upsertError)
-
+    // Optimistic: update UI immediately so card answer feels instant
     set((state) => ({
-      cardSRS: { ...state.cardSRS, [cardId]: { ...upsertData, easiness: next.easiness, interval: next.interval, repetitions: next.repetitions } },
+      cardSRS: { ...state.cardSRS, [cardId]: upsertData },
       lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
     }))
+
+    // Sync to DB in background
+    const { error: upsertError } = await supabase.from('card_srs').upsert(upsertData, { onConflict: 'card_id' })
+    if (upsertError) console.error('updateSRS upsert error:', upsertError)
   },
 
   revertSRS: (cardId, setId, prevState) => {
