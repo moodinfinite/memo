@@ -57,17 +57,15 @@ export default function NewSetPage() {
     setSaving(true)
     setError('')
     setCanRetry(false)
-    const timer = setTimeout(() => {
-      setSaving(false)
-      setError('Connection is slow — tap Retry to try again')
-      setCanRetry(true)
-    }, 12000)
+    // Warn at 8s (cold start), give up at 25s
+    const slowTimer = setTimeout(() => setError('Taking longer than usual — almost there…'), 8000)
+    const failTimer = setTimeout(() => { setSaving(false); setError('Connection timed out — tap Retry'); setCanRetry(true) }, 25000)
     try {
       const set = await createSet(title.trim(), description.trim(), validCards)
-      clearTimeout(timer)
+      clearTimeout(slowTimer); clearTimeout(failTimer)
       navigate(`/sets/${set.id}`)
     } catch (err: any) {
-      clearTimeout(timer)
+      clearTimeout(slowTimer); clearTimeout(failTimer)
       console.error('[NewSetPage] createSet failed:', err)
       const msg = err?.message ?? err?.error_description ?? JSON.stringify(err)
       setError(`Failed to save: ${msg}`)
