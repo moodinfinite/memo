@@ -66,9 +66,11 @@ export default function NewSetPage() {
       const set = await createSet(title.trim(), description.trim(), validCards)
       clearTimeout(timer)
       navigate(`/sets/${set.id}`)
-    } catch {
+    } catch (err: any) {
       clearTimeout(timer)
-      setError('Failed to save — tap Retry to try again')
+      console.error('[NewSetPage] createSet failed:', err)
+      const msg = err?.message ?? err?.error_description ?? JSON.stringify(err)
+      setError(`Failed to save: ${msg}`)
       setCanRetry(true)
       setSaving(false)
     }
