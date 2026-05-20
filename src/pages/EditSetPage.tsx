@@ -23,6 +23,7 @@ export default function EditSetPage() {
   const [rows, setRows] = useState<CardRow[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [canRetry, setCanRetry] = useState(false)
 
   useEffect(() => {
     if (id) fetchSet(id)
@@ -65,14 +66,20 @@ export default function EditSetPage() {
 
     setSaving(true)
     setError('')
-    const timer = setTimeout(() => { setSaving(false); setError('Save timed out — check your connection and try again') }, 30000)
+    setCanRetry(false)
+    const timer = setTimeout(() => {
+      setSaving(false)
+      setError('Connection is slow — tap Retry to try again')
+      setCanRetry(true)
+    }, 12000)
     try {
       await updateSet(id, title.trim(), description.trim(), validCards as never)
       clearTimeout(timer)
       navigate(`/sets/${id}`)
     } catch {
       clearTimeout(timer)
-      setError('Failed to save — please try again')
+      setError('Failed to save — tap Retry to try again')
+      setCanRetry(true)
       setSaving(false)
     }
   }
@@ -94,7 +101,12 @@ export default function EditSetPage() {
         </div>
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.error} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span>{error}</span>
+          {canRetry && <button onClick={handleSave} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, cursor: 'pointer' }}>Retry</button>}
+        </div>
+      )}
 
       <div className={styles.metaCard}>
         <div className={styles.field}>

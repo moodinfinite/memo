@@ -26,6 +26,7 @@ export default function NewSetPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showImport, setShowImport] = useState(false)
+  const [canRetry, setCanRetry] = useState(false)
 
   const handleImportLocal = (imported: { term: string; definition: string }[]) => {
     const existingFilled = rows.filter(r => r.term.trim() || r.definition.trim())
@@ -55,14 +56,20 @@ export default function NewSetPage() {
 
     setSaving(true)
     setError('')
-    const timer = setTimeout(() => { setSaving(false); setError('Save timed out — check your connection and try again') }, 30000)
+    setCanRetry(false)
+    const timer = setTimeout(() => {
+      setSaving(false)
+      setError('Connection is slow — tap Retry to try again')
+      setCanRetry(true)
+    }, 12000)
     try {
       const set = await createSet(title.trim(), description.trim(), validCards)
       clearTimeout(timer)
       navigate(`/sets/${set.id}`)
     } catch {
       clearTimeout(timer)
-      setError('Failed to save — please try again')
+      setError('Failed to save — tap Retry to try again')
+      setCanRetry(true)
       setSaving(false)
     }
   }
@@ -82,7 +89,12 @@ export default function NewSetPage() {
         </div>
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.error} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span>{error}</span>
+          {canRetry && <button onClick={handleSave} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, cursor: 'pointer' }}>Retry</button>}
+        </div>
+      )}
 
       {/* Set metadata */}
       <div className={styles.metaCard}>

@@ -104,9 +104,11 @@ export const useSetsStore = create<SetsState>((set, get) => ({
             cards: safeCards.filter((c) => (c as any).id).map((c) => ({ ...(c as any), set_id: id, user_id: user.id })) }
         : state.currentSet,
     }))
-    // Sync to DB in background
-    await supabase.from('sets').update({ title: safeTitle, description: safeDesc, folder_id: folderId }).eq('id', id)
-    await supabase.from('cards').delete().eq('set_id', id)
+    // Sync to DB — throw on error so the caller can surface it to the user
+    const { error: updateErr } = await supabase.from('sets').update({ title: safeTitle, description: safeDesc, folder_id: folderId }).eq('id', id)
+    if (updateErr) throw updateErr
+    const { error: deleteErr } = await supabase.from('cards').delete().eq('set_id', id)
+    if (deleteErr) throw deleteErr
     if (rawCards.length > 0) {
       const rows = safeCards.map((c) => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
       try {
