@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
+import { supabase } from '@/lib/supabase'
 import ImportModal from '@/components/ui/ImportModal'
 import TitleAI from '@/components/ui/TitleAI'
 import styles from './NewSetPage.module.css'
@@ -27,6 +28,12 @@ export default function NewSetPage() {
   const [error, setError] = useState('')
   const [showImport, setShowImport] = useState(false)
   const [canRetry, setCanRetry] = useState(false)
+  const [dbStatus, setDbStatus] = useState<'warming' | 'ready'>('warming')
+
+  // Warm up the DB connection as soon as the page loads so it's ready by the time the user hits Save
+  useEffect(() => {
+    supabase.from('sets').select('id').limit(1).then(() => setDbStatus('ready'))
+  }, [])
 
   const handleImportLocal = (imported: { term: string; definition: string }[]) => {
     const existingFilled = rows.filter(r => r.term.trim() || r.definition.trim())
@@ -82,6 +89,18 @@ export default function NewSetPage() {
           <p className={styles.sub}>Add your terms and definitions</p>
         </div>
         <div className={styles.headerActions}>
+          {dbStatus === 'warming' && (
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg style={{ animation: 'spin 1s linear infinite' }} width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="5.5" cy="5.5" r="4" strokeOpacity="0.25"/><path d="M5.5 1.5a4 4 0 0 1 4 4" strokeLinecap="round"/></svg>
+              Connecting…
+            </span>
+          )}
+          {dbStatus === 'ready' && (
+            <span style={{ fontSize: 12, color: 'var(--accent-text)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 5.5l2.5 2.5 4.5-4.5"/></svg>
+              Ready
+            </span>
+          )}
           <button className={styles.cancelBtn} onClick={() => navigate(-1)}>Cancel</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save set'}
