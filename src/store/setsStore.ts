@@ -20,6 +20,7 @@ interface SetsState {
   moveToFolder: (id: string, folderId: string | null) => Promise<void>
   importCards: (setId: string, cards: Omit<Card, 'id' | 'set_id' | 'user_id'>[]) => Promise<void>
   searchSets: (query: string) => Promise<void>
+  saveToSavedWords: (term: string, definition: string) => Promise<void>
 }
 
 export const useSetsStore = create<SetsState>((set, get) => ({
@@ -175,6 +176,42 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     )
     set({ currentSetFetchedAt: 0 })
     await get().fetchSet(setId)
+  },
+
+  saveToSavedWords: async (term, definition) => {
+    const user = useAuthStore.getState().user
+    if (!user) throw new Error('Not authenticated')
+    const safeTerm = sanitizeText(term, 200)
+    const safeDef = sanitizeText(definition, 500)
+
+    // Find or create the "Saved Words" set
+    let savedSet = get().sets.find(s => s.title === 'Saved Words')
+    if (!savedSet) {
+      const { data: existing } = await supabase
+        .from('sets').select('*').eq('user_id', user.id).eq('title', 'Saved Words').maybeSingle()
+      if (existing) {
+        savedSet = { ...existing, cardCount: existing.cardCount ?? 0, cards: [] }
+        set(state => ({ sets: state.sets.some(s => s.id === existing.id) ? state.sets : [savedSet!, ...state.sets] }))
+      } else {
+        const { data: newSet, error } = await supabase
+          .from('sets').insert({ title: 'Saved Words', description: 'Words saved while reading stories', user_id: user.id, folder_id: null, pinned: false })
+          .select().single()
+        if (error) throw error
+        savedSet = { ...newSet, cardCount: 0, cards: [] }
+        set(state => ({ sets: [savedSet!, ...state.sets] }))
+      }
+    }
+
+    // Get current card count for position
+    const { count } = await supabase.from('cards').select('*', { count: 'exact', head: true }).eq('set_id', savedSet.id)
+    const { error: cardErr } = await supabase.from('cards').insert({
+      set_id: savedSet.id, user_id: user.id,
+      term: safeTerm, definition: safeDef, position: count ?? 0,
+    })
+    if (cardErr) throw cardErr
+
+    // Update local card count
+    set(state => ({ sets: state.sets.map(s => s.id === savedSet!.id ? { ...s, cardCount: (s.cardCount ?? 0) + 1 } : s) }))
   },
 
   searchSets: async (query) => {

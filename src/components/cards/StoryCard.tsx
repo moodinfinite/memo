@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
 import { useSRSStore } from '@/store/srsStore'
+import { useSetsStore } from '@/store/setsStore'
 import styles from './StoryCard.module.css'
 
 interface Props {
@@ -13,20 +14,14 @@ interface Props {
 /** Split `text` into plain/highlighted segments for the given terms */
 function buildSegments(text: string, terms: Card[]): { text: string; highlighted: boolean; definition?: string }[] {
   if (!terms.length) return [{ text, highlighted: false }]
-
-  // Sort longest first to avoid partial substring matches
   const sorted = [...terms].sort((a, b) => b.term.length - a.term.length)
   const escaped = sorted.map(t => t.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   const regex = new RegExp(`(${escaped.join('|')})`, 'gi')
-
   const parts = text.split(regex)
   const termMap = new Map(terms.map(t => [t.term.toLowerCase(), t.definition]))
-
   return parts.map(part => {
     const def = termMap.get(part.toLowerCase())
-    return def !== undefined
-      ? { text: part, highlighted: true, definition: def }
-      : { text: part, highlighted: false }
+    return def !== undefined ? { text: part, highlighted: true, definition: def } : { text: part, highlighted: false }
   })
 }
 
@@ -35,11 +30,16 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
+  const [selection, setSelection] = useState<string>('')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
   const tappedIds = useRef<Set<string>>(new Set())
   const storyRef = useRef('')
+  const storyElRef = useRef<HTMLParagraphElement>(null)
+  const { saveToSavedWords } = useSetsStore()
+
   useEffect(() => { storyRef.current = story }, [story])
 
-  // On unmount: log mastery — tapped terms needed help (false), untapped didn't (true)
+  // On unmount: log mastery signals
   useEffect(() => {
     return () => {
       if (!storyRef.current) return
@@ -48,20 +48,55 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Detect text selection within the story paragraph
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || !storyElRef.current) { setSelection(''); return }
+      const range = sel.getRangeAt(0)
+      if (!storyElRef.current.contains(range.commonAncestorContainer)) { setSelection(''); return }
+      const word = sel.toString().trim()
+      if (word) { setSelection(word); setSaveStatus('idle') }
+      else setSelection('')
+    }
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => document.removeEventListener('selectionchange', handleSelectionChange)
+  }, [])
+
+  const handleSaveWord = async () => {
+    if (!selection || saveStatus === 'loading') return
+    setSaveStatus('loading')
+    try {
+      const res = await fetch('/api/lookup-word', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ word: selection }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      await saveToSavedWords(selection, data.definition)
+      setSaveStatus('saved')
+      window.getSelection()?.removeAllRanges()
+      setSelection('')
+      setTimeout(() => setSaveStatus('idle'), 2000)
+    } catch {
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus('idle'), 2500)
+    }
+  }
+
   const generate = useCallback(async () => {
     tappedIds.current.clear()
     setLoading(true)
     setError(null)
     setStory('')
     setTooltip(null)
+    setSelection('')
     try {
       const res = await fetch('/api/generate-story', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          setTitle,
-          terms: terms.map(t => ({ term: t.term, definition: t.definition })),
-        }),
+        body: JSON.stringify({ setTitle, terms: terms.map(t => ({ term: t.term, definition: t.definition })) }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to generate story')
@@ -97,7 +132,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
           </div>
         )}
         {story && (
-          <p className={styles.storyText}>
+          <p className={styles.storyText} ref={storyElRef}>
             {segments.map((seg, i) =>
               seg.highlighted ? (
                 <mark
@@ -117,6 +152,26 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
             )}
           </p>
         )}
+
+        {/* Selection save bar — slides up when text is selected */}
+        {selection && story && (
+          <div className={styles.saveBar}>
+            <span className={styles.saveBarWord}>「{selection}」</span>
+            <button
+              className={styles.saveBarBtn}
+              onClick={handleSaveWord}
+              disabled={saveStatus === 'loading'}
+            >
+              {saveStatus === 'loading' && 'Looking up…'}
+              {saveStatus === 'saved' && '✓ Saved'}
+              {saveStatus === 'error' && 'Failed — try again'}
+              {saveStatus === 'idle' && '+ Save to deck'}
+            </button>
+            <button className={styles.saveBarDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelection('') }}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l9 9M10 1L1 10"/></svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tooltip / definition reveal */}
@@ -130,7 +185,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
         </div>
       )}
 
-      {/* Terms used chips */}
+      {/* Terms chips */}
       {story && (
         <div className={styles.termsRow}>
           <span className={styles.termsLabel}>Terms in this story</span>
