@@ -23,6 +23,9 @@ interface SetsState {
   saveToSavedWords: (term: string, definition: string) => Promise<void>
 }
 
+// Serializes concurrent "find or create Saved Words set" calls so only one DB insert fires
+let savedWordsReady: Promise<string> | null = null
+
 export const useSetsStore = create<SetsState>((set, get) => ({
   sets: [],
   currentSet: null,
@@ -184,34 +187,40 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     const safeTerm = sanitizeText(term, 200)
     const safeDef = sanitizeText(definition, 500)
 
-    // Find or create the "Saved Words" set
-    let savedSet = get().sets.find(s => s.title === 'Saved Words')
-    if (!savedSet) {
-      const { data: existing } = await supabase
-        .from('sets').select('*').eq('user_id', user.id).eq('title', 'Saved Words').maybeSingle()
-      if (existing) {
-        savedSet = { ...existing, cardCount: existing.cardCount ?? 0, cards: [] }
-        set(state => ({ sets: state.sets.some(s => s.id === existing.id) ? state.sets : [savedSet!, ...state.sets] }))
-      } else {
-        const { data: newSet, error } = await supabase
-          .from('sets').insert({ title: 'Saved Words', description: 'Words saved while reading stories', user_id: user.id, folder_id: null, pinned: false })
-          .select().single()
-        if (error) throw error
-        savedSet = { ...newSet, cardCount: 0, cards: [] }
-        set(state => ({ sets: [savedSet!, ...state.sets] }))
-      }
+    // Serialize concurrent calls — only one "find or create" runs at a time
+    if (!savedWordsReady) {
+      savedWordsReady = (async () => {
+        let savedSet = get().sets.find(s => s.title === 'Saved Words')
+        if (!savedSet) {
+          const { data: existing } = await supabase
+            .from('sets').select('*').eq('user_id', user.id).eq('title', 'Saved Words').maybeSingle()
+          if (existing) {
+            savedSet = { ...existing, cardCount: existing.cardCount ?? 0, cards: [] }
+            set(state => ({ sets: state.sets.some(s => s.id === existing.id) ? state.sets : [savedSet!, ...state.sets] }))
+          } else {
+            const { data: newSet, error } = await supabase
+              .from('sets').insert({ title: 'Saved Words', description: 'Words saved while reading stories', user_id: user.id, folder_id: null, pinned: false })
+              .select().single()
+            if (error) throw error
+            savedSet = { ...newSet, cardCount: 0, cards: [] }
+            set(state => ({ sets: [savedSet!, ...state.sets] }))
+          }
+        }
+        return savedSet.id
+      })().finally(() => { savedWordsReady = null })
     }
+    const savedSetId = await savedWordsReady
 
     // Get current card count for position
-    const { count } = await supabase.from('cards').select('*', { count: 'exact', head: true }).eq('set_id', savedSet.id)
+    const { count } = await supabase.from('cards').select('*', { count: 'exact', head: true }).eq('set_id', savedSetId)
     const { error: cardErr } = await supabase.from('cards').insert({
-      set_id: savedSet.id, user_id: user.id,
+      set_id: savedSetId, user_id: user.id,
       term: safeTerm, definition: safeDef, position: count ?? 0,
     })
     if (cardErr) throw cardErr
 
     // Update local card count
-    set(state => ({ sets: state.sets.map(s => s.id === savedSet!.id ? { ...s, cardCount: (s.cardCount ?? 0) + 1 } : s) }))
+    set(state => ({ sets: state.sets.map(s => s.id === savedSetId ? { ...s, cardCount: (s.cardCount ?? 0) + 1 } : s) }))
   },
 
   searchSets: async (query) => {

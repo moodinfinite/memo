@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
 import { useSRSStore } from '@/store/srsStore'
 import { useSetsStore } from '@/store/setsStore'
+import { supabase } from '@/lib/supabase'
 import styles from './StoryCard.module.css'
 
 interface Props {
@@ -35,18 +36,22 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
   const tappedIds = useRef<Set<string>>(new Set())
   const storyRef = useRef('')
   const storyElRef = useRef<HTMLParagraphElement>(null)
+  const termsRef = useRef(terms)
+  const setIdRef = useRef(setId)
   const { saveToSavedWords } = useSetsStore()
 
   useEffect(() => { storyRef.current = story }, [story])
+  useEffect(() => { termsRef.current = terms }, [terms])
+  useEffect(() => { setIdRef.current = setId }, [setId])
 
-  // On unmount: log mastery signals
+  // On unmount: log mastery signals using refs so we always have the current batch's terms
   useEffect(() => {
     return () => {
       if (!storyRef.current) return
       const updateSRS = useSRSStore.getState().updateSRS
-      terms.forEach(t => updateSRS(t.id, setId, !tappedIds.current.has(t.id)))
+      termsRef.current.forEach(t => updateSRS(t.id, setIdRef.current, !tappedIds.current.has(t.id)))
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // Detect text selection within the story paragraph
   useEffect(() => {
@@ -67,9 +72,10 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     if (!selection || saveStatus === 'loading') return
     setSaveStatus('loading')
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/lookup-word', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ word: selection }),
       })
       const data = await res.json()
@@ -93,9 +99,10 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     setTooltip(null)
     setSelection('')
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/generate-story', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ setTitle, terms: terms.map(t => ({ term: t.term, definition: t.definition })) }),
       })
       const data = await res.json()

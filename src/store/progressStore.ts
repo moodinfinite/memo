@@ -74,7 +74,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
     const { data: sessions, error } = await supabase
       .from('study_sessions')
-      .select('completed_at, total_cards')
+      .select('*')
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
       .limit(200)
