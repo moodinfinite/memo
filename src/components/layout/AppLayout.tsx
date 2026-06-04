@@ -12,6 +12,12 @@ export default function AppLayout() {
   const location = useLocation()
   const { folders, fetchFolders, createFolder } = useFoldersStore()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true')
+
+  const toggleCollapsed = () => setCollapsed(v => {
+    localStorage.setItem('sidebarCollapsed', String(!v))
+    return !v
+  })
 
   useEffect(() => { fetchFolders() }, [])
 
@@ -45,7 +51,7 @@ export default function AppLayout() {
       {/* Backdrop for mobile sidebar */}
       {mobileOpen && <div className={styles.backdrop} onClick={closeSidebar} />}
 
-      <aside className={[styles.sidebar, mobileOpen ? styles.sidebarOpen : ''].join(' ')}>
+      <aside className={[styles.sidebar, mobileOpen ? styles.sidebarOpen : '', collapsed ? styles.sidebarCollapsed : ''].join(' ')}>
         <div className={styles.sidebarTop}>
           <div className={styles.logo}>Memo</div>
           <button className={styles.closeBtn} onClick={closeSidebar} aria-label="Close menu">
@@ -92,7 +98,12 @@ export default function AppLayout() {
 
         <div className={styles.spacer} />
         <div className={styles.footer}>
-          <button className={styles.footerBtn} onClick={toggle}>
+          <button className={styles.collapseBtn} onClick={toggleCollapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ transition: 'transform 0.2s', transform: collapsed ? 'rotate(180deg)' : 'none' }}>
+              <path d="M9 3L5 7.5 9 12"/>
+            </svg>
+          </button>
+          <button className={[styles.footerBtn, styles.footerBtnHide].join(' ')} onClick={toggle}>
             {isDark
               ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/></svg>
               : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13.5 10A6 6 0 0 1 6 2.5a6 6 0 1 0 7.5 7.5Z"/></svg>

@@ -1,10 +1,24 @@
-.shell{display:flex;height:100vh;background:var(--bg-surface)}
+.shell{display:flex;height:100vh;background:var(--bg-surface);--sidebar-current-width:var(--sidebar-width)}
 
 /* Mobile header — hidden on desktop */
 .mobileHeader{display:none}
 
 /* Sidebar */
-.sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);background:var(--bg-base);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);background:var(--bg-base);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:width 0.2s ease,min-width 0.2s ease}
+.sidebarCollapsed{width:52px;min-width:52px}
+.sidebarCollapsed .logo,
+.sidebarCollapsed .navSection,
+.sidebarCollapsed .navItem span,
+.sidebarCollapsed .folderItem span,
+.sidebarCollapsed .userInfo,
+.sidebarCollapsed .footerBtnHide{display:none}
+.sidebarCollapsed .navItem,
+.sidebarCollapsed .folderItem{justify-content:center;padding:8px 0}
+.sidebarCollapsed .footer{flex-direction:column;align-items:center;gap:6px;padding:10px 0 14px}
+.sidebarCollapsed .sidebarTop{justify-content:center;padding:20px 0 16px}
+.sidebarCollapsed .nav{padding:0 6px}
+.collapseBtn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--r-md);border:none;background:none;color:var(--text-tertiary);cursor:pointer;flex-shrink:0;transition:background var(--t-fast),color var(--t-fast)}
+.collapseBtn:hover{background:var(--bg-overlay);color:var(--text-primary)}
 .sidebarTop{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 16px;border-bottom:1px solid var(--border-subtle);margin-bottom:8px}
 .logo{font-size:16px;font-weight:600;color:var(--text-primary);letter-spacing:-0.02em}
 .closeBtn{display:none;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--r-sm);border:none;background:none;color:var(--text-tertiary);cursor:pointer}
@@ -22,6 +36,7 @@
 .footer{padding:12px 8px 16px;border-top:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px}
 .footerBtn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--r-md);border:none;background:none;color:var(--text-secondary);cursor:pointer;transition:background var(--t-fast),color var(--t-fast)}
 .footerBtn:hover{background:var(--bg-overlay);color:var(--text-primary)}
+.footerBtnHide{}
 .userInfo{flex:1;min-width:0}
 .userName{font-size:12.5px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logoutBtn{font-size:11px;color:var(--text-tertiary);background:none;border:none;padding:0;cursor:pointer;font-family:var(--font);transition:color var(--t-fast)}
