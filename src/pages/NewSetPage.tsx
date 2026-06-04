@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
-import { supabase } from '@/lib/supabase'
 import ImportModal from '@/components/ui/ImportModal'
 import TitleAI from '@/components/ui/TitleAI'
 import styles from './NewSetPage.module.css'
@@ -24,16 +23,7 @@ export default function NewSetPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [rows, setRows] = useState<CardRow[]>([makeRow(0), makeRow(1)])
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [showImport, setShowImport] = useState(false)
-  const [canRetry, setCanRetry] = useState(false)
-  const [dbStatus, setDbStatus] = useState<'warming' | 'ready'>('warming')
-
-  // Warm up the DB connection as soon as the page loads so it's ready by the time the user hits Save
-  useEffect(() => {
-    supabase.from('sets').select('id').limit(1).then(() => setDbStatus('ready'))
-  }, [])
 
   const handleImportLocal = (imported: { term: string; definition: string }[]) => {
     const existingFilled = rows.filter(r => r.term.trim() || r.definition.trim())
@@ -56,29 +46,12 @@ export default function NewSetPage() {
     setRows((prev) => prev.filter((r) => r.tempId !== tempId))
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!title.trim()) { setError('Give your set a title'); return }
     const validCards = rows.filter((r) => r.term.trim() && r.definition.trim())
     if (validCards.length < 1) { setError('Add at least one complete card'); return }
-
-    setSaving(true)
-    setError('')
-    setCanRetry(false)
-    // Warn at 8s (cold start), give up at 25s
-    const slowTimer = setTimeout(() => setError('Taking longer than usual — almost there…'), 8000)
-    const failTimer = setTimeout(() => { setSaving(false); setError('Connection timed out — tap Retry'); setCanRetry(true) }, 25000)
-    try {
-      const set = await createSet(title.trim(), description.trim(), validCards)
-      clearTimeout(slowTimer); clearTimeout(failTimer)
-      navigate(`/sets/${set.id}`)
-    } catch (err: any) {
-      clearTimeout(slowTimer); clearTimeout(failTimer)
-      console.error('[NewSetPage] createSet failed:', err)
-      const msg = err?.message ?? err?.error_description ?? JSON.stringify(err)
-      setError(`Failed to save: ${msg}`)
-      setCanRetry(true)
-      setSaving(false)
-    }
+    const newSet = createSet(title.trim(), description.trim(), validCards)
+    navigate(`/sets/${newSet.id}`)
   }
 
   return (
@@ -89,31 +62,12 @@ export default function NewSetPage() {
           <p className={styles.sub}>Add your terms and definitions</p>
         </div>
         <div className={styles.headerActions}>
-          {dbStatus === 'warming' && (
-            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <svg style={{ animation: 'spin 1s linear infinite' }} width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="5.5" cy="5.5" r="4" strokeOpacity="0.25"/><path d="M5.5 1.5a4 4 0 0 1 4 4" strokeLinecap="round"/></svg>
-              Connecting…
-            </span>
-          )}
-          {dbStatus === 'ready' && (
-            <span style={{ fontSize: 12, color: 'var(--accent-text)', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 5.5l2.5 2.5 4.5-4.5"/></svg>
-              Ready
-            </span>
-          )}
           <button className={styles.cancelBtn} onClick={() => navigate(-1)}>Cancel</button>
-          <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save set'}
-          </button>
+          <button className={styles.saveBtn} onClick={handleSave}>Save set</button>
         </div>
       </div>
 
-      {error && (
-        <div className={styles.error} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span>{error}</span>
-          {canRetry && <button onClick={handleSave} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, cursor: 'pointer' }}>Retry</button>}
-        </div>
-      )}
+      {error && <div className={styles.error}>{error}</div>}
 
       {/* Set metadata */}
       <div className={styles.metaCard}>

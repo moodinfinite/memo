@@ -36,7 +36,7 @@ function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
 export default function SetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentSet, fetchSet, deleteSet, moveToFolder, isLoading, error } = useSetsStore()
+  const { currentSet, fetchSet, deleteSet, moveToFolder, isLoading, error, pendingSaves, saveErrors, retrySave } = useSetsStore()
   const { folders } = useFoldersStore()
   const { cardSRS, fetchSRS } = useSRSStore()
   const [showFolderPicker, setShowFolderPicker] = useState(false)
@@ -100,8 +100,23 @@ export default function SetDetailPage() {
   const masteredPct = total > 0 ? (masteredCount / total) * 100 : 0
   const learningPct = total > 0 ? (learningCount / total) * 100 : 0
 
+  const isSyncing = id ? pendingSaves.includes(id) : false
+  const syncError = id ? saveErrors[id] : undefined
+
   return (
     <div className={styles.page}>
+      {isSyncing && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', fontSize: 13, color: 'var(--text-secondary)' }}>
+          <svg style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="7" cy="7" r="5" strokeOpacity="0.2"/><path d="M7 2a5 5 0 0 1 5 5" strokeLinecap="round"/></svg>
+          Saving your set…
+        </div>
+      )}
+      {syncError && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--red-subtle)', border: '1px solid var(--red-border)', fontSize: 13, color: 'var(--red-text)' }}>
+          <span>Save failed — your set isn't stored yet</span>
+          <button onClick={() => id && retrySave(id)} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>Retry</button>
+        </div>
+      )}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{currentSet.title}</h1>

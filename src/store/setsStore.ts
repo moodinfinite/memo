@@ -11,9 +11,12 @@ interface SetsState {
   error: string | null
   setsLastFetched: number        // timestamp — skip refetch if recent
   currentSetFetchedAt: number    // timestamp — skip refetch if same ID + recent
+  pendingSaves: string[]         // set IDs currently syncing to DB
+  saveErrors: Record<string, string> // set ID -> error message for failed syncs
   fetchSets: () => Promise<void>
   fetchSet: (id: string) => Promise<void>
-  createSet: (title: string, description: string, cards: Omit<Card, 'id' | 'set_id' | 'user_id'>[], folderId?: string | null) => Promise<FlashcardSet>
+  createSet: (title: string, description: string, cards: Omit<Card, 'id' | 'set_id' | 'user_id'>[], folderId?: string | null) => FlashcardSet
+  retrySave: (id: string) => Promise<void>
   updateSet: (id: string, title: string, description: string, cards: Omit<Card, 'set_id' | 'user_id'>[], folderId?: string | null) => Promise<void>
   deleteSet: (id: string) => Promise<void>
   togglePin: (id: string) => Promise<void>
@@ -33,6 +36,8 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   error: null,
   setsLastFetched: 0,
   currentSetFetchedAt: 0,
+  pendingSaves: [],
+  saveErrors: {},
 
   fetchSets: async () => {
     // Skip refetch if data is fresh (< 30s old) — avoids re-hitting Supabase on every navigation back to home
@@ -50,7 +55,9 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   },
 
   fetchSet: async (id) => {
-    const { currentSet, currentSetFetchedAt, sets } = get()
+    const { currentSet, currentSetFetchedAt, sets, pendingSaves } = get()
+    // Don't fetch from DB while we're still syncing this set — use optimistic data
+    if (pendingSaves.includes(id)) return
     // Return cached data if same set fetched < 60s ago — covers Study ↔ Back ↔ Study
     if (currentSet?.id === id && currentSetFetchedAt > 0 && Date.now() - currentSetFetchedAt < 60_000) return
     // Show partial data from the sets list immediately so the page isn't blank while cards load
@@ -67,31 +74,71 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     set({ currentSet: { ...data, cards, cardCount: cards.length }, isLoading: false, currentSetFetchedAt: Date.now() })
   },
 
-  createSet: async (title, description, rawCards, folderId = null) => {
+  createSet: (title, description, rawCards, folderId = null) => {
     const user = useAuthStore.getState().user
     if (!user) throw new Error('Not authenticated')
+    const id = crypto.randomUUID()
     const safeTitle = sanitizeText(title, 200)
     const safeDesc = sanitizeText(description, 1000)
-    const { data: setData, error: setError } = await supabase
-      .from('sets')
-      .insert({ title: safeTitle, description: safeDesc, user_id: user.id, folder_id: folderId, pinned: false })
-      .select().single()
-    if (setError) throw setError
-    if (rawCards.length > 0) {
-      const rows = rawCards.map((c, i) => {
-        const safe = sanitizeCard(c)
-        return { set_id: setData.id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
-      })
-      // Insert all chunks in parallel to avoid sequential latency on large sets
-      const chunks: typeof rows[] = []
-      for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
-      const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
-      const chunkErr = results.find(r => r.error)?.error
-      if (chunkErr) throw chunkErr
+    const safeCards = rawCards.map((c, i) => {
+      const safe = sanitizeCard(c)
+      return { id: crypto.randomUUID(), set_id: id, user_id: user.id, term: safe.term, definition: safe.definition, position: i }
+    })
+    const optimisticSet: FlashcardSet = {
+      id, title: safeTitle, description: safeDesc, user_id: user.id,
+      folder_id: folderId ?? null, pinned: false, cardCount: safeCards.length,
+      cards: safeCards, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
     }
-    const newSet = { ...setData, cardCount: rawCards.length }
-    set((state) => ({ sets: [newSet, ...state.sets] }))
-    return newSet
+    // Add to store immediately — user navigates right away
+    set(state => ({ sets: [optimisticSet, ...state.sets], currentSet: optimisticSet, pendingSaves: [...state.pendingSaves, id] }))
+
+    // Background sync — no await
+    ;(async () => {
+      try {
+        const { error: setError } = await supabase
+          .from('sets').insert({ id, title: safeTitle, description: safeDesc, user_id: user.id, folder_id: folderId, pinned: false })
+        if (setError) throw setError
+        if (safeCards.length > 0) {
+          const rows = safeCards.map(c => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
+          const chunks: typeof rows[] = []
+          for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
+          const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
+          const chunkErr = results.find(r => r.error)?.error
+          if (chunkErr) throw chunkErr
+        }
+        // Success — remove from pending, refresh to get server-assigned timestamps
+        set(state => ({ pendingSaves: state.pendingSaves.filter(x => x !== id) }))
+        get().fetchSet(id)
+      } catch (err: any) {
+        set(state => ({ pendingSaves: state.pendingSaves.filter(x => x !== id), saveErrors: { ...state.saveErrors, [id]: err?.message ?? 'Save failed' } }))
+      }
+    })()
+
+    return optimisticSet
+  },
+
+  retrySave: async (id) => {
+    const s = get().sets.find(x => x.id === id)
+    if (!s) return
+    const user = useAuthStore.getState().user
+    if (!user) return
+    set(state => ({ pendingSaves: [...state.pendingSaves, id], saveErrors: Object.fromEntries(Object.entries(state.saveErrors).filter(([k]) => k !== id)) }))
+    try {
+      await supabase.from('sets').upsert({ id, title: s.title, description: s.description, user_id: user.id, folder_id: s.folder_id, pinned: s.pinned })
+      if ((s.cards ?? []).length > 0) {
+        await supabase.from('cards').delete().eq('set_id', id)
+        const rows = (s.cards ?? []).map(c => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
+        const chunks: typeof rows[] = []
+        for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
+        const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
+        const chunkErr = results.find(r => r.error)?.error
+        if (chunkErr) throw chunkErr
+      }
+      set(state => ({ pendingSaves: state.pendingSaves.filter(x => x !== id) }))
+      get().fetchSet(id)
+    } catch (err: any) {
+      set(state => ({ pendingSaves: state.pendingSaves.filter(x => x !== id), saveErrors: { ...state.saveErrors, [id]: err?.message ?? 'Save failed' } }))
+    }
   },
 
   updateSet: async (id, title, description, rawCards, folderId = null) => {
