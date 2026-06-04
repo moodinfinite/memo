@@ -24,6 +24,7 @@ export default function NewSetPage() {
   const [description, setDescription] = useState('')
   const [rows, setRows] = useState<CardRow[]>([makeRow(0), makeRow(1)])
   const [error, setError] = useState('')
+  const [showImport, setShowImport] = useState(false)
 
   const handleImportLocal = (imported: { term: string; definition: string }[]) => {
     const existingFilled = rows.filter(r => r.term.trim() || r.definition.trim())
