@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_MAX = 30
@@ -33,15 +32,6 @@ export default async function handler(req: any, res: any) {
     return res.status(429).json({ error: 'Too many requests. Please wait a minute.' })
   }
 
-  const authHeader = (req.headers['authorization'] as string) ?? ''
-  const token = authHeader.replace('Bearer ', '').trim()
-  if (!token) return res.status(401).json({ error: 'Unauthorized' })
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.VITE_SUPABASE_ANON_KEY!,
-  )
-  const { error: authError } = await supabase.auth.getUser(token)
-  if (authError) return res.status(401).json({ error: 'Unauthorized' })
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' })
