@@ -31,7 +31,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
-  const [selection, setSelection] = useState<string>('')
+  const [selectionInfo, setSelectionInfo] = useState<{ word: string; x: number; y: number } | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
   const tappedIds = useRef<Set<string>>(new Set())
   const storyRef = useRef('')
@@ -53,38 +53,40 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     }
   }, [])
 
-  // Detect text selection within the story paragraph
+  // Detect text selection within the story paragraph and track its position
   useEffect(() => {
     const handleSelectionChange = () => {
       const sel = window.getSelection()
-      if (!sel || sel.isCollapsed || !storyElRef.current) { setSelection(''); return }
+      if (!sel || sel.isCollapsed || !storyElRef.current) { setSelectionInfo(null); return }
       const range = sel.getRangeAt(0)
-      if (!storyElRef.current.contains(range.commonAncestorContainer)) { setSelection(''); return }
+      if (!storyElRef.current.contains(range.commonAncestorContainer)) { setSelectionInfo(null); return }
       const word = sel.toString().trim()
-      if (word) { setSelection(word); setSaveStatus('idle') }
-      else setSelection('')
+      if (!word) { setSelectionInfo(null); return }
+      const rect = range.getBoundingClientRect()
+      // Center above the selection; flip below if too close to top of viewport
+      const x = rect.left + rect.width / 2
+      const y = rect.top > 60 ? rect.top - 8 : rect.bottom + 8
+      setSelectionInfo({ word, x, y })
+      setSaveStatus('idle')
     }
     document.addEventListener('selectionchange', handleSelectionChange)
     return () => document.removeEventListener('selectionchange', handleSelectionChange)
   }, [])
 
   const handleSaveWord = async () => {
-    if (!selection || saveStatus === 'loading') return
+    if (!selectionInfo || saveStatus === 'loading') return
     setSaveStatus('loading')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/lookup-word', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ word: selection }),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ word: selectionInfo.word }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      await saveToSavedWords(selection, data.definition)
+      await saveToSavedWords(selectionInfo.word, data.definition)
       setSaveStatus('saved')
-      window.getSelection()?.removeAllRanges()
-      setSelection('')
-      setTimeout(() => setSaveStatus('idle'), 2000)
+      setTimeout(() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null); setSaveStatus('idle') }, 1200)
     } catch {
       setSaveStatus('error')
       setTimeout(() => setSaveStatus('idle'), 2500)
@@ -97,7 +99,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     setError(null)
     setStory('')
     setTooltip(null)
-    setSelection('')
+    setSelectionInfo(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/generate-story', {
@@ -162,25 +164,6 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
           </p>
         )}
 
-        {/* Selection save bar — slides up when text is selected */}
-        {selection && story && (
-          <div className={styles.saveBar}>
-            <span className={styles.saveBarWord}>「{selection}」</span>
-            <button
-              className={styles.saveBarBtn}
-              onClick={handleSaveWord}
-              disabled={saveStatus === 'loading'}
-            >
-              {saveStatus === 'loading' && 'Looking up…'}
-              {saveStatus === 'saved' && '✓ Saved'}
-              {saveStatus === 'error' && 'Failed — try again'}
-              {saveStatus === 'idle' && '+ Save to deck'}
-            </button>
-            <button className={styles.saveBarDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelection('') }}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l9 9M10 1L1 10"/></svg>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Tooltip / definition reveal */}
@@ -212,6 +195,29 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Floating save tooltip — fixed position above the selection */}
+      {selectionInfo && story && (
+        <div
+          className={styles.floatingSave}
+          style={{
+            left: selectionInfo.x,
+            top: selectionInfo.y,
+            transform: selectionInfo.y < 60 ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+          }}
+        >
+          <span className={styles.floatingSaveWord}>「{selectionInfo.word}」</span>
+          <button className={styles.floatingSaveBtn} onClick={handleSaveWord} disabled={saveStatus === 'loading'}>
+            {saveStatus === 'loading' && 'Looking up…'}
+            {saveStatus === 'saved' && '✓ Saved'}
+            {saveStatus === 'error' && 'Try again'}
+            {saveStatus === 'idle' && '+ Save'}
+          </button>
+          <button className={styles.floatingSaveDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null) }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l8 8M9 1L1 9"/></svg>
+          </button>
         </div>
       )}
 
