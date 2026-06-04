@@ -105,7 +105,9 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
         headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ setTitle, terms: terms.map(t => ({ term: t.term, definition: t.definition })) }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data: any
+      try { data = JSON.parse(text) } catch { throw new Error('Story generation timed out — tap to try again') }
       if (!res.ok) throw new Error(data.error || 'Failed to generate story')
       setStory(data.story)
     } catch (err: any) {
