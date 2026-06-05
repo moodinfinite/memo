@@ -55,6 +55,7 @@ interface StudyState {
   reshuffleRemaining: () => void
   tickTimer: () => void; resetSession: () => void
   persistSession: () => Promise<void>
+  retryPersist: () => Promise<void>
   _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft?: boolean) => Promise<void>
 }
 
@@ -319,6 +320,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     await get()._persist(known, unknown, sessionCards.length, mode, setId)
   },
 
+  retryPersist: async () => {
+    const { _lastPersistArgs } = get() as any
+    if (!_lastPersistArgs) return
+    await get()._persist(..._lastPersistArgs as Parameters<StudyState['_persist']>)
+  },
+
   resumeSession: (draft, cards) => {
     const cardMap = Object.fromEntries(cards.map(c => [c.id, c]))
     const orderedCards = draft.card_order.map(cid => cardMap[cid]).filter(Boolean) as Card[]
@@ -394,6 +401,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
     if (!setId || setId === '__master__') return
+    ;(get() as any)._lastPersistArgs = [known, unknown, total, mode, setId, clearDraft]
     set({ persistError: null, isPersisting: true, persistSaved: false })
     // Hard 12s deadline — if Supabase hangs, unblock the UI. expired flag prevents
     // a late-arriving response from overwriting the timeout error with a false "Saved!".

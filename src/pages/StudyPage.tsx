@@ -32,7 +32,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, startLearnSession, resetLearn } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, startLearnSession, resetLearn } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -444,7 +444,14 @@ export default function StudyPage() {
                 Session saved
               </div>
             )}
-            {persistError && <div className={styles.persistError}>{persistError}</div>}
+            {persistError && (
+              <div className={styles.persistError} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <span>{persistError}</span>
+                <button onClick={retryPersist} disabled={isPersisting} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, fontWeight: 500, cursor: 'pointer', opacity: isPersisting ? 0.5 : 1 }}>
+                  {isPersisting ? 'Retrying…' : 'Retry'}
+                </button>
+              </div>
+            )}
 
             <div className={styles.summaryActions}>
               <button
