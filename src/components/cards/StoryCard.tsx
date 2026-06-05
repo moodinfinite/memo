@@ -31,7 +31,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
-  const [selectionInfo, setSelectionInfo] = useState<{ word: string; x: number; y: number } | null>(null)
+  const [selectionInfo, setSelectionInfo] = useState<{ word: string; x: number; y: number; flipped: boolean } | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
   const tappedIds = useRef<Set<string>>(new Set())
   const storyRef = useRef('')
@@ -63,10 +63,15 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
       const word = sel.toString().trim()
       if (!word) { setSelectionInfo(null); return }
       const rect = range.getBoundingClientRect()
-      // Center above the selection; flip below if too close to top of viewport
-      const x = rect.left + rect.width / 2
-      const y = rect.top > 60 ? rect.top - 8 : rect.bottom + 8
-      setSelectionInfo({ word, x, y })
+      const TOOLTIP_W = 220
+      const GAP = 10
+      // Clamp x so tooltip never bleeds off left/right edge
+      const rawX = rect.left + rect.width / 2
+      const x = Math.max(TOOLTIP_W / 2 + 8, Math.min(window.innerWidth - TOOLTIP_W / 2 - 8, rawX))
+      // Flip below if not enough room above
+      const aboveRoom = rect.top > 60
+      const y = aboveRoom ? rect.top - GAP : rect.bottom + GAP
+      setSelectionInfo({ word, x, y, flipped: !aboveRoom })
       setSaveStatus('idle')
     }
     document.addEventListener('selectionchange', handleSelectionChange)
@@ -205,7 +210,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
           style={{
             left: selectionInfo.x,
             top: selectionInfo.y,
-            transform: selectionInfo.y < 60 ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+            transform: selectionInfo.flipped ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
           }}
         >
           <span className={styles.floatingSaveWord}>「{selectionInfo.word}」</span>
