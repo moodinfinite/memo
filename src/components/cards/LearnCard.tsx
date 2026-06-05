@@ -5,10 +5,10 @@ import styles from './LearnCard.module.css'
 
 function makeMCOptions(card: Card, allCards: Card[]) {
   const others = allCards.filter(c => c.id !== card.id)
-  const distractors = [...others].sort(() => Math.random() - 0.5).slice(0, 3).map(c => c.definition)
-  return [card.definition, ...distractors]
+  const distractors = [...others].sort(() => Math.random() - 0.5).slice(0, 3).map(c => c.term)
+  return [card.term, ...distractors]
     .sort(() => Math.random() - 0.5)
-    .map(text => ({ text, correct: text === card.definition }))
+    .map(text => ({ text, correct: text === card.term }))
 }
 
 export default function LearnCard() {
@@ -138,13 +138,13 @@ export default function LearnCard() {
         <div className={styles.cardWrap}>
           <div className={styles.card}>
             {flash && <div className={[styles.flashOverlay, flash === 'correct' ? styles.flashCorrect : styles.flashIncorrect].join(' ')} />}
-            <div className={styles.cardSideLabel}>Term</div>
-            <div className={styles.cardTerm}>{card.term}</div>
+            <div className={styles.cardSideLabel}>Definition</div>
+            <div className={styles.cardTerm}>{card.definition}</div>
             {showDef && (
               <div className={styles.definitionReveal}>
                 <div className={styles.defDivider} />
-                <div className={styles.defLabel}>Definition</div>
-                <div className={styles.defText}>{card.definition}</div>
+                <div className={styles.defLabel}>Term</div>
+                <div className={styles.defText}>{card.term}</div>
               </div>
             )}
           </div>
@@ -163,8 +163,8 @@ export default function LearnCard() {
         /* ── Multiple choice view ── */
         <div className={styles.mcWrap}>
           <div className={styles.mcQuestion}>
-            <div className={styles.mcLabel}>What is the definition of…</div>
-            <div className={styles.mcTerm}>{card.term}</div>
+            <div className={styles.mcLabel}>Which term matches this definition?</div>
+            <div className={styles.mcTerm}>{card.definition}</div>
           </div>
           <div className={styles.mcOptions}>
             {mcOptions.map((opt, i) => {
