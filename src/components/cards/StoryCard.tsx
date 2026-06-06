@@ -53,29 +53,44 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
     }
   }, [])
 
-  // Detect text selection within the story paragraph and track its position
+  // Show tooltip on pointer-up (selection fully settled) — more reliable than selectionchange
   useEffect(() => {
-    const handleSelectionChange = () => {
-      const sel = window.getSelection()
-      if (!sel || sel.isCollapsed || !storyElRef.current) { setSelectionInfo(null); return }
-      const range = sel.getRangeAt(0)
-      if (!storyElRef.current.contains(range.commonAncestorContainer)) { setSelectionInfo(null); return }
-      const word = sel.toString().trim()
-      if (!word) { setSelectionInfo(null); return }
-      const rect = range.getBoundingClientRect()
-      const TOOLTIP_W = 220
-      const GAP = 10
-      // Clamp x so tooltip never bleeds off left/right edge
-      const rawX = rect.left + rect.width / 2
-      const x = Math.max(TOOLTIP_W / 2 + 8, Math.min(window.innerWidth - TOOLTIP_W / 2 - 8, rawX))
-      // Flip below if not enough room above
-      const aboveRoom = rect.top > 60
-      const y = aboveRoom ? rect.top - GAP : rect.bottom + GAP
-      setSelectionInfo({ word, x, y, flipped: !aboveRoom })
-      setSaveStatus('idle')
+    const show = () => {
+      // rAF lets the browser finalise the selection before we read it
+      requestAnimationFrame(() => {
+        const sel = window.getSelection()
+        if (!sel || sel.isCollapsed || !storyElRef.current) return
+        const range = sel.getRangeAt(0)
+        if (!storyElRef.current.contains(range.commonAncestorContainer)) return
+        const word = sel.toString().trim()
+        if (!word) return
+        const rect = range.getBoundingClientRect()
+        // Sanity-check: ignore degenerate rects (can happen mid-drag)
+        if (rect.width === 0 && rect.height === 0) return
+        const TOOLTIP_W = 220
+        const rawX = rect.left + rect.width / 2
+        const x = Math.max(TOOLTIP_W / 2 + 8, Math.min(window.innerWidth - TOOLTIP_W / 2 - 8, rawX))
+        const aboveRoom = rect.top > 60
+        const y = aboveRoom ? rect.top - 10 : rect.bottom + 10
+        setSelectionInfo({ word, x, y, flipped: !aboveRoom })
+        setSaveStatus('idle')
+      })
     }
-    document.addEventListener('selectionchange', handleSelectionChange)
-    return () => document.removeEventListener('selectionchange', handleSelectionChange)
+    // Hide when selection collapses (click elsewhere)
+    const hide = () => {
+      requestAnimationFrame(() => {
+        const sel = window.getSelection()
+        if (!sel || sel.isCollapsed) setSelectionInfo(null)
+      })
+    }
+    document.addEventListener('mouseup', show)
+    document.addEventListener('touchend', show)
+    document.addEventListener('selectionchange', hide)
+    return () => {
+      document.removeEventListener('mouseup', show)
+      document.removeEventListener('touchend', show)
+      document.removeEventListener('selectionchange', hide)
+    }
   }, [])
 
   const handleSaveWord = async () => {
