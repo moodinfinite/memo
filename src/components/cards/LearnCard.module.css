@@ -32,6 +32,12 @@
 
 /* ── Flashcard view ── */
 .cardWrap { display: flex; flex-direction: column; gap: 14px; }
+@keyframes flipX {
+  0%   { transform: perspective(800px) rotateY(0deg); }
+  50%  { transform: perspective(800px) rotateY(90deg); }
+  100% { transform: perspective(800px) rotateY(0deg); }
+}
+.cardFlipping { animation: flipX 0.28s ease; }
 .card {
   position: relative;
   background: var(--bg-raised);

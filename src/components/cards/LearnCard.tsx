@@ -19,13 +19,14 @@ export default function LearnCard() {
 
   const card = learnBatch[learnBatchIdx]
   const score = learnScores[card?.id ?? ''] ?? 0
-  const isFlashcard = score === 0
+  const isFlashcard = score >= 1   // MC first (recognition), then flashcard (recall)
   const totalCards = learnGraduated.length + learnBatch.length + learnQueue.length
 
   const canMC = learnCards.length >= 4
 
   const [showDef, setShowDef] = useState(false)
   const [flipped, setFlipped] = useState(false)
+  const [isFlipping, setIsFlipping] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [mcResult, setMcResult] = useState<'idle' | 'correct' | 'incorrect'>('idle')
@@ -54,6 +55,7 @@ export default function LearnCard() {
   useEffect(() => {
     setShowDef(false)
     setFlipped(false)
+    setIsFlipping(false)
     setFlash(null)
     setSelectedIdx(null)
     setMcResult('idle')
@@ -140,8 +142,12 @@ export default function LearnCard() {
         /* ── Flashcard view ── */
         <div className={styles.cardWrap}>
           <div
-            className={styles.card}
-            onClick={() => { if (!flash) setFlipped(v => !v) }}
+            className={[styles.card, isFlipping ? styles.cardFlipping : ''].join(' ')}
+            onClick={() => {
+            if (flash || isFlipping) return
+            setIsFlipping(true)
+            setTimeout(() => { setFlipped(v => !v); setIsFlipping(false) }, 140)
+          }}
             style={{ cursor: flash ? 'default' : 'pointer' }}
             title="Tap to flip"
           >
