@@ -25,6 +25,7 @@ export default function LearnCard() {
   const canMC = learnCards.length >= 4
 
   const [showDef, setShowDef] = useState(false)
+  const [flipped, setFlipped] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [mcResult, setMcResult] = useState<'idle' | 'correct' | 'incorrect'>('idle')
@@ -33,6 +34,7 @@ export default function LearnCard() {
   const handleFlashAnswer = (correct: boolean) => {
     if (flash) return
     setFlash(correct ? 'correct' : 'incorrect')
+    setFlipped(false)
     if (!correct) {
       setShowDef(true)
       setTimeout(() => answerLearnCard(false), 2000)
@@ -51,6 +53,7 @@ export default function LearnCard() {
   // Reset local UI state when card or view type changes
   useEffect(() => {
     setShowDef(false)
+    setFlipped(false)
     setFlash(null)
     setSelectedIdx(null)
     setMcResult('idle')
@@ -136,11 +139,25 @@ export default function LearnCard() {
       {isFlashcard || !canMC ? (
         /* ── Flashcard view ── */
         <div className={styles.cardWrap}>
-          <div className={styles.card}>
+          <div
+            className={styles.card}
+            onClick={() => { if (!flash) setFlipped(v => !v) }}
+            style={{ cursor: flash ? 'default' : 'pointer' }}
+            title="Tap to flip"
+          >
             {flash && <div className={[styles.flashOverlay, flash === 'correct' ? styles.flashCorrect : styles.flashIncorrect].join(' ')} />}
-            <div className={styles.cardSideLabel}>Definition</div>
-            <div className={styles.cardTerm}>{card.definition}</div>
-            {showDef && (
+            {!flipped ? (
+              <>
+                <div className={styles.cardSideLabel}>Definition</div>
+                <div className={styles.cardTerm}>{card.definition}</div>
+              </>
+            ) : (
+              <>
+                <div className={styles.cardSideLabel}>Term</div>
+                <div className={styles.cardTerm}>{card.term}</div>
+              </>
+            )}
+            {showDef && !flipped && (
               <div className={styles.definitionReveal}>
                 <div className={styles.defDivider} />
                 <div className={styles.defLabel}>Term</div>
