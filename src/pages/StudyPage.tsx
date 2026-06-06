@@ -40,6 +40,7 @@ export default function StudyPage() {
   const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn' | 'story'>('flashcard')
   const [storyTerms, setStoryTerms] = useState<Card[]>([])
   const [storyBatchOffset, setStoryBatchOffset] = useState(0)
+  const [storySummary, setStorySummary] = useState<Card[] | null>(null)
   const [doShuffle, setDoShuffle] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
@@ -224,7 +225,13 @@ export default function StudyPage() {
 
   const handleEnd = () => {
     if (storyTerms.length > 0) {
+      // Save terms for summary, unmount StoryCard (triggers SRS updates), show checkpoint
+      setStorySummary(storyTerms)
       setStoryTerms([])
+      return
+    }
+    if (storySummary) {
+      setStorySummary(null)
       setSelecting(true)
       return
     }
@@ -376,10 +383,53 @@ export default function StudyPage() {
           <div className={styles.summary}>
             <div className={styles.countScore}>🎉</div>
             <div className={styles.summaryTitle}>All cards learned!</div>
-            <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards graduated</div>
+            <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards graduated this session</div>
+            {learnGraduated.length > 0 && (
+              <div className={styles.checkpointChips}>
+                {learnGraduated.map((c, i) => (
+                  <div key={c.id} className={styles.checkpointChip} style={{ animationDelay: `${i * 40}ms` }}>{c.term}</div>
+                ))}
+              </div>
+            )}
+            <div className={styles.checkpointSaved}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7l3 3 6-6"/></svg>
+              Mastery updated for all {learnGraduated.length} words
+            </div>
             <div className={styles.summaryActions}>
               <button className={styles.retryBtn} onClick={() => startLearnSession(learnCards, id!)}>Study again</button>
               <button className={styles.changeModeBtn} onClick={() => { resetLearn(); setSelecting(true) }}>Change mode</button>
+              <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  // ─────────────────────────────────────────────────────────────
+
+  // ── Story summary checkpoint ─────────────────────────────────
+  if (storySummary) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.summaryWrap}>
+          <div className={styles.summary}>
+            <div className={styles.countScore}>📖</div>
+            <div className={styles.summaryTitle}>Story complete!</div>
+            <div className={styles.summaryMeta}>You read a story with {storySummary.length} vocabulary words</div>
+            {storySummary.length > 0 && (
+              <div className={styles.checkpointChips}>
+                {storySummary.map((c, i) => (
+                  <div key={c.id} className={styles.checkpointChip} style={{ animationDelay: `${i * 40}ms` }}>{c.term}</div>
+                ))}
+              </div>
+            )}
+            <div className={styles.checkpointSaved}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7l3 3 6-6"/></svg>
+              Mastery updated — words you tapped marked for review
+            </div>
+            <div className={styles.summaryActions}>
+              <button className={styles.retryBtn} onClick={() => { setStorySummary(null); setStoryTerms(storySummary) }}>Read another story</button>
+              <button className={styles.changeModeBtn} onClick={() => { setStorySummary(null); setSelecting(true) }}>Change mode</button>
               <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
             </div>
           </div>
