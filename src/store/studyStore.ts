@@ -403,23 +403,26 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     if (!setId || setId === '__master__') return
     ;(get() as any)._lastPersistArgs = [known, unknown, total, mode, setId, clearDraft]
     set({ persistError: null, isPersisting: true, persistSaved: false })
-    // Hard 12s deadline — if Supabase hangs, unblock the UI. expired flag prevents
-    // a late-arriving response from overwriting the timeout error with a false "Saved!".
+    // Warn at 8s (cold start), give up at 25s
     let expired = false
+    const slowWarn = setTimeout(() => {
+      set({ persistError: 'Slow connection — still saving, hang tight…' })
+    }, 8000)
     const deadline = setTimeout(() => {
       expired = true
-      set({ isPersisting: false, persistError: 'Save timed out — session may not have been recorded.' })
-    }, 12000)
+      clearTimeout(slowWarn)
+      set({ isPersisting: false, persistError: 'Save timed out — tap Retry' })
+    }, 25000)
     try {
       const user = useAuthStore.getState().user
-      if (!user) { clearTimeout(deadline); set({ isPersisting: false }); return }
+      if (!user) { clearTimeout(slowWarn); clearTimeout(deadline); set({ isPersisting: false }); return }
       const { error } = await supabase.from('study_sessions').insert({
         user_id: user.id, set_id: setId, mode, total_cards: total,
         known_count: known.length, unknown_count: unknown.length,
         score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
         completed_at: new Date().toISOString(),
       })
-      clearTimeout(deadline)
+      clearTimeout(slowWarn); clearTimeout(deadline)
       if (expired) return  // deadline already fired; don't overwrite the timeout error
       if (error) {
         const code = (error as any).code ?? 'unknown'
@@ -432,7 +435,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       useProgressStore.getState().fetchProgress()
       set({ isPersisting: false, persistSaved: true })
     } catch (err: any) {
-      clearTimeout(deadline)
+      clearTimeout(slowWarn); clearTimeout(deadline)
       if (expired) return
       const code = err?.code ?? 'unknown'
       const msg = err?.message ?? 'unknown error'
