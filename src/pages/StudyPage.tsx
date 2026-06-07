@@ -386,7 +386,7 @@ export default function StudyPage() {
             <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards graduated this session</div>
             {learnGraduated.length > 0 && (
               <div className={styles.checkpointChips}>
-                {learnGraduated.map((c, i) => (
+                {learnCards.filter(c => learnGraduated.includes(c.id)).map((c, i) => (
                   <div key={c.id} className={styles.checkpointChip} style={{ animationDelay: `${i * 40}ms` }}>{c.term}</div>
                 ))}
               </div>
