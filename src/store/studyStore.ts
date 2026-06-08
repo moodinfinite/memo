@@ -20,9 +20,11 @@ interface StudyState {
   learnSetId: string
   learnBatchComplete: boolean
   learnBatchSummary: Card[]             // cards that graduated in the just-finished batch
+  learnStoryReady: boolean              // batch fully graduated — show story before advancing
   startLearnSession: (cards: Card[], setId: string) => void
   answerLearnCard: (correct: boolean) => void
   advanceToNextBatch: () => void
+  completeLearnStory: () => void
   resetLearn: () => void
   // ────────────────────────────────────────────────────────────
   mode: StudyMode; setId: string
@@ -73,6 +75,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
   learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
   learnBatchComplete: false, learnBatchSummary: [],
+  learnStoryReady: false,
 
   startLearnSession: (cards, setId) => {
     const BATCH = 5
@@ -83,6 +86,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       learnGraduated: [], learnScores: {}, learnBatchIdx: 0,
       learnComplete: false, learnSetId: setId,
       learnBatchComplete: false, learnBatchSummary: [],
+      learnStoryReady: false,
     })
   },
 
@@ -107,14 +111,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       nextIdx = (learnBatchIdx + 1) % newBatch.length
     }
     if (newBatch.length === 0) {
-      if (learnQueue.length > 0) {
-        // Batch done, more cards waiting — show batch summary screen
-        set({ learnBatch: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnBatchComplete: true })
-      } else {
-        // All done
-        set({ learnBatch: [], learnQueue: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnComplete: true })
-        get()._persist(newGraduated, [], learnCards.length, 'learn', learnSetId, false)
-      }
+      // All batch cards graduated — show story interlude before advancing/completing
+      set({ learnBatch: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnStoryReady: true })
       return
     }
     set({ learnBatch: newBatch, learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnBatchIdx: nextIdx })
@@ -129,13 +127,27 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       learnBatch: nextBatch, learnQueue: nextQueue,
       learnBatchComplete: false, learnBatchSummary: [],
       learnBatchIdx: 0, learnScores: {},
+      learnStoryReady: false,
     })
+  },
+
+  // Called when user finishes the post-batch story interlude
+  completeLearnStory: () => {
+    const { learnQueue, learnGraduated, learnCards, learnSetId, learnBatchSummary } = get()
+    if (learnQueue.length > 0) {
+      // More batches remaining — show batch summary screen then advance
+      set({ learnStoryReady: false, learnBatchComplete: true })
+    } else {
+      // All done — show learn complete
+      set({ learnStoryReady: false, learnBatchComplete: false, learnComplete: true })
+      get()._persist(learnGraduated, [], learnCards.length, 'learn', learnSetId, false)
+    }
   },
 
   resetLearn: () => set({
     learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
     learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
-    learnBatchComplete: false, learnBatchSummary: [],
+    learnBatchComplete: false, learnBatchSummary: [], learnStoryReady: false,
   }),
   // ─────────────────────────────────────────────────────────────
   mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],

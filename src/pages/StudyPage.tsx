@@ -32,7 +32,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, startLearnSession, resetLearn } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, learnBatch, learnBatchSummary, learnSetId, learnStoryReady, startLearnSession, resetLearn, completeLearnStory } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -355,6 +355,39 @@ export default function StudyPage() {
       )}
     </div>
   )
+
+  // ── Learn story interlude (after batch graduates, before advancing) ──
+  if (learnActive && learnStoryReady && !learnComplete) {
+    // Use the just-graduated batch cards (learnBatchSummary) for the story.
+    // Fall back to learnBatch if summary is empty for some reason.
+    const storyCards = learnBatchSummary.length > 0 ? learnBatchSummary : learnBatch
+    return (
+      <div className={styles.page}>
+        <div className={styles.topBar}>
+          <button className={styles.backBtn} onClick={handleEnd}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
+            {currentSet.title}
+          </button>
+          <div className={styles.topBarRight}>
+            <div className={styles.modeTag}>Story</div>
+            <button className={styles.exitBtn} onClick={completeLearnStory}>Skip</button>
+          </div>
+        </div>
+        <div className={styles.learnStoryHint}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 1a6 6 0 1 1 0 12A6 6 0 0 1 7 1zm0 3v4l2.5 1.5"/></svg>
+          Nice work! See these words in a story, then tap <strong>Continue</strong> to lock them in.
+        </div>
+        <StoryCard
+          terms={storyCards}
+          setId={learnSetId}
+          setTitle={currentSet.title}
+          onNewBatch={completeLearnStory}
+          onComplete={completeLearnStory}
+        />
+      </div>
+    )
+  }
+  // ─────────────────────────────────────────────────────────────
 
   // ── Learn session active ──────────────────────────────────────
   if (learnActive && !learnComplete) {

@@ -10,6 +10,7 @@ interface Props {
   setTitle: string
   setId: string
   onNewBatch: () => void
+  onComplete?: () => void   // when set, shows "Continue →" button (used in learn mode)
 }
 
 /** Split `text` into plain/highlighted segments for the given terms */
@@ -26,7 +27,7 @@ function buildSegments(text: string, terms: Card[]): { text: string; highlighted
   })
 }
 
-export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props) {
+export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComplete }: Props) {
   const [story, setStory] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -241,7 +242,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
         </div>
       )}
 
-      {/* Regenerate / New batch */}
+      {/* Regenerate / New batch / Continue */}
       {!loading && (
         <div className={styles.actionRow}>
           <button className={styles.regenBtn} onClick={generate} disabled={loading}>
@@ -251,12 +252,21 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch }: Props)
             </svg>
             New story, same words
           </button>
-          <button className={styles.newBatchBtn} onClick={onNewBatch}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 4h9M1 7h7M1 10h5"/><path d="M11 8l2 2-2 2"/>
-            </svg>
-            New batch
-          </button>
+          {onComplete ? (
+            <button className={styles.newBatchBtn} onClick={onComplete}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7h8M7 3l4 4-4 4"/>
+              </svg>
+              Continue
+            </button>
+          ) : (
+            <button className={styles.newBatchBtn} onClick={onNewBatch}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 4h9M1 7h7M1 10h5"/><path d="M11 8l2 2-2 2"/>
+              </svg>
+              New batch
+            </button>
+          )}
         </div>
       )}
     </div>
