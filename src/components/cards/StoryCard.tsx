@@ -110,7 +110,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
       setTimeout(() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null); setSaveStatus('idle') }, 1200)
     } catch {
       setSaveStatus('error')
-      setTimeout(() => setSaveStatus('idle'), 2500)
+      // No auto-dismiss — user can explicitly retry or dismiss
     }
   }
 
@@ -222,21 +222,41 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
       {/* Floating save tooltip — fixed position above the selection */}
       {selectionInfo && story && (
         <div
-          className={styles.floatingSave}
+          className={[styles.floatingSave, saveStatus === 'error' ? styles.floatingSaveError : ''].join(' ')}
           style={{
             left: selectionInfo.x,
             top: selectionInfo.y,
             transform: selectionInfo.flipped ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
           }}
         >
-          <span className={styles.floatingSaveWord}>「{selectionInfo.word}」</span>
-          <button className={styles.floatingSaveBtn} onClick={handleSaveWord} disabled={saveStatus === 'loading'}>
-            {saveStatus === 'loading' && 'Looking up…'}
-            {saveStatus === 'saved' && '✓ Saved'}
-            {saveStatus === 'error' && 'Try again'}
-            {saveStatus === 'idle' && '+ Save'}
-          </button>
-          <button className={styles.floatingSaveDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null) }}>
+          {saveStatus === 'error' ? (
+            <>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0 }}><circle cx="6.5" cy="6.5" r="5.5"/><path d="M6.5 4v3M6.5 8.5v.5" strokeLinecap="round"/></svg>
+              <span className={styles.floatingSaveWord} style={{ color: 'inherit' }}>Couldn't save</span>
+              <button className={[styles.floatingSaveBtn, styles.floatingSaveBtnRetry].join(' ')} onClick={handleSaveWord}>
+                Retry
+              </button>
+            </>
+          ) : (
+            <>
+              <span className={styles.floatingSaveWord}>「{selectionInfo.word}」</span>
+              <button
+                className={[styles.floatingSaveBtn, saveStatus === 'saved' ? styles.floatingSaveBtnSaved : ''].join(' ')}
+                onClick={handleSaveWord}
+                disabled={saveStatus === 'loading' || saveStatus === 'saved'}
+              >
+                {saveStatus === 'loading' && (
+                  <>
+                    <svg className={styles.floatingSaveSpinner} width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="5.5" cy="5.5" r="4" strokeOpacity="0.25"/><path d="M5.5 1.5a4 4 0 0 1 4 4" strokeLinecap="round"/></svg>
+                    Saving…
+                  </>
+                )}
+                {saveStatus === 'saved' && '✓ Saved'}
+                {saveStatus === 'idle' && '+ Save to deck'}
+              </button>
+            </>
+          )}
+          <button className={styles.floatingSaveDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null); setSaveStatus('idle') }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l8 8M9 1L1 9"/></svg>
           </button>
         </div>
