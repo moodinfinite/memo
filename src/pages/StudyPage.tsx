@@ -32,7 +32,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, learnBatch, learnBatchSummary, learnSetId, learnStoryReady, startLearnSession, resetLearn, completeLearnStory } = useStudyStore()
+  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, persistAttempt, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, dismissPersistError, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, learnBatch, learnBatchSummary, learnSetId, learnStoryReady, startLearnSession, resetLearn, completeLearnStory } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -518,7 +518,7 @@ export default function StudyPage() {
             {isPersisting && (
               <div className={styles.saveStatus}>
                 <svg className={styles.saveSpinner} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5" strokeOpacity="0.25"/><path d="M7 2a5 5 0 0 1 5 5" strokeLinecap="round"/></svg>
-                Saving session…
+                {persistAttempt > 0 ? `Retrying… (attempt ${persistAttempt + 1})` : 'Saving session…'}
               </div>
             )}
             {!isPersisting && persistSaved && !persistError && (
@@ -527,12 +527,17 @@ export default function StudyPage() {
                 Session saved
               </div>
             )}
-            {persistError && (
-              <div className={styles.persistError} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <span>{persistError}</span>
-                <button onClick={retryPersist} disabled={isPersisting} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, fontWeight: 500, cursor: 'pointer', opacity: isPersisting ? 0.5 : 1 }}>
-                  {isPersisting ? 'Retrying…' : 'Retry'}
+            {persistError && !isPersisting && (
+              <div className={styles.persistError}>
+                <span style={{ flex: 1 }}>{persistError}</span>
+                <button onClick={retryPersist} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                  Retry
                 </button>
+                {persistAttempt >= 2 && (
+                  <button onClick={dismissPersistError} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                    Dismiss
+                  </button>
+                )}
               </div>
             )}
 

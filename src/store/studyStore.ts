@@ -36,6 +36,7 @@ interface StudyState {
   isAdvancing: boolean
   lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number; cardId: string; prevCardSRS: import('./srsStore').CardSRS | null } | null
   persistError: string | null
+  persistAttempt: number
   hasDraft: boolean; draftLoading: boolean
   isPersisting: boolean; persistSaved: boolean
   sentenceInput: string
@@ -58,6 +59,7 @@ interface StudyState {
   tickTimer: () => void; resetSession: () => void
   persistSession: () => Promise<void>
   retryPersist: () => Promise<void>
+  dismissPersistError: () => void
   _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft?: boolean) => Promise<void>
 }
 
@@ -69,6 +71,8 @@ function shuffleArr<T>(arr: T[]): T[] {
 
 // Module-level debounce timer for saveProgress — prevents firing 1 upsert per card
 let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
+// Active abort controller — cancelled before each new _persist call so stale requests don't race
+let _persistController: AbortController | null = null
 
 export const useStudyStore = create<StudyState>((set, get) => ({
   // ── Learn mode initial state ─────────────────────────────────
@@ -155,7 +159,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
   isAdvancing: false, lastAction: null,
-  persistError: null,
+  persistError: null, persistAttempt: 0,
   hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
   sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null,
   sentenceScore: null, sentenceEntries: [],
@@ -324,7 +328,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
-  resetSession: () => set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] }),
+  resetSession: () => {
+    _persistController?.abort()
+    _persistController = null
+    set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, persistAttempt: 0, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] })
+  },
 
   persistSession: async () => {
     const { known, unknown, sessionCards, mode, setId } = get()
@@ -335,7 +343,15 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   retryPersist: async () => {
     const { _lastPersistArgs } = get() as any
     if (!_lastPersistArgs) return
+    set({ persistAttempt: get().persistAttempt + 1 })
     await get()._persist(..._lastPersistArgs as Parameters<StudyState['_persist']>)
+  },
+
+  dismissPersistError: () => {
+    // Cancel any in-flight request and clear error state
+    _persistController?.abort()
+    _persistController = null
+    set({ persistError: null, isPersisting: false, persistAttempt: 0 })
   },
 
   resumeSession: (draft, cards) => {
@@ -414,45 +430,52 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
     if (!setId || setId === '__master__') return
     ;(get() as any)._lastPersistArgs = [known, unknown, total, mode, setId, clearDraft]
+
+    // Cancel any previous in-flight request before starting a new one
+    _persistController?.abort()
+    _persistController = new AbortController()
+    const signal = _persistController.signal
+
     set({ persistError: null, isPersisting: true, persistSaved: false })
-    // Warn at 8s (cold start), give up at 25s
-    let expired = false
+
+    const attempt = get().persistAttempt
     const slowWarn = setTimeout(() => {
+      if (signal.aborted) return
       set({ persistError: 'Slow connection — still saving, hang tight…' })
     }, 8000)
     const deadline = setTimeout(() => {
-      expired = true
-      clearTimeout(slowWarn)
-      set({ isPersisting: false, persistError: 'Save timed out — tap Retry' })
+      if (signal.aborted) return
+      _persistController?.abort()
+      set({ isPersisting: false, persistError: attempt >= 2 ? 'Still failing — session may not have saved. You can dismiss or keep retrying.' : 'Save timed out — tap Retry' })
     }, 25000)
+
     try {
       const user = useAuthStore.getState().user
       if (!user) { clearTimeout(slowWarn); clearTimeout(deadline); set({ isPersisting: false }); return }
-      const { error } = await supabase.from('study_sessions').insert({
+      const { error } = await (supabase.from('study_sessions').insert({
         user_id: user.id, set_id: setId, mode, total_cards: total,
         known_count: known.length, unknown_count: unknown.length,
         score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
         completed_at: new Date().toISOString(),
-      })
+      }) as any).abortSignal(signal)
       clearTimeout(slowWarn); clearTimeout(deadline)
-      if (expired) return  // deadline already fired; don't overwrite the timeout error
+      if (signal.aborted) return  // this call was superseded by a retry
       if (error) {
         const code = (error as any).code ?? 'unknown'
         const msg = error.message ?? 'unknown error'
         console.error('study_sessions insert failed:', code, msg)
-        set({ persistError: `Save error [${code}]: ${msg}`, isPersisting: false })
+        set({ persistError: `Save error — ${msg}`, isPersisting: false })
         return
       }
       if (clearDraft) get().clearProgress(setId)
       useProgressStore.getState().fetchProgress()
-      set({ isPersisting: false, persistSaved: true })
+      set({ isPersisting: false, persistSaved: true, persistAttempt: 0 })
     } catch (err: any) {
       clearTimeout(slowWarn); clearTimeout(deadline)
-      if (expired) return
-      const code = err?.code ?? 'unknown'
+      if (signal.aborted) return  // aborted by retry or dismiss — don't show error
       const msg = err?.message ?? 'unknown error'
-      console.error('study_sessions persist error:', code, msg)
-      set({ persistError: `Save error [${code}]: ${msg}`, isPersisting: false })
+      console.error('study_sessions persist error:', err?.code, msg)
+      set({ persistError: `Save error — ${msg}`, isPersisting: false })
     }
   },
 }))
