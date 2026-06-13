@@ -21,7 +21,6 @@ const MODES: { id: StudyMode | 'learn' | 'story'; label: string; desc: string }[
   { id: 'learn', label: 'Learn', desc: 'Guided batches — flashcards & quizzes' },
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
   { id: 'multiple_choice', label: 'Multiple choice', desc: 'Pick the right answer' },
-  { id: 'typed', label: 'Typed answer', desc: 'Write the definition' },
   { id: 'sentence', label: 'Write a sentence', desc: 'Use each word in a sentence' },
   { id: 'story', label: 'Story', desc: 'Read your words in a generated story' },
 ]
