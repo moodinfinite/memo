@@ -30,6 +30,7 @@ function buildSegments(text: string, terms: Card[]): { text: string; highlighted
 export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComplete }: Props) {
   const [story, setStory] = useState('')
   const [loading, setLoading] = useState(false)
+  const [slowLoad, setSlowLoad] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
   const [selectionInfo, setSelectionInfo] = useState<{ word: string; x: number; y: number; flipped: boolean } | null>(null)
@@ -117,16 +118,21 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
   const generate = useCallback(async () => {
     tappedIds.current.clear()
     setLoading(true)
+    setSlowLoad(false)
     setError(null)
     setStory('')
     setTooltip(null)
     setSelectionInfo(null)
+    const controller = new AbortController()
+    const slowWarn = setTimeout(() => setSlowLoad(true), 8000)
+    const deadline = setTimeout(() => controller.abort(), 22000)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/generate-story', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ setTitle, terms: terms.map(t => ({ term: t.term, definition: t.definition })) }),
+        signal: controller.signal,
       })
       const text = await res.text()
       let data: any
@@ -134,9 +140,13 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
       if (!res.ok) throw new Error(data.error || 'Failed to generate story')
       setStory(data.story)
     } catch (err: any) {
-      setError(err.message ?? 'Something went wrong')
+      const msg = err.name === 'AbortError' ? 'Taking too long — tap to try again' : (err.message ?? 'Something went wrong')
+      setError(msg)
     } finally {
+      clearTimeout(slowWarn)
+      clearTimeout(deadline)
       setLoading(false)
+      setSlowLoad(false)
     }
   }, [terms, setTitle])
 
@@ -154,7 +164,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
               <circle cx="11" cy="11" r="8" strokeOpacity="0.2"/>
               <path d="M11 3a8 8 0 0 1 8 8" strokeLinecap="round"/>
             </svg>
-            <span>Writing your story…</span>
+            <span>{slowLoad ? 'Still writing — almost there…' : 'Writing your story…'}</span>
           </div>
         )}
         {error && (
