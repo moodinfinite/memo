@@ -228,6 +228,8 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
             top: selectionInfo.y,
             transform: selectionInfo.flipped ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
           }}
+          onMouseDown={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
         >
           {saveStatus === 'error' ? (
             <>
