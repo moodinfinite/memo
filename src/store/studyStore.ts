@@ -37,6 +37,7 @@ interface StudyState {
   lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number; cardId: string; prevCardSRS: import('./srsStore').CardSRS | null } | null
   persistError: string | null
   persistAttempt: number
+  _lastPersistArgs: Parameters<StudyState['_persist']> | null
   hasDraft: boolean; draftLoading: boolean
   isPersisting: boolean; persistSaved: boolean
   sentenceInput: string
@@ -69,6 +70,8 @@ function shuffleArr<T>(arr: T[]): T[] {
   return a
 }
 
+const LEARN_BATCH_SIZE = 5
+
 // Module-level debounce timer for saveProgress — prevents firing 1 upsert per card
 let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 // Active abort controller — cancelled before each new _persist call so stale requests don't race
@@ -82,11 +85,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   learnStoryReady: false,
 
   startLearnSession: (cards, setId) => {
-    const BATCH = 5
     const shuffled = shuffleArr([...cards])
     set({
       learnActive: true, learnCards: cards,
-      learnBatch: shuffled.slice(0, BATCH), learnQueue: shuffled.slice(BATCH),
+      learnBatch: shuffled.slice(0, LEARN_BATCH_SIZE), learnQueue: shuffled.slice(LEARN_BATCH_SIZE),
       learnGraduated: [], learnScores: {}, learnBatchIdx: 0,
       learnComplete: false, learnSetId: setId,
       learnBatchComplete: false, learnBatchSummary: [],
@@ -124,9 +126,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   advanceToNextBatch: () => {
     const { learnQueue } = get()
-    const BATCH = 5
-    const nextBatch = learnQueue.slice(0, BATCH)
-    const nextQueue = learnQueue.slice(BATCH)
+    const nextBatch = learnQueue.slice(0, LEARN_BATCH_SIZE)
+    const nextQueue = learnQueue.slice(LEARN_BATCH_SIZE)
     set({
       learnBatch: nextBatch, learnQueue: nextQueue,
       learnBatchComplete: false, learnBatchSummary: [],
@@ -137,7 +138,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   // Called when user finishes the post-batch story interlude
   completeLearnStory: () => {
-    const { learnQueue, learnGraduated, learnCards, learnSetId, learnBatchSummary } = get()
+    const { learnQueue, learnGraduated, learnCards, learnSetId } = get()
     if (learnQueue.length > 0) {
       // More batches remaining — show batch summary screen then advance
       set({ learnStoryReady: false, learnBatchComplete: true })
@@ -159,7 +160,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
   isAdvancing: false, lastAction: null,
-  persistError: null, persistAttempt: 0,
+  persistError: null, persistAttempt: 0, _lastPersistArgs: null,
   hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
   sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null,
   sentenceScore: null, sentenceEntries: [],
@@ -331,7 +332,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   resetSession: () => {
     _persistController?.abort()
     _persistController = null
-    set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, persistAttempt: 0, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] })
+    set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, persistAttempt: 0, _lastPersistArgs: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] })
   },
 
   persistSession: async () => {
@@ -341,10 +342,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 
   retryPersist: async () => {
-    const { _lastPersistArgs } = get() as any
+    const { _lastPersistArgs } = get()
     if (!_lastPersistArgs) return
     set({ persistAttempt: get().persistAttempt + 1 })
-    await get()._persist(..._lastPersistArgs as Parameters<StudyState['_persist']>)
+    await get()._persist(..._lastPersistArgs)
   },
 
   dismissPersistError: () => {
@@ -429,7 +430,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
     if (!setId || setId === '__master__') return
-    ;(get() as any)._lastPersistArgs = [known, unknown, total, mode, setId, clearDraft]
+    set({ _lastPersistArgs: [known, unknown, total, mode, setId, clearDraft] })
 
     // Cancel any previous in-flight request before starting a new one
     _persistController?.abort()
