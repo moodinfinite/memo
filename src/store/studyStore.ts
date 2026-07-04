@@ -469,7 +469,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         return
       }
       if (clearDraft) get().clearProgress(setId)
-      useProgressStore.getState().fetchProgress()
+      useProgressStore.getState().fetchProgress(true)   // force — bypass 60s cache so new session shows
       set({ isPersisting: false, persistSaved: true, persistAttempt: 0 })
     } catch (err: any) {
       clearTimeout(slowWarn); clearTimeout(deadline)

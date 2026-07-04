@@ -9,7 +9,7 @@ interface ProgressState {
   totalCardsStudied: number
   isLoading: boolean
   progressLastFetched: number
-  fetchProgress: () => Promise<void>
+  fetchProgress: (force?: boolean) => Promise<void>
 }
 
 /**
@@ -65,9 +65,10 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   isLoading: false,
   progressLastFetched: 0,
 
-  fetchProgress: async () => {
-    // Skip refetch if data is fresh (< 60s old)
-    if (Date.now() - get().progressLastFetched < 60_000) return
+  fetchProgress: async (force = false) => {
+    // Skip refetch if data is fresh (< 60s old) — unless forced,
+    // e.g. right after a session save so new stats show immediately
+    if (!force && Date.now() - get().progressLastFetched < 60_000) return
     set({ isLoading: true })
     const user = useAuthStore.getState().user
     if (!user) { set({ isLoading: false }); return }

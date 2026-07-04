@@ -73,6 +73,32 @@ function isToday(dateStr: string): boolean {
   return dateStr <= today
 }
 
+// ─────────────────────────────────────────────────────────────
+// SRS write queue.
+// Saves run one at a time, in the order the user answered. Without this,
+// rapid answers fire parallel requests and a slow connection can deliver an
+// OLD answer's save after a NEWER one, overwriting it in the database.
+// Each write also gets one automatic retry — free-tier connections often
+// hiccup once and succeed on the second try.
+// ─────────────────────────────────────────────────────────────
+let _writeChain: Promise<void> = Promise.resolve()
+
+function enqueueSRSWrite(
+  job: () => PromiseLike<{ error: { message: string } | null }>,
+  label: string,
+) {
+  _writeChain = _writeChain
+    .then(async () => {
+      let { error } = await job()
+      if (error) {
+        await new Promise((r) => setTimeout(r, 1500))
+        ;({ error } = await job())
+      }
+      if (error) console.error(`${label} failed after retry:`, error.message)
+    })
+    .catch(() => {}) // never let one failure break the chain
+}
+
 export const useSRSStore = create<SRSState>((set, get) => ({
   cardSRS: {},
   lastLocalUpdate: {},
@@ -142,9 +168,13 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
     }))
 
-    // Sync to DB in background
-    const { error: upsertError } = await supabase.from('card_srs').upsert(upsertData, { onConflict: 'card_id' })
-    if (upsertError) console.error('updateSRS upsert error:', upsertError)
+    // Sync to DB in background, serialized through the write queue.
+    // NOTE: conflict target must match the DB's unique(user_id, card_id)
+    // constraint — 'card_id' alone makes Postgres reject the whole upsert.
+    enqueueSRSWrite(
+      () => supabase.from('card_srs').upsert(upsertData, { onConflict: 'user_id,card_id' }),
+      'updateSRS upsert',
+    )
   },
 
   revertSRS: (cardId, setId, prevState) => {
@@ -155,8 +185,10 @@ export const useSRSStore = create<SRSState>((set, get) => ({
         lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
       }))
       if (!user) return
-      supabase.from('card_srs').upsert({ ...prevState, user_id: user.id }, { onConflict: 'card_id' })
-        .then(({ error }) => { if (error) console.error('revertSRS upsert error:', error) })
+      enqueueSRSWrite(
+        () => supabase.from('card_srs').upsert({ ...prevState, user_id: user.id }, { onConflict: 'user_id,card_id' }),
+        'revertSRS upsert',
+      )
     } else {
       // Card had no SRS record before this session — delete the row we created
       set((state) => {
@@ -165,8 +197,10 @@ export const useSRSStore = create<SRSState>((set, get) => ({
         return { cardSRS: next, lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() } }
       })
       if (!user) return
-      supabase.from('card_srs').delete().eq('card_id', cardId)
-        .then(({ error }) => { if (error) console.error('revertSRS delete error:', error) })
+      enqueueSRSWrite(
+        () => supabase.from('card_srs').delete().eq('card_id', cardId),
+        'revertSRS delete',
+      )
     }
   },
 
