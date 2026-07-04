@@ -33,11 +33,12 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
   const [slowLoad, setSlowLoad] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
-  const [selectionInfo, setSelectionInfo] = useState<{ word: string; x: number; y: number; flipped: boolean } | null>(null)
+  const [selectedWord, setSelectedWord] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
   const tappedIds = useRef<Set<string>>(new Set())
   const storyRef = useRef('')
   const storyElRef = useRef<HTMLParagraphElement>(null)
+  const saveBarRef = useRef<HTMLDivElement>(null)
   const termsRef = useRef(terms)
   const setIdRef = useRef(setId)
   const { saveToSavedWords } = useSetsStore()
@@ -55,60 +56,56 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
     }
   }, [])
 
-  // Show tooltip on pointer-up (selection fully settled) — more reliable than selectionchange
+  // Watch for text selection inside the story. The save bar is a fixed
+  // snackbar at the bottom of the screen — no coordinate math, so it can
+  // never drift out of the viewport. Once shown, it keeps the word in state
+  // and stays up until the user saves, dismisses, or taps elsewhere; it
+  // does NOT depend on the browser selection staying alive.
   useEffect(() => {
-    const show = () => {
+    const onPointerUp = (e: MouseEvent | TouchEvent) => {
+      // Taps on the save bar itself never change or hide it
+      if (saveBarRef.current?.contains(e.target as Node)) return
       // rAF lets the browser finalise the selection before we read it
       requestAnimationFrame(() => {
         const sel = window.getSelection()
-        if (!sel || sel.isCollapsed || !storyElRef.current) return
-        const range = sel.getRangeAt(0)
-        if (!storyElRef.current.contains(range.commonAncestorContainer)) return
-        const word = sel.toString().trim()
-        if (!word) return
-        const rect = range.getBoundingClientRect()
-        // Sanity-check: ignore degenerate rects (can happen mid-drag)
-        if (rect.width === 0 && rect.height === 0) return
-        const TOOLTIP_W = 220
-        const rawX = rect.left + rect.width / 2
-        const x = Math.max(TOOLTIP_W / 2 + 8, Math.min(window.innerWidth - TOOLTIP_W / 2 - 8, rawX))
-        const aboveRoom = rect.top > 60
-        const y = aboveRoom ? rect.top - 10 : rect.bottom + 10
-        setSelectionInfo({ word, x, y, flipped: !aboveRoom })
+        if (sel && !sel.isCollapsed && storyElRef.current) {
+          const range = sel.getRangeAt(0)
+          if (storyElRef.current.contains(range.commonAncestorContainer)) {
+            const word = sel.toString().trim()
+            if (word && word.length <= 40) {
+              setSelectedWord(word)
+              setSaveStatus('idle')
+              return
+            }
+          }
+        }
+        // Tapped elsewhere with no valid selection — hide
+        setSelectedWord(null)
         setSaveStatus('idle')
       })
     }
-    // Hide when selection collapses (click elsewhere)
-    const hide = () => {
-      requestAnimationFrame(() => {
-        const sel = window.getSelection()
-        if (!sel || sel.isCollapsed) setSelectionInfo(null)
-      })
-    }
-    document.addEventListener('mouseup', show)
-    document.addEventListener('touchend', show)
-    document.addEventListener('selectionchange', hide)
+    document.addEventListener('mouseup', onPointerUp)
+    document.addEventListener('touchend', onPointerUp)
     return () => {
-      document.removeEventListener('mouseup', show)
-      document.removeEventListener('touchend', show)
-      document.removeEventListener('selectionchange', hide)
+      document.removeEventListener('mouseup', onPointerUp)
+      document.removeEventListener('touchend', onPointerUp)
     }
   }, [])
 
   const handleSaveWord = async () => {
-    if (!selectionInfo || saveStatus === 'loading') return
+    if (!selectedWord || saveStatus === 'loading') return
     setSaveStatus('loading')
     try {
       const res = await fetch('/api/lookup-word', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ word: selectionInfo.word }),
+        body: JSON.stringify({ word: selectedWord }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      await saveToSavedWords(selectionInfo.word, data.definition)
+      await saveToSavedWords(selectedWord, data.definition)
       setSaveStatus('saved')
-      setTimeout(() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null); setSaveStatus('idle') }, 1200)
+      setTimeout(() => { window.getSelection()?.removeAllRanges(); setSelectedWord(null); setSaveStatus('idle') }, 1200)
     } catch {
       setSaveStatus('error')
       // No auto-dismiss — user can explicitly retry or dismiss
@@ -122,7 +119,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
     setError(null)
     setStory('')
     setTooltip(null)
-    setSelectionInfo(null)
+    setSelectedWord(null)
     const controller = new AbortController()
     const slowWarn = setTimeout(() => setSlowLoad(true), 8000)
     const deadline = setTimeout(() => controller.abort(), 22000)
@@ -229,17 +226,11 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
         </div>
       )}
 
-      {/* Floating save tooltip — fixed position above the selection */}
-      {selectionInfo && story && (
+      {/* Save-to-deck snackbar — fixed at bottom center, never drifts */}
+      {selectedWord && story && (
         <div
+          ref={saveBarRef}
           className={[styles.floatingSave, saveStatus === 'error' ? styles.floatingSaveError : ''].join(' ')}
-          style={{
-            left: selectionInfo.x,
-            top: selectionInfo.y,
-            transform: selectionInfo.flipped ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
-          }}
-          onMouseDown={(e) => e.preventDefault()}
-          onTouchStart={(e) => e.preventDefault()}
         >
           {saveStatus === 'error' ? (
             <>
@@ -251,7 +242,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
             </>
           ) : (
             <>
-              <span className={styles.floatingSaveWord}>「{selectionInfo.word}」</span>
+              <span className={styles.floatingSaveWord}>「{selectedWord}」</span>
               <button
                 className={[styles.floatingSaveBtn, saveStatus === 'saved' ? styles.floatingSaveBtnSaved : ''].join(' ')}
                 onClick={handleSaveWord}
@@ -268,7 +259,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
               </button>
             </>
           )}
-          <button className={styles.floatingSaveDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelectionInfo(null); setSaveStatus('idle') }}>
+          <button className={styles.floatingSaveDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelectedWord(null); setSaveStatus('idle') }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l8 8M9 1L1 9"/></svg>
           </button>
         </div>
