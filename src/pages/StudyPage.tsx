@@ -498,6 +498,7 @@ export default function StudyPage() {
       isPersisting={isPersisting}
       persistSaved={persistSaved}
       persistError={persistError}
+      retryPersist={retryPersist}
       onStudyAgain={() => { resetSession(); startSession(currentSet.cards!, 'sentence', id!) }}
       onChangeMode={handleEnd}
       backTo={`/sets/${id}`}
@@ -517,7 +518,7 @@ export default function StudyPage() {
             {isPersisting && (
               <div className={styles.saveStatus}>
                 <svg className={styles.saveSpinner} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5" strokeOpacity="0.25"/><path d="M7 2a5 5 0 0 1 5 5" strokeLinecap="round"/></svg>
-                {persistAttempt > 0 ? `Retrying… (attempt ${persistAttempt + 1})` : 'Saving session…'}
+                {persistError ?? (persistAttempt > 0 ? `Retrying… (attempt ${persistAttempt + 1})` : 'Saving session…')}
               </div>
             )}
             {!isPersisting && persistSaved && !persistError && (

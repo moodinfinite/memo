@@ -8,6 +8,7 @@ interface Props {
   isPersisting: boolean
   persistSaved: boolean
   persistError: string | null
+  retryPersist?: () => void
   onStudyAgain: () => void
   onChangeMode: () => void
   backTo: string
@@ -16,7 +17,7 @@ interface Props {
 const scoreLabel = { great: 'Great', good: 'Good', needs_work: 'Needs work' }
 const scoreMod = { great: styles.great, good: styles.good, needs_work: styles.needsWork }
 
-export default function SentenceSummary({ entries, setTitle, isPersisting, persistSaved, persistError, onStudyAgain, onChangeMode, backTo }: Props) {
+export default function SentenceSummary({ entries, setTitle, isPersisting, persistSaved, persistError, retryPersist, onStudyAgain, onChangeMode, backTo }: Props) {
   const greatCount = entries.filter(e => e.score === 'great').length
   const goodCount = entries.filter(e => e.score === 'good').length
   const needsCount = entries.filter(e => e.score === 'needs_work').length
@@ -38,7 +39,7 @@ export default function SentenceSummary({ entries, setTitle, isPersisting, persi
         {isPersisting && (
           <div className={styles.saveStatus}>
             <svg className={styles.spinner} width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="5" strokeOpacity="0.25"/><path d="M6.5 1.5a5 5 0 0 1 5 5" strokeLinecap="round"/></svg>
-            Saving session…
+            {persistError ?? 'Saving session…'}
           </div>
         )}
         {!isPersisting && persistSaved && !persistError && (
@@ -47,7 +48,14 @@ export default function SentenceSummary({ entries, setTitle, isPersisting, persi
             Session saved
           </div>
         )}
-        {persistError && <div className={styles.saveError}>{persistError}</div>}
+        {persistError && !isPersisting && (
+          <div className={styles.saveError}>
+            {persistError}
+            {retryPersist && (
+              <button onClick={retryPersist} className={styles.retryLink}>Retry</button>
+            )}
+          </div>
+        )}
 
         {/* Sentence list */}
         <div className={styles.list}>
