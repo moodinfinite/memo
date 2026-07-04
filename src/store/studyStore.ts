@@ -329,9 +329,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
+  // NOTE: deliberately does NOT abort an in-flight persist — exiting a session
+  // early fires a partial save right before this runs, and aborting here would
+  // kill it. _persist already aborts its own predecessor on each new call.
   resetSession: () => {
-    _persistController?.abort()
-    _persistController = null
     set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, persistAttempt: 0, _lastPersistArgs: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] })
   },
 

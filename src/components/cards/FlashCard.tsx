@@ -8,13 +8,14 @@ interface Props {
   total: number
   onKnow: () => void
   onDontKnow: () => void
+  onAnswerStart?: (correct: boolean) => void   // fires instantly on tap, before the flash delay
   onUndo?: () => void
   canUndo?: boolean
   flipKey?: number
   startSide?: 'term' | 'definition' | 'random'
 }
 
-export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUndo, canUndo, flipKey, startSide = 'term' }: Props) {
+export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAnswerStart, onUndo, canUndo, flipKey, startSide = 'term' }: Props) {
   // Decide once on mount which content goes on which face.
   // Always start flipped=false so the front face (neutral styling) is shown first.
   // When definition-first, we put definition content on the front face and term on the back.
@@ -50,13 +51,15 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onUn
   const handleKnow = () => {
     if (answering) return
     setFlash('correct')
-    setTimeout(onKnow, 900)
+    onAnswerStart?.(true)
+    setTimeout(onKnow, 1000)   // matches MC's 1s answer-feedback rhythm
   }
 
   const handleDontKnow = () => {
     if (answering) return
     setFlash('incorrect')
-    setTimeout(onDontKnow, 900)
+    onAnswerStart?.(false)
+    setTimeout(onDontKnow, 1000)
   }
 
   return (

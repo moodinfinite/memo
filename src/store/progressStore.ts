@@ -6,6 +6,8 @@ import { useAuthStore } from './authStore'
 interface ProgressState {
   sessions: StudySession[]
   weekStreak: number
+  dayStreak: number
+  studiedDays: string[]          // local 'YYYY-MM-DD' strings with ≥1 session
   totalCardsStudied: number
   isLoading: boolean
   progressLastFetched: number
@@ -58,9 +60,37 @@ function calculateWeekStreak(sessions: StudySession[]): number {
   return streak
 }
 
+// Local calendar day 'YYYY-MM-DD' — uses the user's timezone, since "studied
+// today" should follow their clock, not UTC
+function localDayStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/**
+ * Day streak = consecutive local calendar days with at least one session.
+ * Today counts if already studied today; otherwise the streak is still alive
+ * if yesterday was studied (you haven't "missed" today until it's over).
+ */
+function calculateDayStreak(studiedDays: Set<string>): number {
+  if (studiedDays.size === 0) return 0
+  const cursor = new Date()
+  if (!studiedDays.has(localDayStr(cursor))) {
+    cursor.setDate(cursor.getDate() - 1)
+    if (!studiedDays.has(localDayStr(cursor))) return 0
+  }
+  let streak = 0
+  while (studiedDays.has(localDayStr(cursor))) {
+    streak++
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return streak
+}
+
 export const useProgressStore = create<ProgressState>((set, get) => ({
   sessions: [],
   weekStreak: 0,
+  dayStreak: 0,
+  studiedDays: [],
   totalCardsStudied: 0,
   isLoading: false,
   progressLastFetched: 0,
@@ -85,7 +115,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     const s = sessions ?? []
     const totalCardsStudied = s.reduce((acc, sess) => acc + sess.total_cards, 0)
     const weekStreak = calculateWeekStreak(s)
+    const daySet = new Set(s.map((sess) => localDayStr(new Date(sess.completed_at))))
+    const dayStreak = calculateDayStreak(daySet)
 
-    set({ sessions: s, weekStreak, totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
+    set({ sessions: s, weekStreak, dayStreak, studiedDays: Array.from(daySet), totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
   },
 }))

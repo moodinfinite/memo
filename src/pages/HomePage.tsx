@@ -14,7 +14,7 @@ export default function HomePage() {
   const { user, profile } = useAuthStore()
   const { sets, fetchSets, searchSets, togglePin, isLoading } = useSetsStore()
   const { folders } = useFoldersStore()
-  const { weekStreak, totalCardsStudied, fetchProgress } = useProgressStore()
+  const { dayStreak, studiedDays, totalCardsStudied, fetchProgress } = useProgressStore()
   const { cardSRS, fetchAllSRS } = useSRSStore()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -80,10 +80,16 @@ export default function HomePage() {
       </div>
 
       <div className={styles.statsRow}>
-        <div className={styles.statCard}><div className={styles.statLabel}>Study streak</div><div className={styles.statValue}>{weekStreak} {weekStreak === 1 ? 'week' : 'weeks'}</div><div className={styles.statSub}>consecutive weeks</div></div>
+        <div className={[styles.statCard, dayStreak > 0 ? styles.streakCardActive : ''].join(' ')}>
+          <div className={styles.statLabel}>Study streak</div>
+          <div className={styles.statValue}>{dayStreak > 0 && <span className={styles.streakFlame}>🔥</span>}{dayStreak} {dayStreak === 1 ? 'day' : 'days'}</div>
+          <div className={styles.statSub}>{dayStreak > 0 ? (studiedDays.includes(todayStr()) ? 'you studied today!' : 'study today to keep it') : 'study today to start one'}</div>
+        </div>
         <div className={styles.statCard}><div className={styles.statLabel}>Cards studied total</div><div className={styles.statValue}>{totalCardsStudied.toLocaleString()}</div><div className={styles.statSub}>across all sessions</div></div>
         <div className={styles.statCard}><div className={styles.statLabel}>Sets created</div><div className={styles.statValue}>{sets.length}</div><div className={styles.statSub}>{totalCards} cards total</div></div>
       </div>
+
+      <StreakCalendar studiedDays={studiedDays} />
 
       <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
@@ -113,6 +119,56 @@ export default function HomePage() {
       {!isLoading && (rest.length > 0 || (!query && sets.length > 0)) && (
         <><div className={styles.sectionLabel}>{pinned.length > 0 && !query ? 'Other sets' : query ? `Results for "${query}"` : 'Your sets'}</div><div className={styles.grid}>{!query && <MasterDeckCard totalCards={totalCards} setCount={sets.length} onNavigate={() => navigate('/master')} />}{rest.map((s) => <SetCard key={s.id} set={s} folderMap={folderMap} cardSRS={cardSRS} onPin={() => togglePin(s.id)} onNavigate={() => navigate(`/sets/${s.id}`)} />)}</div></>
       )}
+    </div>
+  )
+}
+
+function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function StreakCalendar({ studiedDays }: { studiedDays: string[] }) {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const monthName = now.toLocaleDateString('en-US', { month: 'long' })
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7  // Mon = 0
+  const today = now.getDate()
+  const studied = new Set(studiedDays)
+  const dayKey = (day: number) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const studiedThisMonth = Array.from({ length: daysInMonth }, (_, i) => i + 1).filter(d => studied.has(dayKey(d))).length
+
+  return (
+    <div className={styles.calCard}>
+      <div className={styles.calHeader}>
+        <span className={styles.calTitle}>{monthName}</span>
+        <span className={styles.calCount}>{studiedThisMonth} {studiedThisMonth === 1 ? 'day' : 'days'} studied</span>
+      </div>
+      <div className={styles.calGrid}>
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+          <div key={`h${i}`} className={styles.calWeekday}>{d}</div>
+        ))}
+        {Array.from({ length: firstWeekday }, (_, i) => <div key={`b${i}`} />)}
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1
+          const isStudied = studied.has(dayKey(day))
+          const isToday = day === today
+          return (
+            <div
+              key={day}
+              className={[
+                styles.calDay,
+                isStudied ? styles.calDayStudied : '',
+                isToday ? styles.calDayToday : '',
+              ].join(' ')}
+            >
+              {day}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

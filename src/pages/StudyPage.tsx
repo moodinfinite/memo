@@ -49,10 +49,9 @@ export default function StudyPage() {
   const [isStarting, setIsStarting] = useState(false)
   const [flipKey, setFlipKey] = useState(0)
   const [shuffleActive, setShuffleActive] = useState(false)
-  const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
-  const [burstMsg, setBurstMsg] = useState<string | null>(null)
+  const [burst, setBurst] = useState<{ msg: string; streak: number } | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const shownMilestones = useRef(new Set<number>())
+  const burstShownFor = useRef(0)
 
   useEffect(() => {
     if (!id) return
@@ -94,39 +93,38 @@ export default function StudyPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timerOn, selecting, isComplete])
 
-  // Reset flip key and milestones on card change
+  // Reset flip key on card change
   useEffect(() => { setFlipKey(0) }, [currentIndex])
-  useEffect(() => { shownMilestones.current = new Set() }, [sessionCards.length])
 
-  // Streak burst — fires whenever mcStreak or flashStreak hits a multiple of 5
+  // Streak burst — one system for both modes, fires at answer time.
   const BURST_MSGS = ['On a roll!', 'Unstoppable!', 'On fire!', 'Legendary!']
+  const fireBurst = (streak: number) => {
+    const idx = Math.floor(streak / 5) - 1
+    setBurst({ msg: BURST_MSGS[Math.min(idx, BURST_MSGS.length - 1)], streak })
+    setTimeout(() => setBurst(null), 2000)
+  }
+  // MC increments its streak instantly on answer, so this effect fires in sync
   useEffect(() => {
     if (mcStreak === 0 || mcStreak % 5 !== 0) return
-    const idx = Math.floor(mcStreak / 5) - 1
-    setBurstMsg(BURST_MSGS[Math.min(idx, BURST_MSGS.length - 1)])
-    setTimeout(() => setBurstMsg(null), 2000)
+    fireBurst(mcStreak)
   }, [mcStreak])
+  // Flashcards increment flashStreak ~1s after the tap (when the card advances),
+  // so taps fire the burst early via onAnswerStart below. This effect is the
+  // fallback for keyboard answers, deduped via burstShownFor.
   useEffect(() => {
     if (flashStreak === 0 || flashStreak % 5 !== 0) return
-    const idx = Math.floor(flashStreak / 5) - 1
-    setBurstMsg(BURST_MSGS[Math.min(idx, BURST_MSGS.length - 1)])
-    setTimeout(() => setBurstMsg(null), 2000)
+    if (burstShownFor.current === flashStreak) return
+    fireBurst(flashStreak)
   }, [flashStreak])
-
-  // Milestone toasts
-  useEffect(() => {
-    if (sessionCards.length === 0 || isComplete || mode !== 'flashcard') return
-    const pct = (known.length / sessionCards.length) * 100
-    const checks: [number, string][] = [[25, 'Good start!'], [50, 'Halfway there!'], [75, 'Almost done!']]
-    for (const [thresh, msg] of checks) {
-      if (pct >= thresh && !shownMilestones.current.has(thresh)) {
-        shownMilestones.current.add(thresh)
-        setMilestoneMsg(msg)
-        setTimeout(() => setMilestoneMsg(null), 2000)
-        break
-      }
+  // Called by FlashCard the moment an answer is tapped — same instant feel as MC
+  const handleFlashAnswerStart = (correct: boolean) => {
+    if (!correct) return
+    const next = flashStreak + 1
+    if (next % 5 === 0) {
+      burstShownFor.current = next
+      fireBurst(next)
     }
-  }, [known.length])
+  }
 
   const canMC = (currentSet?.cards?.length ?? 0) >= 4
 
@@ -602,7 +600,7 @@ export default function StudyPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onUndo={undoLast} canUndo={!!lastAction} flipKey={flipKey} startSide={startSide} />}
+      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onAnswerStart={handleFlashAnswerStart} onUndo={undoLast} canUndo={!!lastAction} flipKey={flipKey} startSide={startSide} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {mode === 'sentence' && <SentenceCard />}
@@ -624,8 +622,7 @@ export default function StudyPage() {
           <span className={styles.kbd}><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> select answer</span>
         </div>
       )}
-      {milestoneMsg && <div className={styles.milestoneToast}>{milestoneMsg}</div>}
-      {burstMsg && <StreakBurst msg={burstMsg} streak={mode === 'flashcard' ? flashStreak : mcStreak} />}
+      {burst && <StreakBurst msg={burst.msg} streak={burst.streak} />}
     </div>
   )
 }
