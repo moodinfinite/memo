@@ -1,10 +1,8 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import type { StudySession } from '@/lib/database.types'
 import { useAuthStore } from './authStore'
 
 interface ProgressState {
-  sessions: StudySession[]
   weekStreak: number
   dayStreak: number
   studiedDays: string[]          // local 'YYYY-MM-DD' strings with ≥1 session
@@ -38,7 +36,9 @@ function toISOWeekStr(d: Date): string {
   return `${utc.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
 }
 
-function calculateWeekStreak(sessions: StudySession[]): number {
+type SessionRow = { completed_at: string; total_cards: number }
+
+function calculateWeekStreak(sessions: SessionRow[]): number {
   if (sessions.length === 0) return 0
 
   const weekSet = new Set(sessions.map((s) => toISOWeekStr(new Date(s.completed_at))))
@@ -62,7 +62,7 @@ function calculateWeekStreak(sessions: StudySession[]): number {
 
 // Local calendar day 'YYYY-MM-DD' — uses the user's timezone, since "studied
 // today" should follow their clock, not UTC
-function localDayStr(d: Date): string {
+export function localDayStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -87,7 +87,6 @@ function calculateDayStreak(studiedDays: Set<string>): number {
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
-  sessions: [],
   weekStreak: 0,
   dayStreak: 0,
   studiedDays: [],
@@ -105,10 +104,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
     const { data: sessions, error } = await supabase
       .from('study_sessions')
-      .select('*')
+      .select('completed_at, total_cards')
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
-      .limit(200)
 
     if (error) { console.error('fetchProgress error:', error.message); set({ isLoading: false }); return }
 
@@ -118,6 +116,6 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     const daySet = new Set(s.map((sess) => localDayStr(new Date(sess.completed_at))))
     const dayStreak = calculateDayStreak(daySet)
 
-    set({ sessions: s, weekStreak, dayStreak, studiedDays: Array.from(daySet), totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
+    set({ weekStreak, dayStreak, studiedDays: Array.from(daySet), totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
   },
 }))

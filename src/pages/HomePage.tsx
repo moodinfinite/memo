@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
-import { useProgressStore } from '@/store/progressStore'
+import { useProgressStore, localDayStr } from '@/store/progressStore'
 import { useSRSStore } from '@/store/srsStore'
 import { getSetMastery, MASTERY_INFO } from '@/lib/mastery'
 import type { FlashcardSet } from '@/lib/database.types'
@@ -83,7 +83,7 @@ export default function HomePage() {
         <div className={[styles.statCard, dayStreak > 0 ? styles.streakCardActive : ''].join(' ')}>
           <div className={styles.statLabel}>Study streak</div>
           <div className={styles.statValue}>{dayStreak > 0 && <span className={styles.streakFlame}>🔥</span>}{dayStreak} {dayStreak === 1 ? 'day' : 'days'}</div>
-          <div className={styles.statSub}>{dayStreak > 0 ? (studiedDays.includes(todayStr()) ? 'you studied today!' : 'study today to keep it') : 'study today to start one'}</div>
+          <div className={styles.statSub}>{dayStreak > 0 ? (studiedDays.includes(localDayStr(new Date())) ? 'you studied today!' : 'study today to keep it') : 'study today to start one'}</div>
         </div>
         <div className={styles.statCard}><div className={styles.statLabel}>Cards studied total</div><div className={styles.statValue}>{totalCardsStudied.toLocaleString()}</div><div className={styles.statSub}>across all sessions</div></div>
         <div className={styles.statCard}><div className={styles.statLabel}>Sets created</div><div className={styles.statValue}>{sets.length}</div><div className={styles.statSub}>{totalCards} cards total</div></div>
@@ -121,11 +121,6 @@ export default function HomePage() {
       )}
     </div>
   )
-}
-
-function todayStr(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function StreakCalendar({ studiedDays }: { studiedDays: string[] }) {

@@ -198,7 +198,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       })
       if (!user) return
       enqueueSRSWrite(
-        () => supabase.from('card_srs').delete().eq('card_id', cardId),
+        () => supabase.from('card_srs').delete().eq('card_id', cardId).eq('user_id', user.id),
         'revertSRS delete',
       )
     }
