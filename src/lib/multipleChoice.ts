@@ -20,8 +20,14 @@ export function generateMCQuestions(cards: Card[]): MCQuestion[] {
       .slice(0, 3)
       .map((c) => c.definition)
 
-    const options = shuffle([card.definition, ...distractors])
-    const correctIndex = options.indexOf(card.definition)
+    // Track correct flag through the shuffle so duplicate definitions don't
+    // cause indexOf to land on a distractor instead of the correct option.
+    const tagged = shuffle([
+      { text: card.definition, correct: true },
+      ...distractors.map((d) => ({ text: d, correct: false })),
+    ])
+    const options = tagged.map((o) => o.text)
+    const correctIndex = tagged.findIndex((o) => o.correct)
 
     return { card, options, correctIndex }
   })

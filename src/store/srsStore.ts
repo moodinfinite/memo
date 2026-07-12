@@ -50,7 +50,7 @@ function calcNextSRS(current: CardSRS | null, known: boolean): Omit<CardSRS, 'ca
   let newInterval: number
   if (newReps === 1) newInterval = 1
   else if (newReps === 2) newInterval = 6
-  else newInterval = Math.round(interval * ef)
+  else newInterval = Math.min(365, Math.round(interval * ef))
 
   const newEF = Math.max(1.3, ef + 0.1)
 
@@ -68,7 +68,7 @@ function daysFromNow(days: number): string {
   return d.toISOString().split('T')[0]
 }
 
-function isToday(dateStr: string): boolean {
+function isDue(dateStr: string): boolean {
   const today = new Date().toISOString().split('T')[0]
   return dateStr <= today
 }
@@ -210,7 +210,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       .filter((card) => {
         const srs = cardSRS[card.id]
         if (!srs) return true // Never seen — always due
-        return isToday(srs.next_review)
+        return isDue(srs.next_review)
       })
       .map((c) => c.id)
   },
