@@ -359,7 +359,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   resumeSession: (draft, cards) => {
     const cardMap = Object.fromEntries(cards.map(c => [c.id, c]))
     const orderedCards = draft.card_order.map(cid => cardMap[cid]).filter(Boolean) as Card[]
-    if (orderedCards.length === 0) return
+    if (orderedCards.length === 0) {
+      get().clearProgress(draft.set_id)
+      return
+    }
     const safeIndex = Math.min(draft.current_index, orderedCards.length - 1)
     set({
       mode: draft.mode, setId: draft.set_id, sessionCards: orderedCards,

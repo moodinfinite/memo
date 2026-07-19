@@ -29,11 +29,30 @@ function getMondayMs(weekStr: string): number {
 function toISOWeekStr(d: Date): string {
   // Shift to UTC noon to avoid DST edge cases
   const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12))
-  const jan4 = new Date(Date.UTC(utc.getUTCFullYear(), 0, 4))
-  const dayOfWeek = jan4.getUTCDay() || 7
-  const week1Monday = jan4.getTime() - (dayOfWeek - 1) * 86400000
-  const weekNum = Math.floor((utc.getTime() - week1Monday) / (7 * 86400000)) + 1
-  return `${utc.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
+  const year = utc.getUTCFullYear()
+
+  const computeWeekNum = (y: number) => {
+    const jan4 = new Date(Date.UTC(y, 0, 4))
+    const dayOfWeek = jan4.getUTCDay() || 7
+    const week1Monday = jan4.getTime() - (dayOfWeek - 1) * 86400000
+    return Math.floor((utc.getTime() - week1Monday) / (7 * 86400000)) + 1
+  }
+
+  let weekYear = year
+  let weekNum = computeWeekNum(year)
+
+  // Dec 28–31 can belong to week 1 of the next ISO year
+  if (weekNum >= 53) {
+    const nextWeekNum = computeWeekNum(year + 1)
+    if (nextWeekNum >= 1) { weekYear = year + 1; weekNum = nextWeekNum }
+  }
+  // Jan 1–3 can belong to week 52/53 of the prior ISO year
+  if (weekNum < 1) {
+    weekYear = year - 1
+    weekNum = computeWeekNum(year - 1)
+  }
+
+  return `${weekYear}-W${String(weekNum).padStart(2, '0')}`
 }
 
 type SessionRow = { completed_at: string; total_cards: number }

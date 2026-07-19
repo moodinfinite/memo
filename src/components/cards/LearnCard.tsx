@@ -3,12 +3,22 @@ import { useStudyStore } from '@/store/studyStore'
 import type { Card } from '@/lib/database.types'
 import styles from './LearnCard.module.css'
 
+function fisherYates<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 function makeMCOptions(card: Card, allCards: Card[]) {
   const others = allCards.filter(c => c.id !== card.id)
-  const distractors = [...others].sort(() => Math.random() - 0.5).slice(0, 3).map(c => c.term)
-  return [card.term, ...distractors]
-    .sort(() => Math.random() - 0.5)
-    .map(text => ({ text, correct: text === card.term }))
+  const distractors = fisherYates(others).slice(0, 3).map(c => c.term)
+  return fisherYates([
+    { text: card.term, correct: true },
+    ...distractors.map(d => ({ text: d, correct: false })),
+  ])
 }
 
 export default function LearnCard() {
