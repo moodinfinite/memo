@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useStudyStore } from '@/store/studyStore'
+import { shuffle } from '@/lib/shuffle'
 import type { Card } from '@/lib/database.types'
 import styles from './LearnCard.module.css'
 
-function fisherYates<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
 function makeMCOptions(card: Card, allCards: Card[]) {
   const others = allCards.filter(c => c.id !== card.id)
-  const distractors = fisherYates(others).slice(0, 3).map(c => c.term)
-  return fisherYates([
+  const distractors = shuffle(others).slice(0, 3).map(c => c.term)
+  return shuffle([
     { text: card.term, correct: true },
     ...distractors.map(d => ({ text: d, correct: false })),
   ])

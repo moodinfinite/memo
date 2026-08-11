@@ -6,6 +6,7 @@ import { isFuzzyMatch } from '@/lib/fuzzy'
 import { useSRSStore } from './srsStore'
 import { useProgressStore } from './progressStore'
 import { useAuthStore } from './authStore'
+import { shuffle } from '@/lib/shuffle'
 
 interface StudyState {
   // ── Learn mode ──────────────────────────────────────────────
@@ -64,16 +65,14 @@ interface StudyState {
   _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft?: boolean) => Promise<void>
 }
 
-function shuffleArr<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] }
-  return a
-}
+const shuffleArr = shuffle
 
 const LEARN_BATCH_SIZE = 5
 
 // Module-level debounce timer for saveProgress — prevents firing 1 upsert per card
 let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
+// Abort controller for in-flight draft saves — cancelled when a newer save fires
+let _draftController: AbortController | null = null
 // Active abort controller — cancelled before each new _persist call so stale requests don't race
 let _persistController: AbortController | null = null
 
@@ -386,16 +385,18 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       try {
         const user = useAuthStore.getState().user
         if (!user) return
-        const upsert = supabase.from('session_drafts').upsert({
+        // Cancel any previous in-flight draft save before starting a new one
+        _draftController?.abort()
+        _draftController = new AbortController()
+        const { signal } = _draftController
+        await (supabase.from('session_drafts').upsert({
           user_id: user.id, set_id: setId, mode,
           card_order: sessionCards.map(c => c.id),
           current_index: currentIndex,
           known_ids: known, unknown_ids: unknown,
           do_shuffle: doShuffle, timer_dur_min: timerDurMin,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,set_id' })
-        const timeout = new Promise<void>(r => setTimeout(r, 8000))
-        await Promise.race([upsert, timeout])
+        }, { onConflict: 'user_id,set_id' }) as any).abortSignal(signal)
       } catch (err) {
         // Draft save failure is non-critical — silently ignore
         console.warn('Draft save failed (non-critical):', err)

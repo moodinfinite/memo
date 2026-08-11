@@ -128,8 +128,8 @@ export default function StudyPage() {
 
   const canMC = (currentSet?.cards?.length ?? 0) >= 4
 
-  const filterCard = (cardId: string, filter: MasteryLevel | null): boolean => {
-    const level = getMasteryLevel(cardSRS[cardId])
+  const filterCard = (cardId: string, filter: MasteryLevel | null, srsMap = cardSRS): boolean => {
+    const level = getMasteryLevel(srsMap[cardId])
     if (filter === null) return true
     if (filter === 3) return level < 4            // Not mastered: levels 0,1,2,3
     if (filter === 2) return level >= 1 && level <= 2  // Still learning: seen but not confident
@@ -137,10 +137,10 @@ export default function StudyPage() {
     return true
   }
 
-  const filteredCards = (cards: typeof currentSet.cards) => {
+  const filteredCards = (cards: typeof currentSet.cards, srsMap = cardSRS) => {
     if (!cards) return []
     if (masteryFilter === null) return cards
-    const filtered = cards.filter(c => filterCard(c.id, masteryFilter))
+    const filtered = cards.filter(c => filterCard(c.id, masteryFilter, srsMap))
     // If filter returns nothing (e.g. no cards in that tier), fall back to all cards
     return filtered.length > 0 ? filtered : cards
   }
@@ -150,8 +150,9 @@ export default function StudyPage() {
 
   const handleNewBatch = () => {
     if (!currentSet?.cards?.length) return
-    const cards = filteredCards(currentSet.cards)
-    const sorted = [...cards].sort((a, b) => getMasteryLevel(cardSRS[a.id]) - getMasteryLevel(cardSRS[b.id]))
+    const freshSRS = useSRSStore.getState().cardSRS
+    const cards = filteredCards(currentSet.cards, freshSRS)
+    const sorted = [...cards].sort((a, b) => getMasteryLevel(freshSRS[a.id]) - getMasteryLevel(freshSRS[b.id]))
     const nextOffset = (storyBatchOffset + 1) % Math.ceil(sorted.length / 8)
     setStoryBatchOffset(nextOffset)
     setStoryTerms(sorted.slice(nextOffset * 8, nextOffset * 8 + 8))
@@ -163,8 +164,9 @@ export default function StudyPage() {
     if (selectedMode === 'story') {
       setIsStarting(true)
       await fetchSRS(id, { force: true })
-      const cards = filteredCards(currentSet.cards)
-      const sorted = [...cards].sort((a, b) => getMasteryLevel(cardSRS[a.id]) - getMasteryLevel(cardSRS[b.id]))
+      const freshSRS = useSRSStore.getState().cardSRS
+      const cards = filteredCards(currentSet.cards, freshSRS)
+      const sorted = [...cards].sort((a, b) => getMasteryLevel(freshSRS[a.id]) - getMasteryLevel(freshSRS[b.id]))
       setStoryBatchOffset(0)
       setStoryTerms(sorted.slice(0, 8))
       setSelecting(false)
@@ -175,7 +177,7 @@ export default function StudyPage() {
     if (selectedMode === 'learn') {
       setIsStarting(true)
       await fetchSRS(id, { force: true })
-      const cards = filteredCards(currentSet.cards)
+      const cards = filteredCards(currentSet.cards, useSRSStore.getState().cardSRS)
       if (!cards.length) { setIsStarting(false); return }
       startLearnSession(cards, id)
       setSelecting(false)
@@ -190,7 +192,7 @@ export default function StudyPage() {
     setIsStarting(true)
     // Force-fetch latest SRS data so repetitions/intervals are current before session starts
     await fetchSRS(id, { force: true })
-    const cards = filteredCards(currentSet.cards)
+    const cards = filteredCards(currentSet.cards, useSRSStore.getState().cardSRS)
     if (!cards.length) { setIsStarting(false); return }
     startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
