@@ -1,3 +1,5 @@
+import StudyControls from '@/components/study/StudyControls'
+import MasteryChange from '@/components/study/MasteryChange'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
@@ -48,7 +50,6 @@ export default function StudyPage() {
   const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
   const [isStarting, setIsStarting] = useState(false)
   const [flipKey, setFlipKey] = useState(0)
-  const [shuffleActive, setShuffleActive] = useState(false)
   const [burst, setBurst] = useState<{ msg: string; streak: number } | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const burstShownFor = useRef(0)
@@ -64,6 +65,7 @@ export default function StudyPage() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (useStudyStore.getState().editingCard) return
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (selecting || isComplete || useStudyStore.getState().learnActive || storyTerms.length || selectedMode === 'story') return
       if (mode === 'flashcard') {
@@ -401,6 +403,7 @@ export default function StudyPage() {
           <div className={styles.summary}>
             <div className={styles.countScore}>🎉</div>
             <div className={styles.summaryTitle}>All cards learned!</div>
+            <MasteryChange cards={currentSet.cards ?? []} />
             <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards graduated this session</div>
             {learnGraduated.length > 0 && (
               <div className={styles.checkpointChips}>
@@ -500,6 +503,8 @@ export default function StudyPage() {
           <div className={styles.summary}>
             {pct === 100 ? <PerfectScore total={total} known={k} unknown={u} /> : <CountUpScore pct={pct} total={total} known={k} unknown={u} />}
 
+            <MasteryChange cards={currentSet.cards ?? []} />
+
             {/* Save status banner */}
             {isPersisting && (
               <div className={styles.saveStatus}>
@@ -553,33 +558,9 @@ export default function StudyPage() {
           {currentSet.title}
         </button>
         <div className={styles.topBarRight}>
-          {mode === 'flashcard' && (
-            <>
-              <button
-                className={[styles.shuffleBtn, startSide === 'definition' ? styles.shuffleBtnActive : ''].join(' ')}
-                onClick={() => setStartSide(s => s === 'definition' ? 'term' : 'definition')}
-                title={startSide === 'definition' ? 'Definition first — tap for term first' : 'Term first — tap for definition first'}
-              >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5h9M7 2l3 3-3 3M14 10H5M8 7l-3 3 3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <button
-                className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
-                onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
-                title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
-              >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
-              </button>
-            </>
-          )}
-          {mode === 'multiple_choice' && (
-            <button
-              className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
-              onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
-              title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
-            >
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
-            </button>
-          )}
+          {(mode === 'flashcard' || mode === 'multiple_choice') && <StudyControls
+            startSide={startSide} onToggleSide={mode === 'flashcard' ? () => setStartSide(s => s === 'definition' ? 'term' : 'definition') : undefined}
+            onShuffle={reshuffleRemaining} />}
           <div className={styles.modeTag}>{MODES.find((m) => m.id === mode)?.label}</div>
           <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
         </div>
@@ -630,19 +611,23 @@ export function StreakBurst({ msg, streak }: { msg: string; streak: number }) {
 
 export function CountUpScore({ pct, total, known, unknown }: { pct: number; total: number; known: number; unknown: number }) {
   const [display, setDisplay] = useState(0)
-  const [bar, setBar] = useState(0)
   useEffect(() => {
-    const dur = 1100, start = performance.now()
-    const tick = (now: number) => { const t = Math.min(1, (now - start) / dur); const e = t < 0.5 ? 2 * t * t : (4 - 2 * t) * t - 1; setDisplay(Math.round(e * pct)); if (t < 1) requestAnimationFrame(tick); else { setDisplay(pct); setBar(pct) } }
-    requestAnimationFrame(tick)
-    setTimeout(() => setBar(pct), 50)
-  }, [])
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setDisplay(pct); return }
+    const start = performance.now()
+    let frame: number
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 900)
+      setDisplay(Math.round((1 - (1 - t) ** 3) * pct))
+      if (t < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [pct])
   return (
     <>
       <div className={styles.countScore}>{display}%</div>
-      <div className={styles.countBarTrack}><div className={styles.countBarFill} style={{ width: `${bar}%`, transition: 'width 1.1s cubic-bezier(0.4,0,0.2,1)' }} /></div>
+      <div className={styles.scoreCaption}>Correct this session</div>
       <div className={styles.summaryTitle}>{pct >= 70 ? 'Great progress' : 'Keep going'}</div>
-      <div className={styles.summaryMeta}>{known} known · {unknown} still learning</div>
       <SummaryBars total={total} known={known} unknown={unknown} />
     </>
   )
@@ -663,7 +648,6 @@ export function PerfectScore({ total, known, unknown }: { total: number; known: 
         <div className={styles.stampWrap} id="pstamp"><div className={styles.stampInner}><div className={styles.stampPct}>100%</div><div className={styles.stampLabel}>Perfect</div></div></div>
       </div>
       <div className={styles.summaryTitle}>Perfect round!</div>
-      <div className={styles.summaryMeta}>{known} of {total} cards correct</div>
       <SummaryBars total={total} known={known} unknown={unknown} />
     </>
   )

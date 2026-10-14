@@ -55,3 +55,13 @@ export const MASTERY_INFO: Record<MasteryLevel, MasteryInfo> = {
   3: { level: 3, label: 'Confident',  color: '#f97316', description: '3+ correct, medium interval' },
   4: { level: 4, label: 'Mastered',   color: '#84cc16', description: '4+ correct, 21+ day interval' },
 }
+
+/** Percentage of recall strength across these cards, distinct from study coverage. */
+export function getMasteryChange(cards: { id: string }[], before: Record<string, number>, current: Record<string, CardSRS>) {
+  const ids = [...new Set(cards.map(card => card.id))]
+  const score = (level: (id: string) => number) => ids.length
+    ? Math.round(ids.reduce((sum, id) => sum + level(id), 0) / (ids.length * 4) * 1000) / 10 : 0
+  const previous = score(id => before[id] ?? 0)
+  const next = score(id => getMasteryLevel(current[id]))
+  return { before: previous, after: next, delta: Math.round((next - previous) * 10) / 10 }
+}

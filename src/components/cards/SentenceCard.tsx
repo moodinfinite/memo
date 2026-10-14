@@ -1,3 +1,4 @@
+import QuickEditCard from '@/components/study/QuickEditCard'
 import { useRef, useEffect } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import styles from './SentenceCard.module.css'
@@ -20,7 +21,7 @@ export default function SentenceCard() {
   useEffect(() => {
     if (sentenceStatus !== 'reviewed') return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); nextSentenceCard() }
+      if (!useStudyStore.getState().editingCard && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); nextSentenceCard() }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -40,6 +41,7 @@ export default function SentenceCard() {
 
   return (
     <div className={styles.wrap}>
+      <QuickEditCard card={card} disabled={sentenceStatus === 'submitting'} />
       {sentenceError && <p role="alert">{sentenceError}</p>}
       <div className={styles.cardHeader}>
         <div className={styles.termLabel}>Use this word in a sentence</div>

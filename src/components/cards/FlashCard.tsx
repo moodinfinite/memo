@@ -1,3 +1,4 @@
+import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
 import styles from './FlashCard.module.css'
@@ -66,6 +67,7 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAn
 
   return (
     <div className={styles.wrap}>
+      <QuickEditCard card={card} disabled={answering} />
       {/* Card */}
       <div className={styles.cardArea} onClick={handleFlip}>
         {flash && <div className={[styles.flashOverlay, flash === 'correct' ? styles.flashCorrect : styles.flashIncorrect].join(' ')} />}

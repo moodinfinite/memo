@@ -8,9 +8,13 @@ import { useSRSStore } from './srsStore'
 import { useProgressStore } from './progressStore'
 import { useAuthStore } from './authStore'
 import { queueWrite, readLocal, writeLocal, flushPending, hasPending } from '@/lib/sync'
+import { getMasteryLevel } from '@/lib/mastery'
 import { shuffle } from '@/lib/shuffle'
 
 interface StudyState {
+  editingCard: boolean
+  masteryBefore: Record<string, number> | null
+  replaceCard: (card: Card) => void
   sessionId: string | null
   sentenceError: string | null
   // ── Learn mode ──────────────────────────────────────────────
@@ -77,6 +81,7 @@ const initialLearn = {
   learnComplete: false, learnSetId: '', learnBatchComplete: false, learnBatchSummary: [] as Card[], learnStoryReady: false,
 }
 const initialSession = {
+  editingCard: false, masteryBefore: null as Record<string, number> | null,
   sessionId: null as string | null, mode: 'flashcard' as StudyMode, setId: '', sessionCards: [] as Card[], mcQuestions: [] as MCQuestion[],
   currentIndex: 0, known: [] as string[], unknown: [] as string[], isComplete: false,
   doShuffle: false, timerOn: false, timerDurMin: 0, timerSecsLeft: 0,
@@ -87,15 +92,28 @@ const initialSession = {
   sentenceScore: null, sentenceEntries: [] as SentenceEntry[], sentenceError: null,
 }
 
+const snapshotMastery = () => Object.fromEntries(Object.entries(useSRSStore.getState().cardSRS).map(([id, srs]) => [id, getMasteryLevel(srs)]))
+
 export const useStudyStore = create<StudyState>((set, get) => ({
   ...initialSession, ...initialLearn,
 
+  replaceCard: card => {
+    const s = get()
+    const patch = (cards: Card[]) => cards.map(c => c.id === card.id ? card : c)
+    const cards = patch(s.sessionCards)
+    set({ sessionCards: cards, learnCards: patch(s.learnCards), learnBatch: patch(s.learnBatch),
+      learnQueue: patch(s.learnQueue), learnBatchSummary: patch(s.learnBatchSummary),
+      mcQuestions: s.mode === 'multiple_choice' ? generateMCQuestions(cards) : s.mcQuestions,
+      sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceError: null,
+    })
+    get().saveProgress()
+  },
   startSession: (cards, mode, setId, opts = {}) => {
     get().saveProgress()
     const due = new Set(useSRSStore.getState().getDueCards(setId, cards))
     let ordered = [...cards.filter(c => due.has(c.id)), ...cards.filter(c => !due.has(c.id))]
     if (opts.shuffle) ordered = shuffle(ordered)
-    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), mode, setId, sessionCards: ordered,
+    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), masteryBefore: snapshotMastery(), mode, setId, sessionCards: ordered,
       mcQuestions: mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
       doShuffle: !!opts.shuffle, timerOn: !!opts.timerDurMin, timerDurMin: opts.timerDurMin ?? 0,
       timerSecsLeft: (opts.timerDurMin ?? 0) * 60 })
@@ -105,14 +123,14 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   startLearnSession: (cards, setId) => {
     get().saveProgress()
     const ordered = shuffle([...cards])
-    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), mode: 'learn', setId,
+    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), masteryBefore: snapshotMastery(), mode: 'learn', setId,
       sessionCards: ordered, learnActive: true, learnCards: ordered, learnSetId: setId,
       learnBatch: ordered.slice(0, LEARN_BATCH_SIZE), learnQueue: ordered.slice(LEARN_BATCH_SIZE) })
     get().saveProgress()
   },
   answerLearnCard: correct => {
     const s = get(), card = s.learnBatch[s.learnBatchIdx]
-    if (!s.learnActive || s.learnComplete || s.learnStoryReady || !card) return
+    if (s.editingCard || !s.learnActive || s.learnComplete || s.learnStoryReady || !card) return
     useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
     const scores = { ...s.learnScores, [card.id]: correct ? (s.learnScores[card.id] ?? 0) + 1 : 0 }
     const graduated = scores[card.id] >= 2
@@ -148,7 +166,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   markUnknown: () => answer(false),
   undoLast: () => {
     const s = get(), last = s.lastAction
-    if (!last || s.isComplete) return
+    if (s.editingCard || !last || s.isComplete) return
     const card = s.sessionCards[last.prevIndex]
     useSRSStore.getState().revertSRS(last.cardId, card.set_id, last.prevCardSRS)
     set({ currentIndex: last.prevIndex, known: last.prevKnown, unknown: last.prevUnknown,
@@ -159,7 +177,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
   submitTyped: () => {
     const s = get(), card = s.sessionCards[s.currentIndex]
-    if (!card || s.isComplete || s.typedResult !== 'idle') return
+    if (s.editingCard || !card || s.isComplete || s.typedResult !== 'idle') return
     const correct = isFuzzyMatch(s.typedAnswer, card.term)
     set({ typedResult: correct ? 'correct' : 'incorrect' })
     setTimeout(() => {
@@ -171,7 +189,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   setTypedAnswer: val => { set({ typedAnswer: val }); get().saveProgress() },
   selectMCOption: idx => {
     const s = get(), q = s.mcQuestions[s.currentIndex]
-    if (!q || s.isComplete || s.mcResult !== 'idle' || idx < 0 || idx >= q.options.length) return
+    if (s.editingCard || !q || s.isComplete || s.mcResult !== 'idle' || idx < 0 || idx >= q.options.length) return
     const correct = idx === q.correctIndex
     set({ selectedOption: idx, mcResult: correct ? 'correct' : 'incorrect', mcStreak: correct ? s.mcStreak + 1 : 0 })
     setTimeout(() => {
@@ -182,7 +200,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
   tickTimer: () => {
     const s = get()
-    if (s.isComplete || s.timerSecsLeft <= 0) return
+    if (s.editingCard || s.isComplete || s.timerSecsLeft <= 0) return
     set({ timerSecsLeft: s.timerSecsLeft - 1 })
     if (s.timerSecsLeft === 1) {
       set({ isComplete: true })
@@ -191,7 +209,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
   reshuffleRemaining: () => {
     const s = get()
-    if (s.mcResult !== 'idle' || s.typedResult !== 'idle' || s.isAdvancing) return
+    if (s.editingCard || s.mcResult !== 'idle' || s.typedResult !== 'idle' || s.isAdvancing) return
     const cards = [...s.sessionCards.slice(0, s.currentIndex), ...shuffle(s.sessionCards.slice(s.currentIndex))]
     set({ sessionCards: cards, mcQuestions: s.mode === 'multiple_choice' ? generateMCQuestions(cards) : [] })
     get().saveProgress()
@@ -199,7 +217,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   setSentenceInput: val => { set({ sentenceInput: val, sentenceError: null }); get().saveProgress() },
   submitSentence: async () => {
     const s = get(), card = s.sessionCards[s.currentIndex]
-    if (!card || !s.sentenceInput.trim() || s.sentenceStatus !== 'idle') return
+    if (s.editingCard || !card || !s.sentenceInput.trim() || s.sentenceStatus !== 'idle') return
     set({ sentenceStatus: 'submitting', sentenceError: null })
     const controller = new AbortController()
     const deadline = setTimeout(() => controller.abort(), 25000)
@@ -220,7 +238,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
   nextSentenceCard: () => {
     const s = get(), card = s.sessionCards[s.currentIndex]
-    if (!card || s.sentenceStatus !== 'reviewed' || !s.sentenceScore) return
+    if (s.editingCard || !card || s.sentenceStatus !== 'reviewed' || !s.sentenceScore) return
     const correct = s.sentenceScore !== 'needs_work'
     useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
     const entries = [...s.sentenceEntries, { card_id: card.id, term: card.term, definition: card.definition,
@@ -237,7 +255,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const s = get(), user = useAuthStore.getState().user
     if (!user || !s.sessionId || !s.setId || !s.sessionCards.length || s.isComplete) return
     const state = {
-      timerSecsLeft: s.timerSecsLeft, sentenceInput: s.sentenceInput, sentenceEntries: s.sentenceEntries,
+      masteryBefore: s.masteryBefore, timerSecsLeft: s.timerSecsLeft, sentenceInput: s.sentenceInput, sentenceEntries: s.sentenceEntries,
       sentenceStatus: s.sentenceStatus === 'submitting' ? 'idle' : s.sentenceStatus,
       sentenceFeedback: s.sentenceFeedback, sentenceImproved: s.sentenceImproved, sentenceScore: s.sentenceScore,
       typedAnswer: s.typedAnswer, learnBatch: s.learnBatch.map(c => c.id), learnQueue: s.learnQueue.map(c => c.id),
@@ -295,7 +313,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const index = resolve(draft.card_order.slice(0, draft.current_index)).length
     const learning = draft.mode === 'learn'
     set({ ...initialSession, ...initialLearn, sessionId: draft.session_id ?? draft.id ?? crypto.randomUUID(),
-      setId: scope, mode: draft.mode, sessionCards: ordered, known, unknown, currentIndex: index,
+      masteryBefore: state.masteryBefore ?? null, setId: scope, mode: draft.mode, sessionCards: ordered, known, unknown, currentIndex: index,
       isComplete: !learning && index >= ordered.length, doShuffle: draft.do_shuffle,
       mcQuestions: draft.mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
       timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,
@@ -352,7 +370,7 @@ function queueSession(s: StudyState, userId: string) {
 }
 function answer(correct: boolean) {
   const s = useStudyStore.getState(), card = s.sessionCards[s.currentIndex]
-  if (!card || s.isComplete || s.isAdvancing || s.learnActive) return
+  if (s.editingCard || !card || s.isComplete || s.isAdvancing || s.learnActive) return
   const known = [...s.known, ...(correct ? [card.id] : [])], unknown = [...s.unknown, ...(!correct ? [card.id] : [])]
   const complete = s.currentIndex + 1 >= s.sessionCards.length
   const previous = useSRSStore.getState().cardSRS[card.id] ?? null

@@ -31,6 +31,7 @@ export interface SessionDraft {
   scope_id?: string
   session_id?: string
   state?: {
+    masteryBefore?: Record<string, number> | null
     timerSecsLeft?: number; typedAnswer?: string; sentenceInput?: string; sentenceEntries?: SentenceEntry[]
     sentenceStatus?: string; sentenceFeedback?: string; sentenceImproved?: string | null
     sentenceScore?: 'great' | 'good' | 'needs_work' | null

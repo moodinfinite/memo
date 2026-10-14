@@ -21,6 +21,7 @@ interface SetsState {
   createSet: (title: string, description: string, cards: Omit<Card, 'id' | 'set_id' | 'user_id'>[], folderId?: string | null) => FlashcardSet
   retrySave: (id: string) => Promise<void>
   updateSet: (id: string, title: string, description: string, cards: Omit<Card, 'set_id' | 'user_id'>[], folderId?: string | null) => Promise<void>
+  updateCard: (card: Card, term: string, definition: string) => Promise<Card>
   deleteSet: (id: string) => Promise<void>
   togglePin: (id: string) => Promise<void>
   moveToFolder: (id: string, folderId: string | null) => Promise<void>
@@ -167,6 +168,31 @@ export const useSetsStore = create<SetsState>((set, get) => ({
       currentSetFetchedAt: 0, setsLastFetched: 0,
     }))
     await get().fetchSet(id)
+  },
+
+  updateCard: async (card, term, definition) => {
+    const userId = useAuthStore.getState().user?.id
+    if (!userId || card.user_id !== userId) throw new Error('Please sign in again before editing.')
+    const content = sanitizeCard({ term, definition })
+    if (!content.term || !content.definition) throw new Error('Enter both a term and definition.')
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15000)
+    try {
+      // Update only this card's text; never replace the deck or its mastery records.
+      const { data, error } = await supabase.from('cards').update(content)
+        .eq('id', card.id).eq('set_id', card.set_id).eq('user_id', userId)
+        .select('*').abortSignal(controller.signal).single()
+      if (error || !data) throw new Error('Card was not saved. Check your connection and retry.')
+      if (useAuthStore.getState().user?.id !== userId) throw new Error('Account changed. Please reopen the card.')
+      const updated = data as Card
+      const patch = (cards?: Card[]) => cards?.map(c => c.id === updated.id ? updated : c)
+      set(state => ({
+        currentSet: state.currentSet ? { ...state.currentSet, cards: patch(state.currentSet.cards) } : null,
+        sets: state.sets.map(s => ({ ...s, cards: patch(s.cards) })),
+        currentSetFetchedAt: 0, setsLastFetched: 0,
+      }))
+      return updated
+    } finally { clearTimeout(timeout) }
   },
 
   deleteSet: async (id) => {

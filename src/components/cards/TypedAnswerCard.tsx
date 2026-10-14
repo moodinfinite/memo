@@ -1,3 +1,4 @@
+import QuickEditCard from '@/components/study/QuickEditCard'
 import { useRef, useEffect } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import styles from './StudyModes.module.css'
@@ -27,6 +28,7 @@ export default function TypedAnswerCard() {
 
   return (
     <div className={styles.typedWrap}>
+      <QuickEditCard card={card} disabled={typedResult !== 'idle'} />
       <div className={styles.typedQuestion}>
         <div className={styles.typedLabel}>What's the term?</div>
         <div className={styles.typedTerm}>{card.definition}</div>

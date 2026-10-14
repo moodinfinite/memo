@@ -1,4 +1,5 @@
-import { useSyncStatus, flushPending } from '@/lib/sync'
+import { useSyncStatus } from '@/lib/sync'
+import SyncIndicator from './SyncIndicator'
 import { useEffect, useState, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
@@ -41,7 +42,7 @@ export default function AppLayout() {
         <button className={styles.hamburger} onClick={() => setMobileOpen(true)} aria-label="Open menu">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
         </button>
-        <div className={styles.mobileTitle}>Memo</div>
+        <div className={styles.mobileTitle}>Memo</div><SyncIndicator />
         <button className={styles.mobileThemeBtn} onClick={toggle}>
           {isDark
             ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/></svg>
@@ -55,7 +56,7 @@ export default function AppLayout() {
 
       <aside className={[styles.sidebar, mobileOpen ? styles.sidebarOpen : '', collapsed ? styles.sidebarCollapsed : ''].join(' ')}>
         <div className={styles.sidebarTop}>
-          <div className={styles.logo}>Memo</div>
+          <div><div className={styles.logo}>Memo</div><SyncIndicator compact={collapsed} /></div>
           <button className={styles.closeBtn} onClick={closeSidebar} aria-label="Close menu">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l10 10M14 4L4 14"/></svg>
           </button>
@@ -118,11 +119,7 @@ export default function AppLayout() {
         </div>
       </aside>
       <main className={styles.main}>
-        {(sync.pending > 0 || sync.storageError) && <div role="status" style={{ padding: '10px 14px', marginBottom: 16, border: '1px solid var(--border-default)', borderRadius: 8 }}>
-          {sync.storageError ? 'Device storage is unavailable. Keep this tab open until progress finishes syncing.'
-            : sync.error ? 'Progress is saved on this device and waiting to sync.' : 'Saving progress…'}
-          {sync.error && <button onClick={() => void flushPending()} style={{ marginLeft: 12 }}>Retry sync</button>}
-        </div>}
+        {sync.storageError && <div role="alert" className={styles.storageWarning}>Device storage is unavailable. Keep this tab open until progress finishes syncing.</div>}
         <Outlet key={user?.id} />
       </main>
     </div>

@@ -1,3 +1,4 @@
+import QuickEditCard from '@/components/study/QuickEditCard'
 import { useStudyStore } from '@/store/studyStore'
 import styles from './StudyModes.module.css'
 
@@ -14,6 +15,7 @@ export default function MultipleChoiceCard() {
 
   return (
     <div className={styles.mcWrap}>
+      <QuickEditCard card={card} disabled={selectedOption !== null} />
       <div className={styles.mcQuestion}>
         <div className={styles.mcLabel}>What is the definition of…</div>
         <div className={styles.mcTerm}>{card.term}</div>

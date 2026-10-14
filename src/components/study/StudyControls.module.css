@@ -1,0 +1,6 @@
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tool{position:relative;display:inline-flex}
+.button{display:inline-flex;gap:6px;align-items:center;padding:7px 9px;border:1px solid var(--border-default);border-radius:8px;background:transparent;color:var(--text-secondary);font:12px var(--font);cursor:pointer}
+.button:hover{background:var(--bg-raised);color:var(--text-primary)}.button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.tooltip{position:absolute;top:calc(100% + 8px);right:0;z-index:50;width:max-content;max-width:220px;background:var(--text-primary);color:var(--bg-base);padding:8px 10px;font:12px/1.4 var(--font);border-radius:6px;opacity:0;visibility:hidden;pointer-events:none}
+.tool:hover .tooltip,.tool:focus-within .tooltip{opacity:1;visibility:visible}
+@media(max-width:480px){.button{font-size:11px;padding:7px}.controls{gap:5px}}

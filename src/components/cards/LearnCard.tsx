@@ -1,3 +1,4 @@
+import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import { shuffle } from '@/lib/shuffle'
@@ -66,11 +67,12 @@ export default function LearnCard() {
     if (!isFlashcard && card && canMC) {
       setMcOptions(makeMCOptions(card, learnCards))
     }
-  }, [card?.id, isFlashcard])
+  }, [card?.id, card?.term, card?.definition, isFlashcard])
 
   // Keyboard shortcuts for MC (1-4)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (useStudyStore.getState().editingCard) return
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (isFlashcard || !canMC) return
       if (selectedIdx !== null) return
@@ -125,6 +127,7 @@ export default function LearnCard() {
 
   return (
     <div className={styles.wrap}>
+      <QuickEditCard card={card} disabled={!!flash || selectedIdx !== null} />
       {/* Batch progress */}
       <div className={styles.progressRow}>
         <div className={styles.batchDots}>

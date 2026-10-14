@@ -1,3 +1,5 @@
+import StudyControls from '@/components/study/StudyControls'
+import MasteryChange from '@/components/study/MasteryChange'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useStudyStore } from '@/store/studyStore'
@@ -42,7 +44,6 @@ export default function MasterDeckPage() {
   const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
   const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
   const [flipKey, setFlipKey] = useState(0)
-  const [shuffleActive, setShuffleActive] = useState(false)
   const [burstMsg, setBurstMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -72,6 +73,7 @@ export default function MasterDeckPage() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (useStudyStore.getState().editingCard) return
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (selecting || isComplete) return
       if (mode === 'flashcard') {
@@ -126,6 +128,12 @@ export default function MasterDeckPage() {
       setSelecting(false)
     } finally { setIsStarting(false) }
   }
+
+  useEffect(() => {
+    if (!sessionCards.length) return
+    const updated = new Map(sessionCards.map(card => [card.id, card]))
+    setAllCards(cards => cards.map(card => updated.get(card.id) ?? card))
+  }, [sessionCards])
 
   const handleEnd = () => {
     if (!isComplete) persistSession()
@@ -240,6 +248,7 @@ export default function MasterDeckPage() {
               ? <PerfectScore total={total} known={k} unknown={u} />
               : <CountUpScore pct={pct} total={total} known={k} unknown={u} />
             }
+            <MasteryChange cards={allCards} label="Overall mastery" />
             <div className={styles.summaryActions}>
               <button className={styles.retryBtn} onClick={() => { startSession(filteredCards, mode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 }) }}>Study again</button>
               <button className={styles.changeModeBtn} onClick={handleEnd}>Change mode</button>
@@ -258,15 +267,9 @@ export default function MasterDeckPage() {
           Master Deck
         </button>
         <div className={styles.topBarRight}>
-          {(mode === 'flashcard' || mode === 'multiple_choice') && (
-            <button
-              className={[styles.shuffleBtn, shuffleActive ? styles.shuffleBtnActive : ''].join(' ')}
-              onClick={() => { const next = !shuffleActive; setShuffleActive(next); if (next) reshuffleRemaining() }}
-              title={shuffleActive ? 'Shuffle on' : 'Shuffle off'}
-            >
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
-            </button>
-          )}
+          {(mode === 'flashcard' || mode === 'multiple_choice') && <StudyControls
+            startSide={startSide} onToggleSide={mode === 'flashcard' ? () => setStartSide(s => s === 'definition' ? 'term' : 'definition') : undefined}
+            onShuffle={reshuffleRemaining} />}
           <div className={styles.modeTag}>{MODES.find(m => m.id === mode)?.label}</div>
           <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
         </div>
