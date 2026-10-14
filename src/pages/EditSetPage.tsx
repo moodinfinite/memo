@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import TitleAI from '@/components/ui/TitleAI'
@@ -18,6 +18,7 @@ export default function EditSetPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet, updateSet } = useSetsStore()
 
+  const initializedFor = useRef<string | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [rows, setRows] = useState<CardRow[]>([])
@@ -30,7 +31,8 @@ export default function EditSetPage() {
   }, [id])
 
   useEffect(() => {
-    if (currentSet) {
+    if (currentSet?.id === id && currentSet.cards?.length && initializedFor.current !== id) {
+      initializedFor.current = id
       setTitle(currentSet.title)
       setDescription(currentSet.description ?? '')
       setRows(
@@ -43,7 +45,7 @@ export default function EditSetPage() {
         }))
       )
     }
-  }, [currentSet?.id])
+  }, [id, currentSet])
 
   const updateRow = (tempId: string, field: 'term' | 'definition', value: string) => {
     setRows((prev) => prev.map((r) => r.tempId === tempId ? { ...r, [field]: value } : r))
@@ -67,18 +69,11 @@ export default function EditSetPage() {
     setSaving(true)
     setError('')
     setCanRetry(false)
-    const timer = setTimeout(() => {
-      setSaving(false)
-      setError('Connection is slow — tap Retry to try again')
-      setCanRetry(true)
-    }, 12000)
     try {
       await updateSet(id, title.trim(), description.trim(), validCards as never)
-      clearTimeout(timer)
       navigate(`/sets/${id}`)
-    } catch {
-      clearTimeout(timer)
-      setError('Failed to save — tap Retry to try again')
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to save — tap Retry to try again')
       setCanRetry(true)
       setSaving(false)
     }

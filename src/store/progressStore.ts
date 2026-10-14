@@ -1,3 +1,5 @@
+import { onSynced } from '@/lib/sync'
+import { registerAccountReset } from '@/lib/accountState'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from './authStore'
@@ -125,8 +127,10 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       .from('study_sessions')
       .select('completed_at, total_cards')
       .eq('user_id', user.id)
+      .gt('total_cards', 0)
       .order('completed_at', { ascending: false })
 
+    if (useAuthStore.getState().user?.id !== user.id) return
     if (error) { console.error('fetchProgress error:', error.message); set({ isLoading: false }); return }
 
     const s = sessions ?? []
@@ -138,3 +142,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set({ weekStreak, dayStreak, studiedDays: Array.from(daySet), totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
   },
 }))
+
+registerAccountReset(() => useProgressStore.setState(useProgressStore.getInitialState(), true))
+
+onSynced(job => { if (job.table === 'study_sessions') void useProgressStore.getState().fetchProgress(true) })

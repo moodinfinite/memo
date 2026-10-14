@@ -1,3 +1,5 @@
+import { registerAccountReset } from '@/lib/accountState'
+import { queueWrite, pendingWrites } from '@/lib/sync'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from './authStore'
@@ -73,30 +75,14 @@ function isDue(dateStr: string): boolean {
   return dateStr <= today
 }
 
-// ─────────────────────────────────────────────────────────────
-// SRS write queue.
-// Saves run one at a time, in the order the user answered. Without this,
-// rapid answers fire parallel requests and a slow connection can deliver an
-// OLD answer's save after a NEWER one, overwriting it in the database.
-// Each write also gets one automatic retry — free-tier connections often
-// hiccup once and succeed on the second try.
-// ─────────────────────────────────────────────────────────────
-let _writeChain: Promise<void> = Promise.resolve()
-
-function enqueueSRSWrite(
-  job: () => PromiseLike<{ error: { message: string } | null }>,
-  label: string,
-) {
-  _writeChain = _writeChain
-    .then(async () => {
-      let { error } = await job()
-      if (error) {
-        await new Promise((r) => setTimeout(r, 1500))
-        ;({ error } = await job())
-      }
-      if (error) console.error(`${label} failed after retry:`, error.message)
-    })
-    .catch(() => {}) // never let one failure break the chain
+function withPendingSRS(map: Record<string, CardSRS>, userId: string) {
+  const next = { ...map }
+  for (const job of pendingWrites(userId)) {
+    if (job.table !== 'card_srs') continue
+    if (job.operation === 'delete') delete next[job.filters!.card_id]
+    else next[job.data!.card_id as string] = job.data as unknown as CardSRS
+  }
+  return next
 }
 
 export const useSRSStore = create<SRSState>((set, get) => ({
@@ -112,39 +98,39 @@ export const useSRSStore = create<SRSState>((set, get) => ({
     const lastUpdate = get().lastLocalUpdate[setId] ?? 0
     if (!force && Date.now() - lastUpdate < 5000) return
 
+    const userId = useAuthStore.getState().user?.id
+    if (!userId) return
+    const started = Date.now()
     set({ isLoading: true })
     const { data, error } = await supabase
       .from('card_srs')
       .select('*')
-      .eq('set_id', setId)
-    if (error) console.error('fetchSRS error:', error)
+      .eq('set_id', setId).eq('user_id', userId)
+    if (useAuthStore.getState().user?.id !== userId) return
+    if ((get().lastLocalUpdate[setId] ?? 0) >= started) { set({ isLoading: false }); return }
+    if (error) { set(state => ({ cardSRS: withPendingSRS(state.cardSRS, userId), isLoading: false })); return }
     const updates: Record<string, CardSRS> = {}
     for (const row of data ?? []) updates[row.card_id] = row
     // Merge into existing map so other sets' data is preserved
-    set((state) => ({ cardSRS: { ...state.cardSRS, ...updates }, isLoading: false }))
+    set((state) => ({ cardSRS: withPendingSRS({ ...Object.fromEntries(Object.entries(state.cardSRS).filter(([, row]) => row.set_id !== setId)), ...updates }, userId), isLoading: false }))
   },
 
   fetchAllSRS: async () => {
+    const userId = useAuthStore.getState().user?.id
+    if (!userId) return
     // Skip refetch if data is fresh (< 30s old)
     if (Date.now() - get().srsAllFetchedAt < 30_000 && Object.keys(get().cardSRS).length > 0) return
 
-    // Re-use set IDs already in setsStore — avoids a redundant round-trip to 'sets' table
-    const { useSetsStore } = await import('./setsStore')
-    const cachedSetIds = useSetsStore.getState().sets.map(s => s.id)
-    let setIds: string[]
-    if (cachedSetIds.length > 0) {
-      setIds = cachedSetIds
-    } else {
-      const { data: setsData, error: setsError } = await supabase.from('sets').select('id')
-      if (setsError) { console.error('fetchAllSRS sets error:', setsError); return }
-      setIds = (setsData ?? []).map((s: { id: string }) => s.id)
-    }
-    if (setIds.length === 0) return
-    const { data, error } = await supabase.from('card_srs').select('*').in('set_id', setIds)
-    if (error) { console.error('fetchAllSRS card_srs error:', error); return }
+    const started = Date.now()
+    const { data, error } = await supabase.from('card_srs').select('*').eq('user_id', userId)
+    if (useAuthStore.getState().user?.id !== userId) return
+    if (error) { set(state => ({ cardSRS: withPendingSRS(state.cardSRS, userId) })); return }
     const map: Record<string, CardSRS> = {}
     for (const row of data ?? []) map[row.card_id] = row
-    set({ cardSRS: map, srsAllFetchedAt: Date.now() })
+    const changedSets = new Set(Object.entries(get().lastLocalUpdate).filter(([, time]) => time >= started).map(([id]) => id))
+    for (const [id, row] of Object.entries(map)) if (changedSets.has(row.set_id)) delete map[id]
+    for (const [id, row] of Object.entries(get().cardSRS)) if (changedSets.has(row.set_id)) map[id] = row
+    set({ cardSRS: withPendingSRS(map, userId), srsAllFetchedAt: Date.now() })
   },
 
   updateSRS: async (cardId, setId, known) => {
@@ -168,13 +154,10 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
     }))
 
-    // Sync to DB in background, serialized through the write queue.
+    // Queue durably before syncing. Failed writes survive refresh and are visible in the app.
     // NOTE: conflict target must match the DB's unique(user_id, card_id)
     // constraint — 'card_id' alone makes Postgres reject the whole upsert.
-    enqueueSRSWrite(
-      () => supabase.from('card_srs').upsert(upsertData, { onConflict: 'user_id,card_id' }),
-      'updateSRS upsert',
-    )
+    queueWrite({ userId: user.id, key: `srs:${cardId}`, table: 'card_srs', operation: 'upsert', data: upsertData, conflict: 'user_id,card_id' })
   },
 
   revertSRS: (cardId, setId, prevState) => {
@@ -185,10 +168,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
         lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() },
       }))
       if (!user) return
-      enqueueSRSWrite(
-        () => supabase.from('card_srs').upsert({ ...prevState, user_id: user.id }, { onConflict: 'user_id,card_id' }),
-        'revertSRS upsert',
-      )
+      queueWrite({ userId: user.id, key: `srs:${cardId}`, table: 'card_srs', operation: 'upsert', data: { ...prevState, user_id: user.id }, conflict: 'user_id,card_id' })
     } else {
       // Card had no SRS record before this session — delete the row we created
       set((state) => {
@@ -197,10 +177,7 @@ export const useSRSStore = create<SRSState>((set, get) => ({
         return { cardSRS: next, lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() } }
       })
       if (!user) return
-      enqueueSRSWrite(
-        () => supabase.from('card_srs').delete().eq('card_id', cardId).eq('user_id', user.id),
-        'revertSRS delete',
-      )
+      queueWrite({ userId: user.id, key: `srs:${cardId}`, table: 'card_srs', operation: 'delete', filters: { card_id: cardId, user_id: user.id } })
     }
   },
 
@@ -215,3 +192,5 @@ export const useSRSStore = create<SRSState>((set, get) => ({
       .map((c) => c.id)
   },
 }))
+
+registerAccountReset(() => useSRSStore.setState(useSRSStore.getInitialState(), true))

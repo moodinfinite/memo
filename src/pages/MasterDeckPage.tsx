@@ -4,7 +4,7 @@ import { useStudyStore } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
 import { getMasteryLevel } from '@/lib/mastery'
 import type { MasteryLevel } from '@/lib/mastery'
-import type { Card, StudyMode } from '@/lib/database.types'
+import type { Card, StudyMode, SessionDraft } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
@@ -12,10 +12,6 @@ import { CountUpScore, PerfectScore, StreakBurst } from './StudyPage'
 import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
 import mStyles from './MasterDeckPage.module.css'
-
-// Module-level cache — persists across navigations, resets after 30s
-let _masterCards: Card[] = []
-let _masterFetchedAt = 0
 
 const MODES: { id: StudyMode; label: string; desc: string }[] = [
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
@@ -28,10 +24,12 @@ export default function MasterDeckPage() {
   const {
     mode, sessionCards, currentIndex, known, unknown, isComplete,
     timerSecsLeft, timerOn, mcStreak,
-    startSession, markKnown, markUnknown, resetSession, persistSession,
+    startSession, resumeSession, loadProgress, clearProgress, markKnown, markUnknown, resetSession, persistSession,
     tickTimer, selectMCOption, reshuffleRemaining,
   } = useStudyStore()
 
+  const [isStarting, setIsStarting] = useState(false)
+  const [resumeDraft, setResumeDraft] = useState<SessionDraft | null>(null)
   const [allCards, setAllCards] = useState<Card[]>([])
   const [setCount, setSetCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -50,21 +48,13 @@ export default function MasterDeckPage() {
 
   useEffect(() => {
     fetchAll()
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); useStudyStore.getState().resetSession() }
   }, [])
 
   const fetchAll = async () => {
-    if (_masterCards.length > 0 && Date.now() - _masterFetchedAt < 30_000) {
-      setAllCards(_masterCards)
-      setSetCount(new Set(_masterCards.map((c: Card) => c.set_id)).size)
-      setLoading(false)
-      return
-    }
     setLoading(true)
     const { data } = await supabase.from('cards').select('*').order('set_id')
     if (data) {
-      _masterCards = data
-      _masterFetchedAt = Date.now()
       setAllCards(data)
       setSetCount(new Set(data.map((c: Card) => c.set_id)).size)
     }
@@ -125,9 +115,16 @@ export default function MasterDeckPage() {
   const filterCount = (filter: MasteryLevel | null) =>
     filter === null ? allCards.length : allCards.filter(c => filterCard(c.id, filter)).length
 
-  const handleStart = () => {
-    startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
-    setSelecting(false)
+  const handleStart = async () => {
+    if (isStarting || !allCards.length) return
+    setIsStarting(true)
+    try {
+      await useSRSStore.getState().fetchAllSRS()
+      const draft = await loadProgress('__master__')
+      if (draft) { setResumeDraft(draft); return }
+      startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+      setSelecting(false)
+    } finally { setIsStarting(false) }
   }
 
   const handleEnd = () => {
@@ -155,6 +152,11 @@ export default function MasterDeckPage() {
         </div>
       </div>
 
+      {resumeDraft && <div className={styles.resumePrompt}>
+        <p>Resume your previous Master Deck session?</p>
+        <button onClick={() => { resumeSession(resumeDraft, allCards); setResumeDraft(null); setSelecting(false) }}>Resume session</button>
+        <button onClick={() => { void clearProgress('__master__'); setResumeDraft(null); startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 }); setSelecting(false) }}>Start fresh</button>
+      </div>}
       <div className={styles.modeSelector}>
         <div className={styles.modeSelectorTitle}>Choose a study mode</div>
         <div className={styles.modeOptions}>
@@ -222,13 +224,13 @@ export default function MasterDeckPage() {
             })}
           </div>
         </div>
-        <button className={styles.startBtn} onClick={handleStart}>Start studying</button>
+        <button className={styles.startBtn} onClick={handleStart} disabled={isStarting}>Start studying</button>
       </div>
     </div>
   )
 
   if (isComplete) {
-    const total = sessionCards.length, k = known.length, u = unknown.length
+    const total = known.length + unknown.length, k = known.length, u = unknown.length
     const pct = total > 0 ? Math.round((k / total) * 100) : 0
     return (
       <div className={styles.page}>

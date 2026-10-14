@@ -1,3 +1,6 @@
+import { discardPending } from '@/lib/sync'
+import { useSRSStore } from './srsStore'
+import { registerAccountReset } from '@/lib/accountState'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { FlashcardSet, Card } from '@/lib/database.types'
@@ -40,6 +43,8 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   saveErrors: {},
 
   fetchSets: async () => {
+    const userId = useAuthStore.getState().user?.id
+    if (!userId) return
     // Skip refetch if data is fresh (< 30s old) — avoids re-hitting Supabase on every navigation back to home
     if (get().sets.length > 0 && Date.now() - get().setsLastFetched < 30_000) return
     if (get().sets.length === 0) set({ isLoading: true })
@@ -49,15 +54,19 @@ export const useSetsStore = create<SetsState>((set, get) => ({
       .select('*, cards(count)')
       .order('pinned', { ascending: false })
       .order('updated_at', { ascending: false })
+    if (useAuthStore.getState().user?.id !== userId) return
     if (error) { set({ error: error.message, isLoading: false }); return }
     const sets = (data ?? []).map((s: any) => ({ ...s, cardCount: s.cards?.[0]?.count ?? 0 }))
-    set({ sets, isLoading: false, setsLastFetched: Date.now() })
+    const local = get().sets.filter(s => get().pendingSaves.includes(s.id) || get().saveErrors[s.id])
+    set({ sets: [...local, ...sets.filter(s => !local.some(l => l.id === s.id))], isLoading: false, setsLastFetched: Date.now() })
   },
 
   fetchSet: async (id) => {
+    const userId = useAuthStore.getState().user?.id
+    if (!userId) return
     const { currentSet, currentSetFetchedAt, sets, pendingSaves } = get()
     // Don't fetch from DB while we're still syncing this set — use optimistic data
-    if (pendingSaves.includes(id)) return
+    if (pendingSaves.includes(id) || get().saveErrors[id]) return
     // Return cached data if same set fetched < 60s ago — covers Study ↔ Back ↔ Study
     if (currentSet?.id === id && currentSetFetchedAt > 0 && Date.now() - currentSetFetchedAt < 60_000) return
     // Show partial data from the sets list immediately so the page isn't blank while cards load
@@ -69,6 +78,7 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     set({ error: null })
     const { data, error } = await supabase
       .from('sets').select('*, cards(*)').eq('id', id).single()
+    if (useAuthStore.getState().user?.id !== userId) return
     if (error) { set({ error: error.message, isLoading: false }); return }
     const cards = (data.cards ?? []).sort((a: Card, b: Card) => a.position - b.position)
     set({ currentSet: { ...data, cards, cardCount: cards.length }, isLoading: false, currentSetFetchedAt: Date.now() })
@@ -95,17 +105,11 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     // Background sync — no await
     ;(async () => {
       try {
-        const { error: setError } = await supabase
-          .from('sets').insert({ id, title: safeTitle, description: safeDesc, user_id: user.id, folder_id: folderId, pinned: false })
-        if (setError) throw setError
-        if (safeCards.length > 0) {
-          const rows = safeCards.map(c => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
-          const chunks: typeof rows[] = []
-          for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
-          const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
-          const chunkErr = results.find(r => r.error)?.error
-          if (chunkErr) throw chunkErr
-        }
+        const { error } = await supabase.rpc('save_deck', {
+          p_id: id, p_title: safeTitle, p_description: safeDesc, p_folder_id: folderId,
+          p_cards: safeCards, p_create: true,
+        })
+        if (error) throw error
         // Success — remove from pending, refresh to get server-assigned timestamps
         set(state => ({ pendingSaves: state.pendingSaves.filter(x => x !== id) }))
         get().fetchSet(id)
@@ -124,16 +128,11 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     if (!user) return
     set(state => ({ pendingSaves: [...state.pendingSaves, id], saveErrors: Object.fromEntries(Object.entries(state.saveErrors).filter(([k]) => k !== id)) }))
     try {
-      await supabase.from('sets').upsert({ id, title: s.title, description: s.description, user_id: user.id, folder_id: s.folder_id, pinned: s.pinned })
-      if ((s.cards ?? []).length > 0) {
-        await supabase.from('cards').delete().eq('set_id', id)
-        const rows = (s.cards ?? []).map(c => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
-        const chunks: typeof rows[] = []
-        for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
-        const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
-        const chunkErr = results.find(r => r.error)?.error
-        if (chunkErr) throw chunkErr
-      }
+      const { error } = await supabase.rpc('save_deck', {
+        p_id: id, p_title: s.title, p_description: s.description, p_folder_id: s.folder_id ?? null,
+        p_cards: s.cards ?? [], p_create: true,
+      })
+      if (error) throw error
       set(state => ({ pendingSaves: state.pendingSaves.filter(x => x !== id) }))
       get().fetchSet(id)
     } catch (err: any) {
@@ -141,42 +140,33 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     }
   },
 
-  updateSet: async (id, title, description, rawCards, folderId = null) => {
+  updateSet: async (id, title, description, rawCards, folderId) => {
     const user = useAuthStore.getState().user
     if (!user) throw new Error('Not authenticated')
+    const previous = get().currentSet?.id === id ? get().currentSet : get().sets.find(s => s.id === id)
     const safeTitle = sanitizeText(title, 200)
     const safeDesc = sanitizeText(description, 1000)
-    const safeCards = rawCards.map((c, i) => ({ ...sanitizeCard(c), position: i }))
-    // Optimistic: update UI immediately so navigation back feels instant
-    set((state) => ({
-      sets: state.sets.map((s) => s.id === id ? { ...s, title: safeTitle, description: safeDesc, folder_id: folderId, cardCount: safeCards.length } : s),
-      currentSet: state.currentSet?.id === id
-        ? { ...state.currentSet, title: safeTitle, description: safeDesc, folder_id: folderId, cardCount: safeCards.length,
-            cards: safeCards.filter((c) => (c as any).id).map((c) => ({ ...(c as any), set_id: id, user_id: user.id })) }
-        : state.currentSet,
+    const safeFolder = folderId === undefined ? previous?.folder_id ?? null : folderId
+    const cards = rawCards.map((c, position) => ({
+      ...sanitizeCard(c), id: c.id || crypto.randomUUID(), position, set_id: id, user_id: user.id,
     }))
-    // Sync to DB — throw on error so the caller can surface it to the user
-    const { error: updateErr } = await supabase.from('sets').update({ title: safeTitle, description: safeDesc, folder_id: folderId }).eq('id', id)
-    if (updateErr) throw updateErr
-    const { error: deleteErr } = await supabase.from('cards').delete().eq('set_id', id)
-    if (deleteErr) throw deleteErr
-    if (rawCards.length > 0) {
-      const rows = safeCards.map((c) => ({ set_id: id, user_id: user.id, term: c.term, definition: c.definition, position: c.position }))
-      try {
-        const chunks: typeof rows[] = []
-        for (let i = 0; i < rows.length; i += 15) chunks.push(rows.slice(i, i + 15))
-        const results = await Promise.all(chunks.map(chunk => supabase.from('cards').insert(chunk)))
-        const chunkErr = results.find(r => r.error)?.error
-        if (chunkErr) throw chunkErr
-      } catch (err) {
-        // Re-fetch so UI reflects actual DB state (partial write may have occurred)
-        await get().fetchSet(id)
-        throw err
-      }
-    }
-    // Invalidate cache then refresh to get server-assigned card IDs
-    set({ currentSetFetchedAt: 0, setsLastFetched: 0 })
-    get().fetchSet(id)
+    // No optimistic destructive replacement: the database commits the whole edit or none of it.
+    const { error } = await supabase.rpc('save_deck', {
+      p_id: id, p_title: safeTitle, p_description: safeDesc, p_folder_id: safeFolder,
+      p_cards: cards, p_create: false,
+    })
+    if (error) throw new Error(`Deck was not saved. ${error.message}`)
+    if (useAuthStore.getState().user?.id !== user.id) return
+    const removed = (previous?.cards ?? []).filter(c => !cards.some(next => next.id === c.id)).map(c => c.id)
+    for (const cardId of removed) discardPending(user.id, `srs:${cardId}`)
+    useSRSStore.setState(state => ({ cardSRS: Object.fromEntries(Object.entries(state.cardSRS).filter(([id]) => !removed.includes(id))), srsAllFetchedAt: 0 }))
+    const changes = { title: safeTitle, description: safeDesc, folder_id: safeFolder, cards, cardCount: cards.length }
+    set(state => ({
+      sets: state.sets.map(s => s.id === id ? { ...s, ...changes } : s),
+      currentSet: state.currentSet?.id === id ? { ...state.currentSet, ...changes } : state.currentSet,
+      currentSetFetchedAt: 0, setsLastFetched: 0,
+    }))
+    await get().fetchSet(id)
   },
 
   deleteSet: async (id) => {
@@ -218,12 +208,13 @@ export const useSetsStore = create<SetsState>((set, get) => ({
     const user = useAuthStore.getState().user
     if (!user) throw new Error('Not authenticated')
     const existing = get().currentSet?.cards ?? []
-    await supabase.from('cards').insert(
+    const { error } = await supabase.from('cards').insert(
       rawCards.map((c, i) => {
         const safe = sanitizeCard(c)
         return { set_id: setId, user_id: user.id, term: safe.term, definition: safe.definition, position: existing.length + i }
       })
     )
+    if (error) throw error
     set({ currentSetFetchedAt: 0 })
     await get().fetchSet(setId)
   },
@@ -271,13 +262,18 @@ export const useSetsStore = create<SetsState>((set, get) => ({
   },
 
   searchSets: async (query) => {
+    const userId = useAuthStore.getState().user?.id
+    if (!userId) return
     set({ isLoading: true })
     const safeQuery = escapeIlike(query.trim())
     const { data, error } = await supabase
       .from('sets').select('*, cards(count)').ilike('title', `%${safeQuery}%`)
       .order('pinned', { ascending: false }).order('updated_at', { ascending: false })
+    if (useAuthStore.getState().user?.id !== userId) return
     if (error) { set({ error: error.message, isLoading: false }); return }
     const sets = (data ?? []).map((s: any) => ({ ...s, cardCount: s.cards?.[0]?.count ?? 0 }))
     set({ sets, isLoading: false })
   },
 }))
+
+registerAccountReset(() => useSetsStore.setState(useSetsStore.getInitialState(), true))

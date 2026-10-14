@@ -1,3 +1,4 @@
+import { useSyncStatus, flushPending } from '@/lib/sync'
 import { useEffect, useState, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
@@ -6,6 +7,7 @@ import { useFoldersStore } from '@/store/foldersStore'
 import styles from './AppLayout.module.css'
 
 export default function AppLayout() {
+  const sync = useSyncStatus()
   const { user, profile, logout } = useAuthStore()
   const { toggle, isDark } = useTheme()
   const navigate = useNavigate()
@@ -115,7 +117,14 @@ export default function AppLayout() {
           </div>
         </div>
       </aside>
-      <main className={styles.main}><Outlet /></main>
+      <main className={styles.main}>
+        {(sync.pending > 0 || sync.storageError) && <div role="status" style={{ padding: '10px 14px', marginBottom: 16, border: '1px solid var(--border-default)', borderRadius: 8 }}>
+          {sync.storageError ? 'Device storage is unavailable. Keep this tab open until progress finishes syncing.'
+            : sync.error ? 'Progress is saved on this device and waiting to sync.' : 'Saving progress…'}
+          {sync.error && <button onClick={() => void flushPending()} style={{ marginLeft: 12 }}>Retry sync</button>}
+        </div>}
+        <Outlet key={user?.id} />
+      </main>
     </div>
   )
 }

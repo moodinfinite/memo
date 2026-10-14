@@ -53,3 +53,34 @@ Replace YOUR-USERNAME with your GitHub username.
 - Font: Inter
 - Card flip: vertical rotateX 0.32s cubic-bezier(0.4,0,0.2,1)
 - Streak unit: weeks
+
+## Saving reliability update (October 2026)
+
+**Memo production database:** this update was applied on 14 October 2026 as migration `20261014050533_saving_reliability_and_legacy_draft_compatibility`. Existing decks, cards, and progress were verified intact.
+
+**For another existing installation, apply these before deploying this version:**
+
+1. Back up/export the current database using your Supabase backup workflow.
+2. Run `supabase/schema-drafts.sql` (creates the draft table if missing).
+3. Run `supabase/schema-saving.sql` (rerunnable, transactional migration).
+4. Deploy the app, then verify a title-only deck edit, Master Deck session, and resume after refresh with a test deck.
+
+For a new installation, run those two files after the four SQL files listed in Quick start.
+
+The migration preserves existing cards and study records. It adds atomic deck saving, permits Learn and sentence sessions, supports cross-deck sessions, and stores complete draft state. The new frontend requires this migration; if the `save_deck` function is missing, deck edits fail visibly without falling back to deleting/reinserting cards.
+
+Study changes are written to a user-scoped local queue before synchronization. Failed writes survive reload and retry on reconnection/focus and periodically while the app is open. A visible banner reports pending synchronization. Do not clear browser site data while there are unsynced changes. If browser storage is unavailable, the app warns you to keep the tab open. This is recovery for study state, not a fully offline app or concurrent multi-device conflict resolution system.
+
+Completed and partial sessions use the same stable ID through retries and resume. Cards-studied totals count answered cards. Learn batch state, sentence text/feedback, card order, undo, and remaining timer time are recoverable. Starting a different mode prompts before replacing an existing draft.
+
+### Checks
+
+```bash
+npm install
+npm test
+npm run build
+```
+
+`npm test` runs isolated store/recovery tests and an embedded PostgreSQL test suite. Tests use synthetic accounts and data; they never connect to the live database. The PostgreSQL setup substitutes a local `auth.uid()` function and uses the engine's built-in UUID generation instead of the Supabase `pgcrypto` extension.
+
+The historical security review still applies to the AI handlers: application-level endpoint authentication is a separate follow-up from these saving fixes.

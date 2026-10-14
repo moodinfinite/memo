@@ -1,3 +1,5 @@
+import { changeAccount } from '@/lib/accountState'
+import { activateSync } from '@/lib/sync'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -15,6 +17,8 @@ interface AuthState {
   clearError: () => void
 }
 
+let initPromise: Promise<void> | null = null
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   profile: null,
@@ -22,39 +26,34 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
   initialised: false,
 
-  // Call once on app mount — restores session from localStorage automatically
-  init: async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user ?? null
-
-      let profile = null
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single()
-        profile = data
-      }
-
-      set({ user, profile, initialised: true })
-    } catch {
-      // Network failure on startup — mark as initialised so the app renders
-      // (user will see login screen or be redirected appropriately)
-      set({ initialised: true })
+  // The auth callback must return synchronously: awaiting a database call here
+  // deadlocks the SDK's session lock. Profile loading runs outside that lock.
+  init: () => {
+    if (initPromise) return initPromise
+    const applyUser = (user: User | null) => {
+      const changed = useAuthStore.getState().user?.id !== user?.id
+      changeAccount(user?.id ?? null)
+      set({ user, initialised: true, ...(changed ? { profile: null } : {}) })
+      setTimeout(() => {
+        if (useAuthStore.getState().user?.id !== user?.id) return
+        activateSync(user?.id ?? null)
+        if (user) void supabase.from('profiles').select('name').eq('id', user.id).single().then(({ data }) => {
+          if (useAuthStore.getState().user?.id === user.id) set({ profile: data })
+        })
+      }, 0)
     }
-
-    // Listen for auth changes (token refresh, logout from another tab, etc.)
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      const u = session?.user ?? null
-      let p = null
-      if (u) {
-        const { data } = await supabase.from('profiles').select('name').eq('id', u.id).single()
-        p = data
-      }
-      set({ user: u, profile: p })
+    // One listener for the lifetime of the app, including development Strict Mode.
+    supabase.auth.onAuthStateChange((_event, session) => {
+      activateSync(null) // pause writes immediately on token/account transitions
+      applyUser(session?.user ?? null)
     })
+    initPromise = (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        applyUser(session?.user ?? null)
+      } catch { set({ initialised: true }) }
+    })()
+    return initPromise
   },
 
   login: async (email, password) => {
@@ -82,7 +81,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) { set({ error: error.message }); return }
+    activateSync(null)
+    changeAccount(null)
     set({ user: null, profile: null })
   },
 

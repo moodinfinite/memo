@@ -5,7 +5,7 @@ import styles from './SentenceCard.module.css'
 export default function SentenceCard() {
   const {
     sessionCards, currentIndex,
-    sentenceInput, sentenceStatus, sentenceFeedback, sentenceImproved, sentenceScore,
+    sentenceInput, sentenceStatus, sentenceError, sentenceFeedback, sentenceImproved, sentenceScore,
     setSentenceInput, submitSentence, nextSentenceCard,
   } = useStudyStore()
 
@@ -40,6 +40,7 @@ export default function SentenceCard() {
 
   return (
     <div className={styles.wrap}>
+      {sentenceError && <p role="alert">{sentenceError}</p>}
       <div className={styles.cardHeader}>
         <div className={styles.termLabel}>Use this word in a sentence</div>
         <div className={styles.term}>{card.term}</div>

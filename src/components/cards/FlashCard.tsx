@@ -31,6 +31,8 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAn
   const [flipped, setFlipped] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
 
+  const answerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (answerTimer.current) clearTimeout(answerTimer.current) }, [card.id])
   const mounted = useRef(false)
   const answering = flash !== null
 
@@ -52,14 +54,14 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAn
     if (answering) return
     setFlash('correct')
     onAnswerStart?.(true)
-    setTimeout(onKnow, 1000)   // matches MC's 1s answer-feedback rhythm
+    answerTimer.current = setTimeout(onKnow, 1000)   // matches MC's 1s answer-feedback rhythm
   }
 
   const handleDontKnow = () => {
     if (answering) return
     setFlash('incorrect')
     onAnswerStart?.(false)
-    setTimeout(onDontKnow, 1000)
+    answerTimer.current = setTimeout(onDontKnow, 1000)
   }
 
   return (

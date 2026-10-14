@@ -1,3 +1,4 @@
+import { registerAccountReset } from '@/lib/accountState'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { Card, StudyMode, SessionDraft, SentenceEntry } from '@/lib/database.types'
@@ -6,9 +7,12 @@ import { isFuzzyMatch } from '@/lib/fuzzy'
 import { useSRSStore } from './srsStore'
 import { useProgressStore } from './progressStore'
 import { useAuthStore } from './authStore'
+import { queueWrite, readLocal, writeLocal, flushPending, hasPending } from '@/lib/sync'
 import { shuffle } from '@/lib/shuffle'
 
 interface StudyState {
+  sessionId: string | null
+  sentenceError: string | null
   // ── Learn mode ──────────────────────────────────────────────
   learnActive: boolean
   learnCards: Card[]
@@ -65,423 +69,300 @@ interface StudyState {
   _persist: (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft?: boolean) => Promise<void>
 }
 
-const shuffleArr = shuffle
-
 const LEARN_BATCH_SIZE = 5
-
-// Module-level debounce timer for saveProgress — prevents firing 1 upsert per card
-let _saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
-// Abort controller for in-flight draft saves — cancelled when a newer save fires
-let _draftController: AbortController | null = null
-// Active abort controller — cancelled before each new _persist call so stale requests don't race
-let _persistController: AbortController | null = null
+const draftKey = (user: string, scope: string) => `memo:draft:${user}:${scope}`
+const initialLearn = {
+  learnActive: false, learnCards: [] as Card[], learnBatch: [] as Card[], learnQueue: [] as Card[],
+  learnGraduated: [] as string[], learnScores: {} as Record<string, number>, learnBatchIdx: 0,
+  learnComplete: false, learnSetId: '', learnBatchComplete: false, learnBatchSummary: [] as Card[], learnStoryReady: false,
+}
+const initialSession = {
+  sessionId: null as string | null, mode: 'flashcard' as StudyMode, setId: '', sessionCards: [] as Card[], mcQuestions: [] as MCQuestion[],
+  currentIndex: 0, known: [] as string[], unknown: [] as string[], isComplete: false,
+  doShuffle: false, timerOn: false, timerDurMin: 0, timerSecsLeft: 0,
+  typedAnswer: '', typedResult: 'idle' as const, selectedOption: null, mcResult: 'idle' as const, mcStreak: 0, flashStreak: 0,
+  isAdvancing: false, lastAction: null, persistError: null, persistAttempt: 0, _lastPersistArgs: null,
+  hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
+  sentenceInput: '', sentenceStatus: 'idle' as const, sentenceFeedback: '', sentenceImproved: null,
+  sentenceScore: null, sentenceEntries: [] as SentenceEntry[], sentenceError: null,
+}
 
 export const useStudyStore = create<StudyState>((set, get) => ({
-  // ── Learn mode initial state ─────────────────────────────────
-  learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
-  learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
-  learnBatchComplete: false, learnBatchSummary: [],
-  learnStoryReady: false,
-
-  startLearnSession: (cards, setId) => {
-    const shuffled = shuffleArr([...cards])
-    set({
-      learnActive: true, learnCards: cards,
-      learnBatch: shuffled.slice(0, LEARN_BATCH_SIZE), learnQueue: shuffled.slice(LEARN_BATCH_SIZE),
-      learnGraduated: [], learnScores: {}, learnBatchIdx: 0,
-      learnComplete: false, learnSetId: setId,
-      learnBatchComplete: false, learnBatchSummary: [],
-      learnStoryReady: false,
-    })
-  },
-
-  answerLearnCard: (correct) => {
-    const { learnBatch, learnGraduated, learnScores, learnBatchIdx, learnSetId, learnBatchSummary } = get()
-    const card = learnBatch[learnBatchIdx]
-    if (!card) return
-    useSRSStore.getState().updateSRS(card.id, learnSetId, correct)  // update long-term mastery
-    const newScores = { ...learnScores, [card.id]: correct ? (learnScores[card.id] ?? 0) + 1 : 0 }
-    const didGraduate = (newScores[card.id] ?? 0) >= 2
-    let newBatch = [...learnBatch]
-    const newGraduated = [...learnGraduated]
-    let newBatchSummary = [...learnBatchSummary]
-    let nextIdx: number
-    if (didGraduate) {
-      // Graduate: shrink batch (no queue refill until batch is done)
-      newGraduated.push(card.id)
-      newBatchSummary.push(card)
-      newBatch = newBatch.filter((_, i) => i !== learnBatchIdx)
-      nextIdx = newBatch.length === 0 ? 0 : learnBatchIdx % newBatch.length
-    } else {
-      nextIdx = (learnBatchIdx + 1) % newBatch.length
-    }
-    if (newBatch.length === 0) {
-      // All batch cards graduated — show story interlude before advancing/completing
-      set({ learnBatch: [], learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnStoryReady: true })
-      return
-    }
-    set({ learnBatch: newBatch, learnGraduated: newGraduated, learnScores: newScores, learnBatchSummary: newBatchSummary, learnBatchIdx: nextIdx })
-  },
-
-  advanceToNextBatch: () => {
-    const { learnQueue } = get()
-    const nextBatch = learnQueue.slice(0, LEARN_BATCH_SIZE)
-    const nextQueue = learnQueue.slice(LEARN_BATCH_SIZE)
-    set({
-      learnBatch: nextBatch, learnQueue: nextQueue,
-      learnBatchComplete: false, learnBatchSummary: [],
-      learnBatchIdx: 0, learnScores: {},
-      learnStoryReady: false,
-    })
-  },
-
-  // Called when user finishes the post-batch story interlude
-  completeLearnStory: () => {
-    const { learnQueue, learnGraduated, learnCards, learnSetId } = get()
-    if (learnQueue.length > 0) {
-      // More batches remaining — show batch summary screen then advance
-      set({ learnStoryReady: false, learnBatchComplete: true })
-    } else {
-      // All done — show learn complete
-      set({ learnStoryReady: false, learnBatchComplete: false, learnComplete: true })
-      get()._persist(learnGraduated, [], learnCards.length, 'learn', learnSetId, false)
-    }
-  },
-
-  resetLearn: () => set({
-    learnActive: false, learnCards: [], learnBatch: [], learnQueue: [],
-    learnGraduated: [], learnScores: {}, learnBatchIdx: 0, learnComplete: false, learnSetId: '',
-    learnBatchComplete: false, learnBatchSummary: [], learnStoryReady: false,
-  }),
-  // ─────────────────────────────────────────────────────────────
-  mode: 'flashcard', setId: '', sessionCards: [], mcQuestions: [],
-  currentIndex: 0, known: [], unknown: [], isComplete: false,
-  doShuffle: false, timerOn: false, timerDurMin: 5, timerSecsLeft: 0,
-  typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
-  isAdvancing: false, lastAction: null,
-  persistError: null, persistAttempt: 0, _lastPersistArgs: null,
-  hasDraft: false, draftLoading: false, isPersisting: false, persistSaved: false,
-  sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null,
-  sentenceScore: null, sentenceEntries: [],
+  ...initialSession, ...initialLearn,
 
   startSession: (cards, mode, setId, opts = {}) => {
-    const { shuffle = false, timerDurMin = 0 } = opts
-    const srs = useSRSStore.getState()
-    const dueIds = new Set(srs.getDueCards(setId, cards))
-    let ordered = [...cards.filter(c => dueIds.has(c.id)), ...cards.filter(c => !dueIds.has(c.id))]
-    if (shuffle) ordered = shuffleArr(ordered)
-    set({
-      mode, setId, sessionCards: ordered,
+    get().saveProgress()
+    const due = new Set(useSRSStore.getState().getDueCards(setId, cards))
+    let ordered = [...cards.filter(c => due.has(c.id)), ...cards.filter(c => !due.has(c.id))]
+    if (opts.shuffle) ordered = shuffle(ordered)
+    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), mode, setId, sessionCards: ordered,
       mcQuestions: mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
-      currentIndex: 0, known: [], unknown: [], isComplete: false,
-      doShuffle: shuffle, timerOn: timerDurMin > 0,
-      timerDurMin, timerSecsLeft: timerDurMin * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
-      isAdvancing: false, lastAction: null,
+      doShuffle: !!opts.shuffle, timerOn: !!opts.timerDurMin, timerDurMin: opts.timerDurMin ?? 0,
+      timerSecsLeft: (opts.timerDurMin ?? 0) * 60 })
+    get().saveProgress()
+  },
+
+  startLearnSession: (cards, setId) => {
+    get().saveProgress()
+    const ordered = shuffle([...cards])
+    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), mode: 'learn', setId,
+      sessionCards: ordered, learnActive: true, learnCards: ordered, learnSetId: setId,
+      learnBatch: ordered.slice(0, LEARN_BATCH_SIZE), learnQueue: ordered.slice(LEARN_BATCH_SIZE) })
+    get().saveProgress()
+  },
+  answerLearnCard: correct => {
+    const s = get(), card = s.learnBatch[s.learnBatchIdx]
+    if (!s.learnActive || s.learnComplete || s.learnStoryReady || !card) return
+    useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
+    const scores = { ...s.learnScores, [card.id]: correct ? (s.learnScores[card.id] ?? 0) + 1 : 0 }
+    const graduated = scores[card.id] >= 2
+    const batch = graduated ? s.learnBatch.filter(c => c.id !== card.id) : s.learnBatch
+    set({ learnScores: scores, learnBatch: batch,
+      learnGraduated: graduated ? [...s.learnGraduated, card.id] : s.learnGraduated,
+      learnBatchSummary: graduated ? [...s.learnBatchSummary, card] : s.learnBatchSummary,
+      learnBatchIdx: batch.length ? (graduated ? s.learnBatchIdx : s.learnBatchIdx + 1) % batch.length : 0,
+      learnStoryReady: batch.length === 0,
+      known: [...s.known.filter(id => id !== card.id), ...(correct ? [card.id] : [])],
+      unknown: [...s.unknown.filter(id => id !== card.id), ...(!correct ? [card.id] : [])],
     })
+    get().saveProgress()
   },
-
-  markKnown: () => {
-    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak, isAdvancing } = get()
-    if (isAdvancing) return   // block rapid advances from keyboard or double-tap
-    const card = sessionCards[currentIndex]
-    if (!card) return
-    set({ isAdvancing: true })
-    setTimeout(() => set({ isAdvancing: false }), 400)
-    const prevCardSRS = useSRSStore.getState().cardSRS[card.id] ?? null
-    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak, cardId: card.id, prevCardSRS }
-    const newKnown = [...known, card.id]
-    const nextIndex = currentIndex + 1
-    const isComplete = nextIndex >= sessionCards.length
-    useSRSStore.getState().updateSRS(card.id, setId, true)
-    set({ known: newKnown, currentIndex: nextIndex, isComplete, flashStreak: mode === 'flashcard' ? flashStreak + 1 : flashStreak, lastAction: snapshot })
-    if (isComplete) { get()._persist(newKnown, get().unknown, sessionCards.length, mode, setId, true) }
-    else { get().saveProgress() }
+  advanceToNextBatch: () => {
+    const { learnQueue } = get()
+    set({ learnBatch: learnQueue.slice(0, LEARN_BATCH_SIZE), learnQueue: learnQueue.slice(LEARN_BATCH_SIZE),
+      learnBatchComplete: false, learnBatchSummary: [], learnBatchIdx: 0, learnScores: {}, learnStoryReady: false })
+    get().saveProgress()
   },
-
-  markUnknown: () => {
-    const { sessionCards, currentIndex, known, unknown, mode, setId, flashStreak, isAdvancing } = get()
-    if (isAdvancing) return   // block rapid advances from keyboard or double-tap
-    const card = sessionCards[currentIndex]
-    if (!card) return
-    set({ isAdvancing: true })
-    setTimeout(() => set({ isAdvancing: false }), 400)
-    const prevCardSRS = useSRSStore.getState().cardSRS[card.id] ?? null
-    const snapshot = { prevKnown: known, prevUnknown: unknown, prevIndex: currentIndex, prevFlashStreak: flashStreak, cardId: card.id, prevCardSRS }
-    const newUnknown = [...unknown, card.id]
-    const nextIndex = currentIndex + 1
-    const isComplete = nextIndex >= sessionCards.length
-    useSRSStore.getState().updateSRS(card.id, setId, false)
-    set({ unknown: newUnknown, currentIndex: nextIndex, isComplete, flashStreak: mode === 'flashcard' ? 0 : flashStreak, lastAction: snapshot })
-    if (isComplete) { get()._persist(get().known, newUnknown, sessionCards.length, mode, setId, true) }
-    else { get().saveProgress() }
-  },
-
-  undoLast: () => {
-    const { lastAction, setId } = get()
-    if (!lastAction) return
-    useSRSStore.getState().revertSRS(lastAction.cardId, setId, lastAction.prevCardSRS)
-    set({
-      currentIndex: lastAction.prevIndex,
-      known: lastAction.prevKnown,
-      unknown: lastAction.prevUnknown,
-      flashStreak: lastAction.prevFlashStreak,
-      isComplete: false,
-      lastAction: null,
-    })
-  },
-
-  submitTyped: () => {
-    const { sessionCards, currentIndex, typedAnswer } = get()
-    const correct = isFuzzyMatch(typedAnswer, sessionCards[currentIndex].term)
-    set({ typedResult: correct ? 'correct' : 'incorrect' })
-    setTimeout(() => { if (correct) get().markKnown(); else get().markUnknown(); set({ typedAnswer: '', typedResult: 'idle' }) }, 1200)
-  },
-
-  setTypedAnswer: (val) => set({ typedAnswer: val }),
-
-  selectMCOption: (idx) => {
-    const { mcQuestions, currentIndex, mcStreak } = get()
-    const q = mcQuestions[currentIndex]
-    if (!q || get().mcResult !== 'idle') return
-    const correct = idx === q.correctIndex
-    const newStreak = correct ? mcStreak + 1 : 0
-    set({ selectedOption: idx, mcResult: correct ? 'correct' : 'incorrect', mcStreak: newStreak })
-    setTimeout(() => { if (correct) get().markKnown(); else get().markUnknown(); set({ selectedOption: null, mcResult: 'idle' }) }, 1000)
-  },
-
-  tickTimer: () => {
-    const { timerSecsLeft, isComplete } = get()
-    if (isComplete || timerSecsLeft <= 0) return
-    const next = timerSecsLeft - 1
-    set({ timerSecsLeft: next })
-    if (next <= 0) {
-      const { sessionCards, currentIndex, known, unknown, mode, setId } = get()
-      const remaining = sessionCards.slice(currentIndex).map(c => c.id)
-      const finalUnknown = [...unknown, ...remaining]
-      set({ isComplete: true, unknown: finalUnknown })
-      get()._persist(known, finalUnknown, sessionCards.length, mode, setId, true)
+  completeLearnStory: () => {
+    const s = get()
+    if (s.learnQueue.length) { set({ learnStoryReady: false, learnBatchComplete: true }); get().saveProgress() }
+    else {
+      set({ learnStoryReady: false, learnBatchComplete: false, learnComplete: true, isComplete: true })
+      void get()._persist(s.learnGraduated, [], s.learnCards.length, 'learn', s.learnSetId, true)
     }
   },
+  resetLearn: () => { get().saveProgress(); set({ ...initialLearn, ...initialSession }) },
+  resetSession: () => { get().saveProgress(); set({ ...initialLearn, ...initialSession }) },
 
-  reshuffleRemaining: () => {
-    const { sessionCards, currentIndex, mode } = get()
-    const done = sessionCards.slice(0, currentIndex)
-    const remaining = shuffleArr(sessionCards.slice(currentIndex))
-    const newCards = [...done, ...remaining]
-    set({
-      sessionCards: newCards,
-      mcQuestions: mode === 'multiple_choice' ? generateMCQuestions(newCards) : [],
-    })
+  markKnown: () => answer(true),
+  markUnknown: () => answer(false),
+  undoLast: () => {
+    const s = get(), last = s.lastAction
+    if (!last || s.isComplete) return
+    const card = s.sessionCards[last.prevIndex]
+    useSRSStore.getState().revertSRS(last.cardId, card.set_id, last.prevCardSRS)
+    set({ currentIndex: last.prevIndex, known: last.prevKnown, unknown: last.prevUnknown,
+      flashStreak: last.prevFlashStreak, isComplete: false, isAdvancing: false, lastAction: null })
+    const user = useAuthStore.getState().user
+    if (user) queueSession(get(), user.id) // zero answers must replace a previously recorded answer, too
+    get().saveProgress()
   },
-
-  setSentenceInput: (val) => set({ sentenceInput: val }),
-
+  submitTyped: () => {
+    const s = get(), card = s.sessionCards[s.currentIndex]
+    if (!card || s.isComplete || s.typedResult !== 'idle') return
+    const correct = isFuzzyMatch(s.typedAnswer, card.term)
+    set({ typedResult: correct ? 'correct' : 'incorrect' })
+    setTimeout(() => {
+      if (get().sessionId !== s.sessionId || get().currentIndex !== s.currentIndex || get().isComplete) return
+      if (correct) get().markKnown(); else get().markUnknown()
+      set({ typedAnswer: '', typedResult: 'idle' })
+    }, 1200)
+  },
+  setTypedAnswer: val => { set({ typedAnswer: val }); get().saveProgress() },
+  selectMCOption: idx => {
+    const s = get(), q = s.mcQuestions[s.currentIndex]
+    if (!q || s.isComplete || s.mcResult !== 'idle' || idx < 0 || idx >= q.options.length) return
+    const correct = idx === q.correctIndex
+    set({ selectedOption: idx, mcResult: correct ? 'correct' : 'incorrect', mcStreak: correct ? s.mcStreak + 1 : 0 })
+    setTimeout(() => {
+      if (get().sessionId !== s.sessionId || get().currentIndex !== s.currentIndex || get().isComplete) return
+      if (correct) get().markKnown(); else get().markUnknown()
+      set({ selectedOption: null, mcResult: 'idle' })
+    }, 1000)
+  },
+  tickTimer: () => {
+    const s = get()
+    if (s.isComplete || s.timerSecsLeft <= 0) return
+    set({ timerSecsLeft: s.timerSecsLeft - 1 })
+    if (s.timerSecsLeft === 1) {
+      set({ isComplete: true })
+      void get()._persist(s.known, s.unknown, s.known.length + s.unknown.length, s.mode, s.setId, true)
+    } else get().saveProgress()
+  },
+  reshuffleRemaining: () => {
+    const s = get()
+    if (s.mcResult !== 'idle' || s.typedResult !== 'idle' || s.isAdvancing) return
+    const cards = [...s.sessionCards.slice(0, s.currentIndex), ...shuffle(s.sessionCards.slice(s.currentIndex))]
+    set({ sessionCards: cards, mcQuestions: s.mode === 'multiple_choice' ? generateMCQuestions(cards) : [] })
+    get().saveProgress()
+  },
+  setSentenceInput: val => { set({ sentenceInput: val, sentenceError: null }); get().saveProgress() },
   submitSentence: async () => {
-    const { sessionCards, currentIndex, sentenceInput } = get()
-    const card = sessionCards[currentIndex]
-    if (!card || !sentenceInput.trim()) return
-    set({ sentenceStatus: 'submitting' })
+    const s = get(), card = s.sessionCards[s.currentIndex]
+    if (!card || !s.sentenceInput.trim() || s.sentenceStatus !== 'idle') return
+    set({ sentenceStatus: 'submitting', sentenceError: null })
+    const controller = new AbortController()
+    const deadline = setTimeout(() => controller.abort(), 25000)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/review-sentence', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'authorization': `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ term: card.term, definition: card.definition, sentence: sentenceInput.trim() }),
-      })
+      const res = await fetch('/api/review-sentence', { method: 'POST', signal: controller.signal,
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ term: card.term, definition: card.definition, sentence: s.sentenceInput.trim() }) })
       const data = await res.json()
-      set({
-        sentenceStatus: 'reviewed',
-        sentenceFeedback: data.feedback ?? '',
-        sentenceImproved: data.improved ?? null,
-        sentenceScore: ['great', 'good', 'needs_work'].includes(data.score) ? data.score : 'good',
-      })
+      if (!res.ok || !['great', 'good', 'needs_work'].includes(data.score)) throw new Error(data.error ?? 'Review unavailable')
+      if (get().sessionId !== s.sessionId || get().currentIndex !== s.currentIndex) return
+      set({ sentenceStatus: 'reviewed', sentenceFeedback: data.feedback ?? '', sentenceImproved: data.improved ?? null, sentenceScore: data.score })
     } catch {
-      set({ sentenceStatus: 'reviewed', sentenceFeedback: 'Could not reach AI. Moving on.', sentenceImproved: null, sentenceScore: 'good' })
-    }
+      if (get().sessionId !== s.sessionId || get().currentIndex !== s.currentIndex) return
+      set({ sentenceStatus: 'idle', sentenceError: 'Could not review your sentence. Your text is kept — please try again.', sentenceScore: null })
+    } finally { clearTimeout(deadline) }
+    get().saveProgress()
   },
-
   nextSentenceCard: () => {
-    const { sessionCards, currentIndex, sentenceInput, sentenceFeedback, sentenceImproved, sentenceScore, sentenceEntries, mode, setId } = get()
-    const card = sessionCards[currentIndex]
-    if (!card) return
-    const score = sentenceScore ?? 'good'
-    useSRSStore.getState().updateSRS(card.id, setId, score !== 'needs_work')
-    const newEntries: SentenceEntry[] = [...sentenceEntries, {
-      card_id: card.id,
-      term: card.term, definition: card.definition,
-      sentence: sentenceInput.trim(),
-      feedback: sentenceFeedback,
-      improved: sentenceImproved,
-      score,
-    }]
-    const nextIndex = currentIndex + 1
-    const isComplete = nextIndex >= sessionCards.length
-    set({
-      sentenceEntries: newEntries, currentIndex: nextIndex, isComplete,
-      sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null,
-    })
-    if (isComplete) {
-      const goodIds = newEntries.filter(e => e.score !== 'needs_work').map(e => e.card_id)
-      const badIds  = newEntries.filter(e => e.score === 'needs_work').map(e => e.card_id)
-      get()._persist(goodIds, badIds, newEntries.length, mode, setId, true)
-    }
-  },
-
-  // NOTE: deliberately does NOT abort an in-flight persist — exiting a session
-  // early fires a partial save right before this runs, and aborting here would
-  // kill it. _persist already aborts its own predecessor on each new call.
-  resetSession: () => {
-    set({ sessionCards: [], currentIndex: 0, known: [], unknown: [], isComplete: false, typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0, isAdvancing: false, lastAction: null, timerSecsLeft: 0, persistError: null, persistAttempt: 0, _lastPersistArgs: null, isPersisting: false, persistSaved: false, sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null, sentenceEntries: [] })
-  },
-
-  persistSession: async () => {
-    const { known, unknown, sessionCards, mode, setId } = get()
-    if (known.length === 0 && unknown.length === 0) return
-    await get()._persist(known, unknown, sessionCards.length, mode, setId)
-  },
-
-  retryPersist: async () => {
-    const { _lastPersistArgs } = get()
-    if (!_lastPersistArgs) return
-    set({ persistAttempt: get().persistAttempt + 1 })
-    await get()._persist(..._lastPersistArgs)
-  },
-
-  dismissPersistError: () => {
-    // Cancel any in-flight request and clear error state
-    _persistController?.abort()
-    _persistController = null
-    set({ persistError: null, isPersisting: false, persistAttempt: 0 })
-  },
-
-  resumeSession: (draft, cards) => {
-    const cardMap = Object.fromEntries(cards.map(c => [c.id, c]))
-    const orderedCards = draft.card_order.map(cid => cardMap[cid]).filter(Boolean) as Card[]
-    if (orderedCards.length === 0) {
-      get().clearProgress(draft.set_id)
-      return
-    }
-    const safeIndex = Math.min(draft.current_index, orderedCards.length - 1)
-    set({
-      mode: draft.mode, setId: draft.set_id, sessionCards: orderedCards,
-      mcQuestions: draft.mode === 'multiple_choice' ? generateMCQuestions(orderedCards) : [],
-      currentIndex: safeIndex, known: draft.known_ids, unknown: draft.unknown_ids,
-      isComplete: false, doShuffle: draft.do_shuffle,
-      timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,
-      timerSecsLeft: draft.timer_dur_min * 60,
-      typedAnswer: '', typedResult: 'idle', selectedOption: null, mcResult: 'idle', mcStreak: 0, flashStreak: 0,
-      isAdvancing: false, lastAction: null,
-      persistError: null,
-    })
+    const s = get(), card = s.sessionCards[s.currentIndex]
+    if (!card || s.sentenceStatus !== 'reviewed' || !s.sentenceScore) return
+    const correct = s.sentenceScore !== 'needs_work'
+    useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
+    const entries = [...s.sentenceEntries, { card_id: card.id, term: card.term, definition: card.definition,
+      sentence: s.sentenceInput.trim(), feedback: s.sentenceFeedback, improved: s.sentenceImproved, score: s.sentenceScore }]
+    const known = [...s.known, ...(correct ? [card.id] : [])], unknown = [...s.unknown, ...(!correct ? [card.id] : [])]
+    const complete = s.currentIndex + 1 >= s.sessionCards.length
+    set({ sentenceEntries: entries, currentIndex: s.currentIndex + 1, known, unknown, isComplete: complete,
+      sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null })
+    if (complete) void get()._persist(known, unknown, entries.length, s.mode, s.setId, true)
+    else get().saveProgress()
   },
 
   saveProgress: () => {
-    // Debounce: if cards are answered rapidly, collapse saves into one upsert
-    if (_saveDebounceTimer) clearTimeout(_saveDebounceTimer)
-    _saveDebounceTimer = setTimeout(async () => {
-      const { sessionCards, currentIndex, known, unknown, mode, setId, doShuffle, timerDurMin, isComplete } = get()
-      if (isComplete || !setId || setId === '__master__' || mode === 'sentence' || sessionCards.length === 0) return
-      try {
-        const user = useAuthStore.getState().user
-        if (!user) return
-        // Cancel any previous in-flight draft save before starting a new one
-        _draftController?.abort()
-        _draftController = new AbortController()
-        const { signal } = _draftController
-        await (supabase.from('session_drafts').upsert({
-          user_id: user.id, set_id: setId, mode,
-          card_order: sessionCards.map(c => c.id),
-          current_index: currentIndex,
-          known_ids: known, unknown_ids: unknown,
-          do_shuffle: doShuffle, timer_dur_min: timerDurMin,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,set_id' }) as any).abortSignal(signal)
-      } catch (err) {
-        // Draft save failure is non-critical — silently ignore
-        console.warn('Draft save failed (non-critical):', err)
-      }
-    }, 1500)
-  },
-
-  loadProgress: async (setId) => {
-    set({ draftLoading: true, hasDraft: false })
-    const user = useAuthStore.getState().user
-    if (!user) { set({ draftLoading: false }); return null }
-    const { data } = await supabase.from('session_drafts').select('*')
-      .eq('user_id', user.id).eq('set_id', setId).maybeSingle()
-    if (data) {
-      // Clear if expired (7 days old)
-      const expired = Date.now() - new Date(data.updated_at).getTime() > 7 * 24 * 60 * 60 * 1000
-      // Clear if session was already fully completed
-      const completed = data.current_index >= data.card_order.length
-      if (expired || completed) {
-        get().clearProgress(setId)
-        set({ draftLoading: false, hasDraft: false })
-        return null
-      }
+    const s = get(), user = useAuthStore.getState().user
+    if (!user || !s.sessionId || !s.setId || !s.sessionCards.length || s.isComplete) return
+    const state = {
+      timerSecsLeft: s.timerSecsLeft, sentenceInput: s.sentenceInput, sentenceEntries: s.sentenceEntries,
+      sentenceStatus: s.sentenceStatus === 'submitting' ? 'idle' : s.sentenceStatus,
+      sentenceFeedback: s.sentenceFeedback, sentenceImproved: s.sentenceImproved, sentenceScore: s.sentenceScore,
+      typedAnswer: s.typedAnswer, learnBatch: s.learnBatch.map(c => c.id), learnQueue: s.learnQueue.map(c => c.id),
+      learnGraduated: s.learnGraduated, learnScores: s.learnScores, learnBatchIdx: s.learnBatchIdx,
+      learnBatchComplete: s.learnBatchComplete, learnBatchSummary: s.learnBatchSummary.map(c => c.id), learnStoryReady: s.learnStoryReady,
     }
-    set({ draftLoading: false, hasDraft: !!data })
-    return (data as SessionDraft) ?? null
+    const draft = { user_id: user.id, set_id: s.setId === '__master__' ? null : s.setId, scope_id: s.setId,
+      session_id: s.sessionId, mode: s.mode, card_order: s.sessionCards.map(c => c.id), current_index: s.currentIndex,
+      known_ids: s.known, unknown_ids: s.unknown, do_shuffle: s.doShuffle, timer_dur_min: s.timerDurMin,
+      updated_at: new Date().toISOString(), state }
+    writeLocal(draftKey(user.id, s.setId), draft)
+    queueWrite({ userId: user.id, key: `draft:${s.setId}`, table: 'session_drafts', operation: 'upsert', data: draft, conflict: 'user_id,scope_id' })
+    // Checkpoint the same session ID, so leaving/resuming/retrying cannot double count it.
+    if (s.known.length + s.unknown.length > 0) queueSession(s, user.id)
   },
-
-  clearProgress: async (setId) => {
+  loadProgress: async setId => {
+    const user = useAuthStore.getState().user
+    if (!user) return null
+    const local = readLocal<SessionDraft & { deleted?: boolean }>(draftKey(user.id, setId))
+    // Local unsynced work must remain available even when the network is stalled.
+    if (local && hasPending(user.id, `draft:${setId}`)) return local.deleted ? null : local
+    set({ draftLoading: true })
+    const controller = new AbortController()
+    const deadline = setTimeout(() => controller.abort(), 8000)
+    try {
+      const { data, error } = await supabase.from('session_drafts').select('*')
+        .eq('user_id', user.id).eq('scope_id', setId).abortSignal(controller.signal).maybeSingle()
+      if (useAuthStore.getState().user?.id !== user.id) return null
+      if (error) { set({ persistError: `Could not check cloud progress: ${error.message}` }); return local && !local.deleted ? local : null }
+      // A local answer may have arrived while the read was in flight.
+      const latest = readLocal<SessionDraft & { deleted?: boolean }>(draftKey(user.id, setId))
+      if (latest && (hasPending(user.id, `draft:${setId}`) || (data && latest.updated_at >= data.updated_at))) return latest.deleted ? null : latest
+      writeLocal(draftKey(user.id, setId), data ?? { deleted: true, updated_at: new Date().toISOString() })
+      set({ hasDraft: !!data })
+      return data as SessionDraft | null
+    } catch { return local && !local.deleted ? local : null }
+    finally { clearTimeout(deadline); if (useAuthStore.getState().user?.id === user.id) set({ draftLoading: false }) }
+  },
+  clearProgress: async setId => {
     const user = useAuthStore.getState().user
     if (!user) return
-    await supabase.from('session_drafts').delete()
-      .eq('user_id', user.id).eq('set_id', setId)
+    writeLocal(draftKey(user.id, setId), { deleted: true, updated_at: new Date().toISOString() })
+    queueWrite({ userId: user.id, key: `draft:${setId}`, table: 'session_drafts', operation: 'delete', filters: { user_id: user.id, scope_id: setId } })
     set({ hasDraft: false })
   },
-
-  _persist: async (known: string[], unknown: string[], total: number, mode: StudyMode, setId: string, clearDraft = false) => {
-    if (!setId || setId === '__master__') return
-    set({ _lastPersistArgs: [known, unknown, total, mode, setId, clearDraft] })
-
-    // Cancel any previous in-flight request before starting a new one
-    _persistController?.abort()
-    _persistController = new AbortController()
-    const signal = _persistController.signal
-
-    set({ persistError: null, isPersisting: true, persistSaved: false })
-
-    const attempt = get().persistAttempt
-    const slowWarn = setTimeout(() => {
-      if (signal.aborted) return
-      set({ persistError: 'Slow connection — still saving, hang tight…' })
-    }, 8000)
-    const deadline = setTimeout(() => {
-      if (signal.aborted) return
-      _persistController?.abort()
-      set({ isPersisting: false, persistError: attempt >= 2 ? 'Still failing — session may not have saved. You can dismiss or keep retrying.' : 'Save timed out — tap Retry' })
-    }, 25000)
-
-    try {
-      const user = useAuthStore.getState().user
-      if (!user) { clearTimeout(slowWarn); clearTimeout(deadline); set({ isPersisting: false }); return }
-      const { error } = await (supabase.from('study_sessions').insert({
-        user_id: user.id, set_id: setId, mode, total_cards: total,
-        known_count: known.length, unknown_count: unknown.length,
-        score_pct: total > 0 ? Math.round((known.length / total) * 100) : 0,
-        completed_at: new Date().toISOString(),
-      }) as any).abortSignal(signal)
-      clearTimeout(slowWarn); clearTimeout(deadline)
-      if (signal.aborted) return  // this call was superseded by a retry
-      if (error) {
-        const code = (error as any).code ?? 'unknown'
-        const msg = error.message ?? 'unknown error'
-        console.error('study_sessions insert failed:', code, msg)
-        set({ persistError: `Save error — ${msg}`, isPersisting: false })
-        return
-      }
-      if (clearDraft) get().clearProgress(setId)
-      useProgressStore.getState().fetchProgress(true)   // force — bypass 60s cache so new session shows
-      set({ isPersisting: false, persistSaved: true, persistAttempt: 0 })
-    } catch (err: any) {
-      clearTimeout(slowWarn); clearTimeout(deadline)
-      if (signal.aborted) return  // aborted by retry or dismiss — don't show error
-      const msg = err?.message ?? 'unknown error'
-      console.error('study_sessions persist error:', err?.code, msg)
-      set({ persistError: `Save error — ${msg}`, isPersisting: false })
-    }
+  resumeSession: (draft, cards) => {
+    const scope = draft.scope_id ?? draft.set_id
+    const byId = new Map(cards.map(c => [c.id, c]))
+    const resolve = (ids: string[] = []) => ids.map(id => byId.get(id)).filter((c): c is Card => !!c)
+    const ordered = resolve(draft.card_order)
+    if (!ordered.length) { void get().clearProgress(scope); return }
+    const state = draft.state ?? {}
+    const known = draft.known_ids.filter(id => byId.has(id)), unknown = draft.unknown_ids.filter(id => byId.has(id))
+    // Recompute position after removed cards; an old numeric index would skip survivors.
+    const index = resolve(draft.card_order.slice(0, draft.current_index)).length
+    const learning = draft.mode === 'learn'
+    set({ ...initialSession, ...initialLearn, sessionId: draft.session_id ?? draft.id ?? crypto.randomUUID(),
+      setId: scope, mode: draft.mode, sessionCards: ordered, known, unknown, currentIndex: index,
+      isComplete: !learning && index >= ordered.length, doShuffle: draft.do_shuffle,
+      mcQuestions: draft.mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
+      timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,
+      timerSecsLeft: state.timerSecsLeft ?? draft.timer_dur_min * 60,
+      typedAnswer: state.typedAnswer ?? '', sentenceInput: state.sentenceInput ?? '',
+      sentenceEntries: (state.sentenceEntries ?? []).filter(e => byId.has(e.card_id)),
+      sentenceStatus: state.sentenceStatus === 'reviewed' ? 'reviewed' : 'idle', sentenceFeedback: state.sentenceFeedback ?? '',
+      sentenceImproved: state.sentenceImproved ?? null, sentenceScore: state.sentenceScore ?? null,
+      ...(learning ? { learnActive: true, learnCards: ordered, learnSetId: scope,
+        learnBatch: resolve(state.learnBatch), learnQueue: resolve(state.learnQueue),
+        learnGraduated: (state.learnGraduated ?? []).filter(id => byId.has(id)), learnScores: state.learnScores ?? {},
+        learnBatchIdx: Math.min(state.learnBatchIdx ?? 0, Math.max(0, resolve(state.learnBatch).length - 1)),
+        learnBatchComplete: !!state.learnBatchComplete, learnBatchSummary: resolve(state.learnBatchSummary),
+        learnStoryReady: !!state.learnStoryReady || resolve(state.learnBatch).length === 0 } : {}),
+    })
+    get().saveProgress()
+  },
+  persistSession: async () => {
+    get().saveProgress()
+    const s = get()
+    if (s.known.length + s.unknown.length) await get()._persist(s.known, s.unknown, s.known.length + s.unknown.length, s.mode, s.setId)
+  },
+  retryPersist: async () => {
+    const id = get().sessionId, user = useAuthStore.getState().user
+    set({ isPersisting: true, persistError: null })
+    await flushPending()
+    if (get().sessionId !== id) return
+    const pending = user && hasPending(user.id, `session:${id}`)
+    set({ isPersisting: false, persistSaved: !pending, persistError: pending ? 'Saved on this device; waiting to sync. Retry when connected.' : null })
+  },
+  dismissPersistError: () => set({ persistError: null }),
+  _persist: async (known, unknown, _total, mode, setId, clearDraft = false) => {
+    const s = get(), user = useAuthStore.getState().user
+    if (!user || !s.sessionId) return
+    const id = s.sessionId
+    set({ isPersisting: true, persistSaved: false, persistError: null })
+    if (known.length + unknown.length) queueSession({ ...s, known, unknown, mode, setId }, user.id)
+    if (clearDraft) await get().clearProgress(setId)
+    await flushPending()
+    if (get().sessionId !== id) return
+    const pending = hasPending(user.id, `session:${id}`)
+    set({ isPersisting: false, persistSaved: !pending, persistError: pending ? 'Saved on this device; waiting to sync. Retry when connected.' : null })
+    if (!pending) void useProgressStore.getState().fetchProgress(true)
   },
 }))
+
+function queueSession(s: StudyState, userId: string) {
+  const total = s.known.length + s.unknown.length
+  queueWrite({ userId, key: `session:${s.sessionId}`, table: 'study_sessions', operation: 'upsert', conflict: 'id', data: {
+    id: s.sessionId, user_id: userId, set_id: s.setId === '__master__' ? null : s.setId, mode: s.mode,
+    total_cards: total, known_count: s.known.length, unknown_count: s.unknown.length,
+    score_pct: total ? Math.round(s.known.length / total * 100) : 0, completed_at: new Date().toISOString(), sentence_entries: s.sentenceEntries,
+  } })
+}
+function answer(correct: boolean) {
+  const s = useStudyStore.getState(), card = s.sessionCards[s.currentIndex]
+  if (!card || s.isComplete || s.isAdvancing || s.learnActive) return
+  const known = [...s.known, ...(correct ? [card.id] : [])], unknown = [...s.unknown, ...(!correct ? [card.id] : [])]
+  const complete = s.currentIndex + 1 >= s.sessionCards.length
+  const previous = useSRSStore.getState().cardSRS[card.id] ?? null
+  useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
+  useStudyStore.setState({ known, unknown, currentIndex: s.currentIndex + 1, isComplete: complete, isAdvancing: true,
+    flashStreak: correct ? s.flashStreak + 1 : 0,
+    lastAction: { prevKnown: s.known, prevUnknown: s.unknown, prevIndex: s.currentIndex, prevFlashStreak: s.flashStreak, cardId: card.id, prevCardSRS: previous } })
+  setTimeout(() => { if (useStudyStore.getState().sessionId === s.sessionId) useStudyStore.setState({ isAdvancing: false }) }, 400)
+  if (complete) void useStudyStore.getState()._persist(known, unknown, known.length + unknown.length, s.mode, s.setId, true)
+  else useStudyStore.getState().saveProgress()
+}
+
+registerAccountReset(() => useStudyStore.setState(useStudyStore.getInitialState(), true))

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import { shuffle } from '@/lib/shuffle'
 import type { Card } from '@/lib/database.types'
@@ -20,6 +20,8 @@ export default function LearnCard() {
   } = useStudyStore()
 
   const card = learnBatch[learnBatchIdx]
+  const answerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (answerTimer.current) clearTimeout(answerTimer.current) }, [card?.id])
   const score = learnScores[card?.id ?? ''] ?? 0
   const isFlashcard = score >= 1   // MC first (recognition), then flashcard (recall)
   const totalCards = learnGraduated.length + learnBatch.length + learnQueue.length
@@ -40,9 +42,9 @@ export default function LearnCard() {
     setFlipped(false)
     if (!correct) {
       setShowDef(true)
-      setTimeout(() => answerLearnCard(false), 2000)
+      answerTimer.current = setTimeout(() => answerLearnCard(false), 2000)
     } else {
-      setTimeout(() => answerLearnCard(true), 800)
+      answerTimer.current = setTimeout(() => answerLearnCard(true), 800)
     }
   }
 
@@ -50,7 +52,7 @@ export default function LearnCard() {
     if (selectedIdx !== null) return
     setSelectedIdx(idx)
     setMcResult(correct ? 'correct' : 'incorrect')
-    setTimeout(() => answerLearnCard(correct), 1000)
+    answerTimer.current = setTimeout(() => answerLearnCard(correct), 1000)
   }
 
   // Reset local UI state when card or view type changes

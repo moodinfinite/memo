@@ -59,13 +59,13 @@ export default function StudyPage() {
     fetchSet(id)
     fetchSRS(id)
     loadProgress(id).then(draft => { setCachedDraft(draft) })
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); useStudyStore.getState().resetSession() }
   }, [id])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      if (selecting || isComplete) return
+      if (selecting || isComplete || useStudyStore.getState().learnActive || storyTerms.length || selectedMode === 'story') return
       if (mode === 'flashcard') {
         if (e.code === 'Space') { e.preventDefault(); setFlipKey((k) => k + 1) }
         // markKnown/markUnknown have an isAdvancing guard in the store,
@@ -82,7 +82,7 @@ export default function StudyPage() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [selecting, isComplete, mode])
+  }, [selecting, isComplete, mode, storyTerms.length, selectedMode])
 
   useEffect(() => {
     if (!isComplete && timerOn && !selecting) {
@@ -159,50 +159,35 @@ export default function StudyPage() {
   }
 
   const handleStart = async () => {
-    if (!currentSet?.cards?.length || !id || isStarting) return
-    // Story mode: pick up to 8 lowest-mastery terms, no session tracking
-    if (selectedMode === 'story') {
-      setIsStarting(true)
+    if (!currentSet?.cards?.length || currentSet.id !== id || !id || isStarting) return
+    setIsStarting(true)
+    try {
+      if (selectedMode !== 'story') {
+        const draft = await loadProgress(id)
+        if (draft && draft.card_order.some(cid => currentSet.cards!.some(c => c.id === cid))) {
+          setResumePrompt(draft)
+          return
+        }
+      }
       await fetchSRS(id, { force: true })
       const freshSRS = useSRSStore.getState().cardSRS
       const cards = filteredCards(currentSet.cards, freshSRS)
-      const sorted = [...cards].sort((a, b) => getMasteryLevel(freshSRS[a.id]) - getMasteryLevel(freshSRS[b.id]))
-      setStoryBatchOffset(0)
-      setStoryTerms(sorted.slice(0, 8))
+      if (!cards.length) return
+      if (selectedMode === 'story') {
+        const sorted = [...cards].sort((a, b) => getMasteryLevel(freshSRS[a.id]) - getMasteryLevel(freshSRS[b.id]))
+        setStoryBatchOffset(0)
+        setStoryTerms(sorted.slice(0, 8))
+      } else if (selectedMode === 'learn') startLearnSession(cards, id)
+      else startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
       setSelecting(false)
-      setIsStarting(false)
-      return
-    }
-    // Learn mode: skip draft/resume, just start a fresh learn session
-    if (selectedMode === 'learn') {
-      setIsStarting(true)
-      await fetchSRS(id, { force: true })
-      const cards = filteredCards(currentSet.cards, useSRSStore.getState().cardSRS)
-      if (!cards.length) { setIsStarting(false); return }
-      startLearnSession(cards, id)
-      setSelecting(false)
-      setIsStarting(false)
-      return
-    }
-    if (cachedDraft && cachedDraft.mode === selectedMode) {
-      const valid = cachedDraft.card_order.filter(cid => currentSet.cards!.find(c => c.id === cid))
-      if (valid.length > 0) { setResumePrompt(cachedDraft); return }
-      clearProgress(id); setCachedDraft(null)
-    }
-    setIsStarting(true)
-    // Force-fetch latest SRS data so repetitions/intervals are current before session starts
-    await fetchSRS(id, { force: true })
-    const cards = filteredCards(currentSet.cards, useSRSStore.getState().cardSRS)
-    if (!cards.length) { setIsStarting(false); return }
-    startSession(cards, selectedMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
-    setSelecting(false)
-    setIsStarting(false)
+    } finally { setIsStarting(false) }
   }
 
   const handleResume = async (draft: SessionDraft) => {
     if (!currentSet?.cards || !id || isStarting) return
     setIsStarting(true)
     await fetchSRS(id, { force: true })
+    setSelectedMode(draft.mode)
     resumeSession(draft, currentSet.cards)
     setResumePrompt(null); setCachedDraft(null)
     setSelecting(false)
@@ -217,7 +202,8 @@ export default function StudyPage() {
     setResumePrompt(null); setCachedDraft(null)
     const cards = filteredCards(currentSet!.cards!)
     if (!cards.length) { setIsStarting(false); return }
-    startSession(cards, selectedMode as StudyMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    if (selectedMode === 'learn') startLearnSession(cards, id)
+    else startSession(cards, selectedMode as StudyMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
     setSelecting(false)
     setIsStarting(false)
   }
@@ -506,7 +492,7 @@ export default function StudyPage() {
   }
 
   if (isComplete) {
-    const total = sessionCards.length, k = known.length, u = unknown.length
+    const total = known.length + unknown.length, k = known.length, u = unknown.length
     const pct = total > 0 ? Math.round((k / total) * 100) : 0
     return (
       <div className={styles.page}>

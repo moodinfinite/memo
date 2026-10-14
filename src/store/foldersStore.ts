@@ -1,3 +1,5 @@
+import { useAuthStore } from './authStore'
+import { registerAccountReset } from '@/lib/accountState'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 
@@ -33,6 +35,8 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
   foldersLastFetched: 0,
 
   fetchFolders: async () => {
+    const userId = useAuthStore.getState().user?.id
+    if (!userId) return
     // Skip refetch if data is fresh (< 30s old)
     if (get().folders.length > 0 && Date.now() - get().foldersLastFetched < 30_000) return
     if (get().folders.length === 0) set({ isLoading: true })
@@ -41,6 +45,7 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
       .from('folders')
       .select('*')
       .order('position', { ascending: true })
+    if (useAuthStore.getState().user?.id !== userId) return
     if (error) { set({ error: error.message, isLoading: false }); return }
     set({ folders: data ?? [], isLoading: false, foldersLastFetched: Date.now() })
   },
@@ -79,3 +84,5 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
     if (error) set({ folders: prev }) // rollback on failure
   },
 }))
+
+registerAccountReset(() => useFoldersStore.setState(useFoldersStore.getInitialState(), true))

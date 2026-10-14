@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/store/authStore'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
 import { useSRSStore } from '@/store/srsStore'
@@ -35,6 +36,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
+  const ownerId = useRef(useAuthStore.getState().user?.id)
   const tappedIds = useRef<Set<string>>(new Set())
   const storyRef = useRef('')
   const storyElRef = useRef<HTMLParagraphElement>(null)
@@ -50,7 +52,7 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
   // On unmount: log mastery signals using refs so we always have the current batch's terms
   useEffect(() => {
     return () => {
-      if (!storyRef.current) return
+      if (!storyRef.current || useAuthStore.getState().user?.id !== ownerId.current) return
       const updateSRS = useSRSStore.getState().updateSRS
       termsRef.current.forEach(t => updateSRS(t.id, setIdRef.current, !tappedIds.current.has(t.id)))
     }

@@ -28,6 +28,15 @@ export interface CardProgress {
   known_count: number; unknown_count: number; last_seen_at: string
 }
 export interface SessionDraft {
+  scope_id?: string
+  session_id?: string
+  state?: {
+    timerSecsLeft?: number; typedAnswer?: string; sentenceInput?: string; sentenceEntries?: SentenceEntry[]
+    sentenceStatus?: string; sentenceFeedback?: string; sentenceImproved?: string | null
+    sentenceScore?: 'great' | 'good' | 'needs_work' | null
+    learnBatch?: string[]; learnQueue?: string[]; learnGraduated?: string[]; learnScores?: Record<string, number>
+    learnBatchIdx?: number; learnBatchComplete?: boolean; learnBatchSummary?: string[]; learnStoryReady?: boolean
+  }
   id: string; user_id: string; set_id: string; mode: StudyMode
   card_order: string[]; current_index: number
   known_ids: string[]; unknown_ids: string[]
