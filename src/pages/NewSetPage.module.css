@@ -15,15 +15,15 @@
 }
 
 .title {
-  font-size: 22px;
-  font-weight: 600;
+  font-size:var(--text-page);
+  font-weight:400;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-}
+font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
 
 .sub {
-  font-size: 13.5px;
+  font-size:var(--text-body);
   color: var(--text-secondary);
 }
 
@@ -41,7 +41,7 @@
   border: 1px solid var(--border-default);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13.5px;
+  font-size:var(--text-body);
   font-family: var(--font);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
@@ -58,7 +58,7 @@
   border: none;
   background: var(--text-primary);
   color: var(--bg-base);
-  font-size: 13.5px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   transition: opacity var(--transition-fast);
@@ -72,7 +72,7 @@
   background: var(--red-subtle);
   border: 1px solid var(--red-border);
   border-radius: var(--radius-md);
-  font-size: 13px;
+  font-size:var(--text-body);
   color: var(--red-text);
 }
 
@@ -100,7 +100,7 @@
 }
 
 .label {
-  font-size: 12.5px;
+  font-size:var(--text-body);
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -118,7 +118,7 @@
   border: 1px solid var(--border-default);
   background: var(--bg-base);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size:var(--text-body);
   font-family: var(--font);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -152,7 +152,7 @@
 }
 
 .sectionLabel {
-  font-size: 11px;
+  font-size:var(--text-body);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -160,7 +160,7 @@
 }
 
 .cardCount {
-  font-size: 11px;
+  font-size:var(--text-body);
   font-weight: 500;
   background: var(--bg-overlay);
   color: var(--text-secondary);
@@ -190,7 +190,7 @@
 }
 
 .rowNum {
-  font-size: 12px;
+  font-size:var(--text-body);
   color: var(--text-tertiary);
   min-width: 18px;
   padding-top: 10px;
@@ -220,7 +220,7 @@
 }
 
 .fieldLabel {
-  font-size: 10px;
+  font-size:var(--text-body);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -234,7 +234,7 @@
   border: 1px solid transparent;
   background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 13.5px;
+  font-size:var(--text-body);
   font-family: var(--font);
   line-height: 1.5;
   outline: none;
@@ -283,7 +283,7 @@
   border: 1px solid var(--accent-border);
   background: var(--accent-subtle);
   color: var(--accent-text);
-  font-size: 13.5px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   transition: border-color var(--t-fast), background var(--t-fast);
@@ -306,7 +306,7 @@
   border: 1px solid var(--border-default);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 12.5px;
+  font-size:var(--text-body);
   font-family: var(--font);
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
@@ -320,7 +320,7 @@
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .header { flex-direction: column; gap: 12px }
-  .title { font-size: 18px }
+  .title { font-size:var(--text-page);font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
   .headerActions { width: 100% }
   .cancelBtn, .saveBtn { flex: 1; text-align: center; display: flex; justify-content: center }
   .cardRow { flex-direction: column; gap: 8px; padding: 12px 14px }

@@ -1,4 +1,4 @@
-.indicator{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:0;background:none;border:0;color:var(--text-tertiary);font:11px var(--font);white-space:nowrap;cursor:default}
+.indicator{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:0;background:none;border:0;color:var(--text-tertiary);font:var(--text-body) var(--font);white-space:nowrap;cursor:default}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
 .warning{color:var(--text-secondary);cursor:pointer}.warning .dot{background:#c78b28}
 .indicator:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:3px}

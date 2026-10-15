@@ -99,7 +99,7 @@ export default function EditSetPage() {
       {error && (
         <div className={styles.error} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <span>{error}</span>
-          {canRetry && <button onClick={handleSave} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, cursor: 'pointer' }}>Retry</button>}
+          {canRetry && <button onClick={handleSave} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 'var(--text-body)', cursor: 'pointer' }}>Retry</button>}
         </div>
       )}
 

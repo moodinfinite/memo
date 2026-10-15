@@ -33,7 +33,7 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, persistAttempt, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, dismissPersistError, tickTimer, selectMCOption, reshuffleRemaining, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, learnBatch, learnBatchSummary, learnSetId, learnStoryReady, startLearnSession, resetLearn, completeLearnStory } = useStudyStore()
+  const { doShuffle: shuffleOn, mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, persistAttempt, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, dismissPersistError, tickTimer, selectMCOption, toggleShuffle, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, learnBatch, learnBatchSummary, learnSetId, learnStoryReady, startLearnSession, resetLearn, completeLearnStory } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
   const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
@@ -239,7 +239,7 @@ export default function StudyPage() {
   if (!currentSet && error) return (
     <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
       <p style={{ marginBottom: 16 }}>Failed to load set — {error}</p>
-      <button onClick={() => id && fetchSet(id)} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-default)', background: 'var(--bg-raised)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13 }}>Try again</button>
+      <button onClick={() => id && fetchSet(id)} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-default)', background: 'var(--bg-raised)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 'var(--text-body)' }}>Try again</button>
     </div>
   )
   if (!currentSet) return <StudyPageSkeleton />
@@ -356,7 +356,6 @@ export default function StudyPage() {
             {currentSet.title}
           </button>
           <div className={styles.topBarRight}>
-            <div className={styles.modeTag}>Story</div>
             <button className={styles.exitBtn} onClick={completeLearnStory}>Skip</button>
           </div>
         </div>
@@ -386,7 +385,6 @@ export default function StudyPage() {
             {currentSet.title}
           </button>
           <div className={styles.topBarRight}>
-            <div className={styles.modeTag}>Learn</div>
             <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
           </div>
         </div>
@@ -470,7 +468,6 @@ export default function StudyPage() {
             {currentSet.title}
           </button>
           <div className={styles.topBarRight}>
-            <div className={styles.modeTag}>Story</div>
             <button className={styles.exitBtn} onClick={handleEnd}>Done</button>
           </div>
         </div>
@@ -521,11 +518,11 @@ export default function StudyPage() {
             {persistError && !isPersisting && (
               <div className={styles.persistError}>
                 <span style={{ flex: 1 }}>{persistError}</span>
-                <button onClick={retryPersist} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                <button onClick={retryPersist} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 'var(--text-body)', fontWeight: 500, cursor: 'pointer' }}>
                   Retry
                 </button>
                 {persistAttempt >= 2 && (
-                  <button onClick={dismissPersistError} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                  <button onClick={dismissPersistError} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font)', fontSize: 'var(--text-body)', fontWeight: 500, cursor: 'pointer' }}>
                     Dismiss
                   </button>
                 )}
@@ -535,7 +532,7 @@ export default function StudyPage() {
             <div className={styles.summaryActions}>
               <button
                 className={styles.retryBtn}
-                onClick={() => startSession(currentSet.cards, mode, id!, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })}
+                onClick={() => startSession(currentSet.cards, mode, id!, { shuffle: shuffleOn, timerDurMin: timerEnabled ? timerDur : 0 })}
               >
                 Study again
               </button>
@@ -560,8 +557,7 @@ export default function StudyPage() {
         <div className={styles.topBarRight}>
           {(mode === 'flashcard' || mode === 'multiple_choice') && <StudyControls
             startSide={startSide} onToggleSide={mode === 'flashcard' ? () => setStartSide(s => s === 'definition' ? 'term' : 'definition') : undefined}
-            onShuffle={reshuffleRemaining} />}
-          <div className={styles.modeTag}>{MODES.find((m) => m.id === mode)?.label}</div>
+            onShuffle={toggleShuffle} shuffleOn={shuffleOn} />}
           <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
         </div>
       </div>

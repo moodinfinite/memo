@@ -50,7 +50,7 @@ export default function FolderPage() {
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.5 1v11M1 6.5h11"/></svg>
             New set
           </Link>
-          <button onClick={handleDeleteFolder} style={{ height: 36, padding: '0 14px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-tertiary)', fontSize: 13.5, fontFamily: 'var(--font)', cursor: 'pointer' }}>
+          <button onClick={handleDeleteFolder} style={{ height: 36, padding: '0 14px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-tertiary)', fontSize: 'var(--text-body)', fontFamily: 'var(--font)', cursor: 'pointer' }}>
             Delete folder
           </button>
         </div>

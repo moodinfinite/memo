@@ -86,7 +86,7 @@ export default function SetDetailPage() {
   if (error && !currentSet) return (
     <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
       <p style={{ marginBottom: 16 }}>Failed to load set — {error}</p>
-      <button onClick={() => id && fetchSet(id)} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-default)', background: 'var(--bg-raised)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 13 }}>Try again</button>
+      <button onClick={() => id && fetchSet(id)} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-default)', background: 'var(--bg-raised)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 'var(--text-body)' }}>Try again</button>
     </div>
   )
   if (!currentSet) return null
@@ -106,15 +106,15 @@ export default function SetDetailPage() {
   return (
     <div className={styles.page}>
       {isSyncing && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', fontSize: 13, color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', fontSize: 'var(--text-body)', color: 'var(--text-secondary)' }}>
           <svg style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="7" cy="7" r="5" strokeOpacity="0.2"/><path d="M7 2a5 5 0 0 1 5 5" strokeLinecap="round"/></svg>
           Saving your set…
         </div>
       )}
       {syncError && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--red-subtle)', border: '1px solid var(--red-border)', fontSize: 13, color: 'var(--red-text)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--red-subtle)', border: '1px solid var(--red-border)', fontSize: 'var(--text-body)', color: 'var(--red-text)' }}>
           <span>Save failed — your set isn't stored yet</span>
-          <button onClick={() => id && retrySave(id)} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>Retry</button>
+          <button onClick={() => id && retrySave(id)} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontFamily: 'var(--font)', fontSize: 'var(--text-body)', cursor: 'pointer', fontWeight: 500 }}>Retry</button>
         </div>
       )}
       <div className={styles.header}>

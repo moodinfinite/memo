@@ -27,7 +27,7 @@
   align-items: center;
   gap: 12px;
   color: var(--text-tertiary);
-  font-size: 14px;
+  font-size:var(--text-body);
 }
 .spinner {
   animation: spin 0.9s linear infinite;
@@ -40,7 +40,7 @@
   align-items: center;
   gap: 8px;
   color: var(--red-text, #ef4444);
-  font-size: 14px;
+  font-size:var(--text-body);
 }
 
 .storyText {
@@ -91,7 +91,7 @@
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 .floatingSaveWord {
-  font-size: 14px;
+  font-size:var(--text-body);
   font-weight: 500;
   color: var(--text-primary);
   max-width: 160px;
@@ -112,7 +112,7 @@
   border: 1px solid var(--accent-border);
   background: var(--accent-subtle);
   color: var(--accent-text);
-  font-size: 12px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   cursor: pointer;
@@ -161,14 +161,14 @@
 }
 @keyframes tooltipIn { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: none; } }
 .tooltipTerm {
-  font-size: 13px;
+  font-size:var(--text-body);
   font-weight: 600;
   color: var(--accent-text);
   white-space: nowrap;
   padding-top: 1px;
 }
 .tooltipDef {
-  font-size: 13px;
+  font-size:var(--text-body);
   color: var(--text-secondary);
   line-height: 1.5;
   flex: 1;
@@ -190,7 +190,7 @@
   gap: 8px;
 }
 .termsLabel {
-  font-size: 11px;
+  font-size:var(--text-body);
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -206,7 +206,7 @@
   border-radius: 999px;
   border: 1px solid var(--border-default);
   background: var(--bg-raised);
-  font-size: 13px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   color: var(--text-secondary);
@@ -240,7 +240,7 @@
   border: 1px solid var(--border-default);
   background: var(--bg-raised);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   cursor: pointer;
@@ -262,7 +262,7 @@
   border: 1px solid var(--border-default);
   background: var(--bg-raised);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   cursor: pointer;

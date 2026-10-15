@@ -4,7 +4,7 @@
   border-radius: 8px;
   border: 1px solid var(--border-default);
   background: transparent; color: var(--text-secondary);
-  font-size: 13.5px; font-family: var(--font); cursor: pointer;
+  font-size:var(--text-body); font-family: var(--font); cursor: pointer;
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
 .addSetsBtn:hover { background: var(--bg-overlay); color: var(--text-primary); border-color: var(--border-strong) }
@@ -33,7 +33,7 @@
   flex-shrink: 0;
 }
 
-.modalTitle { font-size: 14px; font-weight: 600; color: var(--text-primary) }
+.modalTitle { font-size:var(--text-section); font-weight:600; color: var(--text-primary) }
 
 .modalClose {
   display: flex; align-items: center; justify-content: center;
@@ -54,10 +54,10 @@
 }
 .modalSetRow:hover { background: var(--bg-overlay) }
 
-.modalSetName { font-size: 13.5px; font-weight: 500; color: var(--text-primary) }
+.modalSetName { font-size:var(--text-body); font-weight: 500; color: var(--text-primary) }
 
 .modalSetMeta {
-  font-size: 12px; color: var(--text-tertiary);
+  font-size:var(--text-body); color: var(--text-tertiary);
   display: flex; align-items: center; gap: 5px;
 }
 

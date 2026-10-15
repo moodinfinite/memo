@@ -24,10 +24,10 @@ const TIMER_OPTS = [{ label: '1 min', mins: 1 }, { label: '3 min', mins: 3 }, { 
 
 export default function MasterDeckPage() {
   const {
-    mode, sessionCards, currentIndex, known, unknown, isComplete,
+    doShuffle: shuffleOn, mode, sessionCards, currentIndex, known, unknown, isComplete,
     timerSecsLeft, timerOn, mcStreak,
     startSession, resumeSession, loadProgress, clearProgress, markKnown, markUnknown, resetSession, persistSession,
-    tickTimer, selectMCOption, reshuffleRemaining,
+    tickTimer, selectMCOption, toggleShuffle,
   } = useStudyStore()
 
   const [isStarting, setIsStarting] = useState(false)
@@ -250,7 +250,7 @@ export default function MasterDeckPage() {
             }
             <MasteryChange cards={allCards} label="Overall mastery" />
             <div className={styles.summaryActions}>
-              <button className={styles.retryBtn} onClick={() => { startSession(filteredCards, mode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 }) }}>Study again</button>
+              <button className={styles.retryBtn} onClick={() => { startSession(filteredCards, mode, '__master__', { shuffle: shuffleOn, timerDurMin: timerEnabled ? timerDur : 0 }) }}>Study again</button>
               <button className={styles.changeModeBtn} onClick={handleEnd}>Change mode</button>
             </div>
           </div>
@@ -269,8 +269,7 @@ export default function MasterDeckPage() {
         <div className={styles.topBarRight}>
           {(mode === 'flashcard' || mode === 'multiple_choice') && <StudyControls
             startSide={startSide} onToggleSide={mode === 'flashcard' ? () => setStartSide(s => s === 'definition' ? 'term' : 'definition') : undefined}
-            onShuffle={reshuffleRemaining} />}
-          <div className={styles.modeTag}>{MODES.find(m => m.id === mode)?.label}</div>
+            onShuffle={toggleShuffle} shuffleOn={shuffleOn} />}
           <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
         </div>
       </div>

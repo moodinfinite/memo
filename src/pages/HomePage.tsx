@@ -144,11 +144,16 @@ function SetCard({ set, folderMap, cardSRS, onPin, onNavigate }: {
       <Link to={`/sets/${set.id}`} className={styles.setTitle} aria-label={`${set.title}, ${mastery.pct}% set progress`} onClick={e => e.stopPropagation()}>{set.title}</Link>
       {set.description && <div className={styles.setDesc}>{set.description}</div>}
       {folder && <div className={styles.folderBadge}><span className={styles.folderDot} style={{ background: folder.color }} />{folder.name}</div>}
-      <div className={styles.masteryOverlay} aria-hidden="true">
-        <div className={styles.masteryFill} style={{ width: `${mastery.pct}%` }} />
+      <div className={styles.masteryOverlay} aria-hidden="true" style={{ '--mastery-fill': `${mastery.pct}%` } as React.CSSProperties}>
         <div className={styles.masteryReadout}>
           <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
           <div className={styles.masteryOverlayLabel}>Set progress</div>
+        </div>
+        <div className={styles.masteryFill}>
+          <div className={styles.masteryReadout}>
+            <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
+            <div className={styles.masteryOverlayLabel}>Set progress</div>
+          </div>
         </div>
       </div>
       <div className={styles.setMeta}>

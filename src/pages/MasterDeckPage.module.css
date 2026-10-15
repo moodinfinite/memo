@@ -19,14 +19,14 @@
 }
 
 .title {
-  font-size: 22px;
-  font-weight: 600;
+  font-size:var(--text-page);
+  font-weight:400;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   margin-bottom: 3px;
-}
+font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
 
 .meta {
-  font-size: 13px;
+  font-size:var(--text-body);
   color: var(--text-secondary);
 }

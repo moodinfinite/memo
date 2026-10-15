@@ -22,7 +22,7 @@
 }
 
 .mcLabel {
-  font-size: 10px;
+  font-size:var(--text-body);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -87,7 +87,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size:var(--text-body);
   font-weight: 600;
   color: var(--text-secondary);
   flex-shrink: 0;
@@ -105,7 +105,7 @@
 
 .mcOptionText {
   flex: 1;
-  font-size: 13.5px;
+  font-size:var(--text-body);
   color: var(--text-primary);
   line-height: 1.4;
 }
@@ -143,7 +143,7 @@
 }
 
 .typedLabel {
-  font-size: 10px;
+  font-size:var(--text-body);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -189,7 +189,7 @@
   border: none;
   background: transparent;
   color: var(--text-primary);
-  font-size: 15px;
+  font-size:var(--text-body);
   font-family: var(--font);
   line-height: 1.5;
   resize: none;
@@ -200,7 +200,7 @@
 .typedInput:disabled { opacity: 0.8; }
 
 .typedHint {
-  font-size: 11px;
+  font-size:var(--text-body);
   color: var(--text-tertiary);
   padding: 0 16px 12px;
 }
@@ -210,7 +210,7 @@
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  font-size: 13px;
+  font-size:var(--text-body);
   font-weight: 500;
   border-top: 1px solid transparent;
 }
@@ -236,7 +236,7 @@
 }
 
 .typedCorrectLabel {
-  font-size: 10px;
+  font-size:var(--text-body);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -244,7 +244,7 @@
 }
 
 .typedCorrectText {
-  font-size: 14px;
+  font-size:var(--text-body);
   color: var(--text-primary);
   line-height: 1.5;
 }
@@ -255,7 +255,7 @@
   border: none;
   background: var(--text-primary);
   color: var(--bg-base);
-  font-size: 14px;
+  font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
   cursor: pointer;
@@ -286,16 +286,16 @@
   .mcOptionLetter {
     width: 24px;
     height: 24px;
-    font-size: 11px;
+    font-size:var(--text-body);
   }
   .mcOptionText {
-    font-size: 13px;
+    font-size:var(--text-body);
   }
   .typedTerm {
-    font-size: 17px;
+    font-size:var(--text-body);
   }
   .typedInput {
     padding: 14px;
-    font-size: 14px;
+    font-size:var(--text-body);
   }
 }

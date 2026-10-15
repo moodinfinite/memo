@@ -38,6 +38,7 @@ interface StudyState {
   // ────────────────────────────────────────────────────────────
   mode: StudyMode; setId: string
   sessionCards: Card[]; mcQuestions: MCQuestion[]
+  unshuffledOrder: string[]
   currentIndex: number; known: string[]; unknown: string[]; isComplete: boolean
   doShuffle: boolean; timerOn: boolean; timerDurMin: number; timerSecsLeft: number
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
@@ -65,7 +66,7 @@ interface StudyState {
   markKnown: () => void; markUnknown: () => void; undoLast: () => void
   submitTyped: () => void; setTypedAnswer: (val: string) => void
   selectMCOption: (idx: number) => void
-  reshuffleRemaining: () => void
+  toggleShuffle: () => void
   tickTimer: () => void; resetSession: () => void
   persistSession: () => Promise<void>
   retryPersist: () => Promise<void>
@@ -84,6 +85,7 @@ const initialSession = {
   editingCard: false, masteryBefore: null as Record<string, number> | null,
   sessionId: null as string | null, mode: 'flashcard' as StudyMode, setId: '', sessionCards: [] as Card[], mcQuestions: [] as MCQuestion[],
   currentIndex: 0, known: [] as string[], unknown: [] as string[], isComplete: false,
+  unshuffledOrder: [] as string[],
   doShuffle: false, timerOn: false, timerDurMin: 0, timerSecsLeft: 0,
   typedAnswer: '', typedResult: 'idle' as const, selectedOption: null, mcResult: 'idle' as const, mcStreak: 0, flashStreak: 0,
   isAdvancing: false, lastAction: null, persistError: null, persistAttempt: 0, _lastPersistArgs: null,
@@ -112,10 +114,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     get().saveProgress()
     const due = new Set(useSRSStore.getState().getDueCards(setId, cards))
     let ordered = [...cards.filter(c => due.has(c.id)), ...cards.filter(c => !due.has(c.id))]
+    const unshuffledOrder = ordered.map(c => c.id)
     if (opts.shuffle) ordered = shuffle(ordered)
     set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), masteryBefore: snapshotMastery(), mode, setId, sessionCards: ordered,
       mcQuestions: mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
-      doShuffle: !!opts.shuffle, timerOn: !!opts.timerDurMin, timerDurMin: opts.timerDurMin ?? 0,
+      unshuffledOrder, doShuffle: !!opts.shuffle, timerOn: !!opts.timerDurMin, timerDurMin: opts.timerDurMin ?? 0,
       timerSecsLeft: (opts.timerDurMin ?? 0) * 60 })
     get().saveProgress()
   },
@@ -207,11 +210,19 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       void get()._persist(s.known, s.unknown, s.known.length + s.unknown.length, s.mode, s.setId, true)
     } else get().saveProgress()
   },
-  reshuffleRemaining: () => {
+  toggleShuffle: () => {
     const s = get()
-    if (s.editingCard || s.mcResult !== 'idle' || s.typedResult !== 'idle' || s.isAdvancing) return
-    const cards = [...s.sessionCards.slice(0, s.currentIndex), ...shuffle(s.sessionCards.slice(s.currentIndex))]
-    set({ sessionCards: cards, mcQuestions: s.mode === 'multiple_choice' ? generateMCQuestions(cards) : [] })
+    if (s.editingCard || s.isComplete || s.mcResult !== 'idle' || s.typedResult !== 'idle' || s.isAdvancing) return
+    const doShuffle = !s.doShuffle
+    // Keep the visible question and completed answers in place when switching modes.
+    const start = s.currentIndex + 1
+    const remaining = s.sessionCards.slice(start)
+    const order = new Map(s.unshuffledOrder.map((id, index) => [id, index]))
+    const upcoming = doShuffle ? shuffle(remaining) : remaining.sort((a, b) =>
+      (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER))
+    const cards = [...s.sessionCards.slice(0, start), ...upcoming]
+    const questions = new Map(s.mcQuestions.map(question => [question.card.id, question]))
+    set({ doShuffle, sessionCards: cards, mcQuestions: s.mode === 'multiple_choice' ? cards.map(card => questions.get(card.id)!) : [] })
     get().saveProgress()
   },
   setSentenceInput: val => { set({ sentenceInput: val, sentenceError: null }); get().saveProgress() },
@@ -255,6 +266,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const s = get(), user = useAuthStore.getState().user
     if (!user || !s.sessionId || !s.setId || !s.sessionCards.length || s.isComplete) return
     const state = {
+      unshuffledOrder: s.unshuffledOrder,
       masteryBefore: s.masteryBefore, timerSecsLeft: s.timerSecsLeft, sentenceInput: s.sentenceInput, sentenceEntries: s.sentenceEntries,
       sentenceStatus: s.sentenceStatus === 'submitting' ? 'idle' : s.sentenceStatus,
       sentenceFeedback: s.sentenceFeedback, sentenceImproved: s.sentenceImproved, sentenceScore: s.sentenceScore,
@@ -314,6 +326,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const learning = draft.mode === 'learn'
     set({ ...initialSession, ...initialLearn, sessionId: draft.session_id ?? draft.id ?? crypto.randomUUID(),
       masteryBefore: state.masteryBefore ?? null, setId: scope, mode: draft.mode, sessionCards: ordered, known, unknown, currentIndex: index,
+      unshuffledOrder: (state.unshuffledOrder ?? cards.map(card => card.id)).filter(id => byId.has(id)),
       isComplete: !learning && index >= ordered.length, doShuffle: draft.do_shuffle,
       mcQuestions: draft.mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
       timerOn: draft.timer_dur_min > 0, timerDurMin: draft.timer_dur_min,

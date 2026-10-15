@@ -1,6 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { harness, cards } from './helpers.mjs';
+const same = (actual, expected) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), JSON.parse(JSON.stringify(expected)));
+
+test('shuffle toggles persist and restore upcoming order without moving current or completed questions',async()=>{
+ const h=harness();h.study.getState().startSession(cards,'multiple_choice','deck');
+ const original=h.study.getState().sessionCards.map(c=>c.id);
+ h.study.getState().selectMCOption(h.study.getState().mcQuestions[0].correctIndex);await h.runTimers(1000);await h.runTimers(400);
+ const before=h.study.getState(),current=before.mcQuestions[before.currentIndex];
+ h.study.getState().toggleShuffle();
+ const shuffled=h.study.getState();assert.equal(shuffled.doShuffle,true);
+ assert.equal(shuffled.sessionId,before.sessionId);assert.equal(shuffled.currentIndex,before.currentIndex);
+ same(shuffled.known,before.known);assert.equal(shuffled.mcQuestions[shuffled.currentIndex],current);
+ same(shuffled.sessionCards.slice(0,before.currentIndex+1),before.sessionCards.slice(0,before.currentIndex+1));
+ same([...shuffled.sessionCards.map(c=>c.id)].sort(),[...original].sort());
+ const draft=await h.study.getState().loadProgress('deck');assert.equal(draft.do_shuffle,true);
+ same(draft.state.unshuffledOrder,original);
+ const next=harness(h.storage);next.study.getState().resumeSession(draft,cards);assert.equal(next.study.getState().doShuffle,true);
+ next.study.getState().toggleShuffle();assert.equal(next.study.getState().doShuffle,false);
+ same(next.study.getState().sessionCards.map(c=>c.id),original);
+ same(next.study.getState().mcQuestions.map(q=>q.card.id),original);
+ assert.equal((await next.study.getState().loadProgress('deck')).do_shuffle,false);
+});
+
+test('shuffle respects feedback and edit locks and supports older drafts',async()=>{
+ const h=harness();h.study.getState().startSession(cards,'multiple_choice','deck',{shuffle:true});
+ h.study.setState({editingCard:true});h.study.getState().toggleShuffle();assert.equal(h.study.getState().doShuffle,true);
+ h.study.setState({editingCard:false});h.study.getState().selectMCOption(0);h.study.getState().toggleShuffle();
+ assert.equal(h.study.getState().doShuffle,true);await h.runTimers(1000);await h.runTimers(400);
+ const draft=await h.study.getState().loadProgress('deck');delete draft.state.unshuffledOrder;
+ h.study.getState().resumeSession(draft,cards);const prefix=h.study.getState().sessionCards.slice(0,h.study.getState().currentIndex+1);
+ h.study.getState().toggleShuffle();const after=h.study.getState();
+ assert.equal(after.doShuffle,false);same(after.sessionCards.slice(0,prefix.length),prefix);
+ same(after.sessionCards.slice(prefix.length).map(c=>c.id),cards.filter(c=>!prefix.some(p=>p.id===c.id)).map(c=>c.id));
+});
 
 test('quick edit updates only the intended card and preserves position, answers, and mastery',async()=>{
  const h=harness();h.study.getState().startSession(cards,'flashcard','deck');h.study.getState().markKnown();await h.runTimers(400);
