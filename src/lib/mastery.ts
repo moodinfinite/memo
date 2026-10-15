@@ -3,7 +3,9 @@ import type { CardSRS } from '@/store/srsStore'
 export interface SetMastery {
   level: MasteryLevel   // floor of average level across all cards
   pct: number           // % of cards studied at least once (level 1+)
-  seenCount: number     // how many cards have an SRS record
+  seenCount: number     // cards currently at level 1+
+  masteredCount: number
+  learningCount: number
 }
 
 export type MasteryLevel = 0 | 1 | 2 | 3 | 4
@@ -37,15 +39,18 @@ export function getMasteryLevel(srs: CardSRS | null | undefined): MasteryLevel {
  * Compute overall mastery for a whole set.
  * Unseen cards (no SRS record) count as level 0.
  */
-export function getSetMastery(setId: string, cardCount: number, cardSRS: Record<string, CardSRS>): SetMastery {
-  if (cardCount === 0) return { level: 0, pct: 0, seenCount: 0 }
-  const records = Object.values(cardSRS).filter(s => s.set_id === setId)
-  const seenCount = records.length
-  const totalLevel = records.reduce((sum, srs) => sum + getMasteryLevel(srs), 0)
-  const avgLevel = totalLevel / cardCount  // unseen cards contribute 0
-  const level = Math.min(4, Math.floor(avgLevel)) as MasteryLevel
-  const pct = Math.round((seenCount / cardCount) * 100)
-  return { level, pct, seenCount }
+export function getSetMastery(setId: string, cardCount: number, cardSRS: Record<string, CardSRS>, cardIds?: string[]): SetMastery {
+  const ids = cardIds ? new Set(cardIds) : null
+  const total = ids ? ids.size : Math.max(0, cardCount)
+  const levels = Object.entries(cardSRS)
+    .filter(([id, s]) => s.set_id === setId && (!ids || ids.has(id)))
+    .map(([, s]) => getMasteryLevel(s))
+  const masteredCount = Math.min(total, levels.filter(level => level >= 3).length)
+  const learningCount = Math.min(total - masteredCount, levels.filter(level => level >= 1 && level <= 2).length)
+  const seenCount = masteredCount + learningCount
+  const level = total ? Math.min(4, Math.floor(levels.reduce((sum, level) => sum + level, 0) / total)) as MasteryLevel : 0
+  const pct = total ? Math.round(seenCount / total * 100) : 0
+  return { level, pct, seenCount, masteredCount, learningCount }
 }
 
 export const MASTERY_INFO: Record<MasteryLevel, MasteryInfo> = {

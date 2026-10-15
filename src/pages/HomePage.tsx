@@ -5,7 +5,7 @@ import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
 import { useProgressStore, localDayStr } from '@/store/progressStore'
 import { useSRSStore } from '@/store/srsStore'
-import { getSetMastery, MASTERY_INFO } from '@/lib/mastery'
+import { getSetMastery } from '@/lib/mastery'
 import type { FlashcardSet } from '@/lib/database.types'
 import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import styles from './HomePage.module.css'
@@ -198,32 +198,24 @@ function SetCard({ set, folderMap, cardSRS, onPin, onNavigate }: {
   const folder = set.folder_id ? folderMap.get(set.folder_id) : undefined
   const cardCount = set.cardCount ?? 0
   const mastery = getSetMastery(set.id, cardCount, cardSRS)
-  const info = MASTERY_INFO[mastery.level]
   return (
     <div className={`${styles.setCard}${set.pinned ? ' ' + styles.pinnedCard : ''}`} onClick={onNavigate}>
       <button className={`${styles.pinBtn}${set.pinned ? ' ' + styles.pinBtnActive : ''}`} onClick={(e) => { e.stopPropagation(); onPin() }} title={set.pinned ? 'Unpin' : 'Pin'}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill={set.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5"><path d="M9 1L5 5H2l2 2-3 5 5-3 2 2V8l4-4z"/></svg>
       </button>
-      <div className={styles.setTitle}>{set.title}</div>
+      <Link to={`/sets/${set.id}`} className={styles.setTitle} aria-label={`${set.title}, ${mastery.pct}% set progress`} onClick={e => e.stopPropagation()}>{set.title}</Link>
       {set.description && <div className={styles.setDesc}>{set.description}</div>}
       {folder && <div className={styles.folderBadge}><span className={styles.folderDot} style={{ background: folder.color }} />{folder.name}</div>}
-      <div className={styles.masteryOverlay} style={{
-        background: mastery.pct === 0
-          ? 'rgba(15,15,15,0.78)'
-          : `rgba(${Math.round(15 - mastery.pct * 0.1)}, ${Math.round(25 + mastery.pct * 0.18)}, ${Math.round(10 - mastery.pct * 0.05)}, ${0.72 + mastery.pct * 0.002})`
-      }}>
-        <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
-        <div className={styles.masteryOverlayLabel}>{mastery.pct === 0 ? 'Not started' : `of ${cardCount} cards studied`}</div>
-        {mastery.pct > 0 && mastery.pct < 100 && (
-          <div className={styles.masteryOverlayBar}>
-            <div className={styles.masteryOverlayFill} style={{ width: `${mastery.pct}%`, background: `hsl(${80 + mastery.pct * 0.2}, ${60 + mastery.pct * 0.3}%, 50%)` }} />
-          </div>
-        )}
-        {mastery.pct === 100 && <div className={styles.masteryOverlayComplete}>All cards covered ✓</div>}
+      <div className={styles.masteryOverlay} aria-hidden="true">
+        <div className={styles.masteryFill} style={{ width: `${mastery.pct}%` }} />
+        <div className={styles.masteryReadout}>
+          <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
+          <div className={styles.masteryOverlayLabel}>Set progress</div>
+        </div>
       </div>
       <div className={styles.setMeta}>
         <span className={styles.setCount}>{cardCount} cards</span>
-        <Link to={`/sets/${set.id}/study`} className={styles.studyBtn} onClick={(e) => e.stopPropagation()}>Study</Link>
+        <span className={styles.touchProgress}>{mastery.pct}% progress</span>
       </div>
     </div>
   )

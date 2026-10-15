@@ -51,3 +51,20 @@ test('mastery comparison survives refresh and distinguishes gains, losses, and n
  assert.deepEqual(h.study.getState().masteryBefore,baseline);
  h.study.getState().resumeSession({...draft,state:{}},cards);assert.equal(h.study.getState().masteryBefore,null);
 });
+
+test('Home and set detail agree on progress after missed answers, with empty and full sets handled',()=>{
+ const {load}=harness();const {getSetMastery}=load('src/lib/mastery.ts');
+ const records={
+  a:{set_id:'deck',repetitions:0,interval:1},
+  b:{set_id:'deck',repetitions:1,interval:1},
+  c:{set_id:'deck',repetitions:4,interval:21},
+  other:{set_id:'other',repetitions:4,interval:21},
+ };
+ const home=getSetMastery('deck',4,records),detail=getSetMastery('deck',4,records,['a','b','c','d']);
+ assert.equal(home.pct,50);assert.equal(home.pct,detail.pct);
+ assert.equal(detail.learningCount,1);assert.equal(detail.masteredCount,1);
+ assert.equal(getSetMastery('deck',0,records).pct,0);
+ assert.equal(getSetMastery('deck',2,records,['b','c']).pct,100);
+ assert.equal(getSetMastery('deck',4,{},['a','b','c','d']).pct,0);
+ assert.equal(getSetMastery('deck',1,records,['a']).pct,0);
+});

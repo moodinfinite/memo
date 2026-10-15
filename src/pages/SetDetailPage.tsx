@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
 import { useSRSStore } from '@/store/srsStore'
-import { getMasteryLevel, MASTERY_INFO } from '@/lib/mastery'
+import { getMasteryLevel, getSetMastery, MASTERY_INFO } from '@/lib/mastery'
 import { SetDetailSkeleton } from '@/components/ui/Skeleton'
 import styles from './SetDetailPage.module.css'
 
@@ -94,8 +94,8 @@ export default function SetDetailPage() {
   const cards = currentSet.cards ?? []
   const cardsLoading = cards.length === 0 && (currentSet.cardCount ?? 0) > 0
   const total = cards.length
-  const masteredCount = cards.filter(c => getMasteryLevel(cardSRS[c.id]) >= 3).length
-  const learningCount = cards.filter(c => { const l = getMasteryLevel(cardSRS[c.id]); return l >= 1 && l <= 2 }).length
+  const progress = getSetMastery(currentSet.id, total, cardSRS, cards.map(card => card.id))
+  const { masteredCount, learningCount } = progress
   const untouchedCount = total - masteredCount - learningCount
   const masteredPct = total > 0 ? (masteredCount / total) * 100 : 0
   const learningPct = total > 0 ? (learningCount / total) * 100 : 0
@@ -167,7 +167,7 @@ export default function SetDetailPage() {
       <div className={styles.progressSummary}>
         <div className={styles.progressSummaryTop}>
           <span className={styles.progressSummaryTitle}>Set progress</span>
-          <span className={styles.progressSummaryPct}>{Math.round(masteredPct + learningPct)}% studied</span>
+          <span className={styles.progressSummaryPct}>{progress.pct}% studied</span>
         </div>
         <div className={styles.progressBar}>
           <div className={styles.progressBarMastered} style={{ width: `${masteredPct}%` }} />
