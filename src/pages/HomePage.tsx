@@ -41,8 +41,6 @@ export default function HomePage() {
     if (val.trim()) searchSets(val.trim()); else fetchSets()
   }
 
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const firstName = profile?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there'
   const folderMap = useMemo(() => new Map(folders.map(f => [f.id, f])), [folders])
   const pinned = sets.filter((s) => s.pinned)
@@ -69,18 +67,7 @@ export default function HomePage() {
           <button onClick={() => setDataError(null)}>✕</button>
         </div>
       )}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.greeting}>{greeting}, {firstName}</h1>
-          <p className={styles.sub}>{sets.length === 0 && !query ? 'Create your first set to get started' : `${sets.length} set${sets.length === 1 ? '' : 's'} · ${totalCards} cards`}</p>
-        </div>
-        <Link to="/sets/new" className={styles.newBtn}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.5 1v11M1 6.5h11"/></svg>
-          New set
-        </Link>
-      </div>
-
-      <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0} />
+      <DailyAlmanac firstName={firstName} studiedDays={studiedDays} ready={progressLastFetched > 0} />
 
       <div className={styles.statsRow}>
         <div className={styles.statCard}><div className={styles.statLabel}>Cards studied total</div><div className={styles.statValue}>{totalCardsStudied.toLocaleString()}</div><div className={styles.statSub}>across all sessions</div></div>

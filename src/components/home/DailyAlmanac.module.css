@@ -1,6 +1,10 @@
 .calendar{--paper:#faf9f3;--ink:#193d2d;--muted:#626c60;--red:#a83429;--green:#24623e;--line:#c9cdbf;--cell:#eeefe7;background:var(--paper);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 0 var(--paper),0 5px 0 var(--line);margin-bottom:5px}
 :global([data-theme="dark"]) .calendar{--paper:#22251f;--ink:#d1e2d5;--muted:#b1b9ab;--red:#ef9487;--green:#b2d88e;--line:#495143;--cell:#30372b}
-.binding{display:flex;justify-content:space-between;gap:16px;padding:14px 24px;background:#a83429;color:#fff8ec;font-size:11px;letter-spacing:2px}
+.binding{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 18px;padding:16px 24px;background:#a83429;color:#fff8ec}
+.greeting{font-size:clamp(18px,2.5vw,22px);font-weight:600;line-height:1.3;letter-spacing:-0.02em;overflow-wrap:anywhere;flex:1;min-width:180px}
+.newSet{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:7px 12px;border:1px solid #ffffff66;border-radius:5px;background:#ffffff12;color:#fff8ec;font-size:13px;font-weight:500;white-space:nowrap}
+.newSet:hover{background:#ffffff26}
+.newSet:focus-visible{outline:2px solid #fff8ec;outline-offset:3px}
 .body{display:grid;grid-template-columns:minmax(220px,38%) minmax(0,1fr)}
 .dateLeaf{text-align:center;padding:26px 24px 22px;border-right:1px solid var(--line)}
 .dateLeaf time{display:flex;flex-direction:column;align-items:center;font-family:Georgia,'Times New Roman',serif}
@@ -31,4 +35,4 @@
 .legend{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:15px;font-size:11px;color:var(--muted)}
 .footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 24px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
 @media(max-width:650px){.body{grid-template-columns:1fr}.dateLeaf{border-right:0;border-bottom:1px solid var(--line);padding:18px 20px}.date{font-size:108px}.month{font-size:19px}.chinese{font-size:24px}.weekday{font-size:17px}.streak{margin-top:15px;padding-top:13px}.streak strong{font-size:38px}.activity{padding:20px}.binding,.footer{padding:13px 20px}.grid{gap:5px}}
-@media(pointer:coarse){.toggle button{min-height:44px;padding:8px 12px}}
+@media(pointer:coarse){.newSet{min-height:44px}.toggle button{min-height:44px;padding:8px 12px}}

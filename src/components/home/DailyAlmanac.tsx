@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { calendarDayKey, calendarDays, calendarStreak, type CalendarView } from '@/lib/calendar'
 import styles from './DailyAlmanac.module.css'
 
@@ -6,7 +7,7 @@ const preferenceKey = 'memo-calendar-view'
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const chineseWeekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
 
-export default function DailyAlmanac({ studiedDays, ready }: { studiedDays: string[]; ready: boolean }) {
+export default function DailyAlmanac({ firstName, studiedDays, ready }: { firstName: string; studiedDays: string[]; ready: boolean }) {
   const [today, setToday] = useState(() => new Date())
   const [view, setView] = useState<CalendarView>(() => {
     try { return localStorage.getItem(preferenceKey) === 'month' ? 'month' : 'week' }
@@ -36,6 +37,7 @@ export default function DailyAlmanac({ studiedDays, ready }: { studiedDays: stri
     setView(next)
     try { localStorage.setItem(preferenceKey, next) } catch { /* View still works without device storage. */ }
   }
+  const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening'
   const todayKey = calendarDayKey(today)
   const studied = new Set(studiedDays)
   const streak = calendarStreak(studiedDays, today)
@@ -49,7 +51,10 @@ export default function DailyAlmanac({ studiedDays, ready }: { studiedDays: stri
     : `${shortDate(days[0]!)} – ${shortDate(days[6]!)}${days[0]!.getFullYear() !== days[6]!.getFullYear() ? ` · ${days[0]!.getFullYear()}/${days[6]!.getFullYear()}` : ''}`
 
   return <section className={styles.calendar} aria-label="Your study calendar">
-    <div className={styles.binding}><span>MEMO <span aria-hidden="true">· 每日學習</span></span><span>{today.getFullYear()}</span></div>
+    <div className={styles.binding}>
+      <h1 className={styles.greeting}>{greeting}, {firstName}</h1>
+      <Link to="/sets/new" className={styles.newSet}><span aria-hidden="true">＋</span> New set</Link>
+    </div>
     <div className={styles.body}>
       <div className={styles.dateLeaf}>
         <time dateTime={todayKey} aria-label={dateLabel}>
