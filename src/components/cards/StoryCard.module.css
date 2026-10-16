@@ -39,7 +39,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--red-text, #ef4444);
+  color: var(--red-text);
   font-size:var(--text-body);
 }
 
@@ -63,7 +63,7 @@
   transition: background 0.15s;
 }
 .highlight:hover, .highlightActive {
-  background: rgba(132, 204, 22, 0.22);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 /* ── Save-to-deck snackbar (fixed bottom center) ── */
@@ -99,9 +99,9 @@
   text-overflow: ellipsis;
 }
 .floatingSaveError {
-  border-color: var(--red-border, #f87171);
+  border-color: var(--red-border);
   background: var(--bg-raised);
-  color: var(--red-text, #ef4444);
+  color: var(--red-text);
 }
 .floatingSaveBtn {
   display: inline-flex;
@@ -126,9 +126,9 @@
   color: var(--accent-text);
 }
 .floatingSaveBtnRetry {
-  border-color: var(--red-border, #f87171);
-  background: rgba(239,68,68,0.08);
-  color: var(--red-text, #ef4444);
+  border-color: var(--red-border);
+  background: color-mix(in srgb, var(--ink-red) 8%, transparent);
+  color: var(--red-text);
 }
 .floatingSaveSpinner {
   animation: spin 0.8s linear infinite;

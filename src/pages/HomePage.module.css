@@ -2,7 +2,7 @@
 .header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .greeting{font-size:var(--text-page);font-weight:600;color:var(--text-primary);letter-spacing:-0.02em;margin-bottom:4px}
 .sub{font-size:var(--text-body);color:var(--text-secondary)}
-.newBtn{display:flex;align-items:center;gap:7px;padding:8px 16px;background:var(--text-primary);color:var(--bg-base);border-radius:var(--r-md);font-size:var(--text-body);font-weight:500;white-space:nowrap;transition:opacity var(--t-fast);flex-shrink:0}
+.newBtn{display:flex;align-items:center;gap:7px;padding:8px 16px;background:var(--primary);color:var(--on-primary);border-radius:var(--r-md);font-size:var(--text-body);font-weight:500;white-space:nowrap;transition:opacity var(--t-fast);flex-shrink:0}
 .newBtn:hover{opacity:0.82}
 .statsRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .statCard{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:14px 16px}
@@ -13,7 +13,7 @@
 .searchIcon{position:absolute;left:12px;color:var(--text-tertiary);pointer-events:none}
 .searchInput{width:100%;height:38px;padding:0 36px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-primary);font-size:var(--text-body);font-family:var(--font);outline:none;transition:border-color var(--t-fast),box-shadow var(--t-fast)}
 .searchInput::placeholder{color:var(--text-tertiary)}
-.searchInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(132,204,22,0.15)}
+.searchInput:focus{border-color:var(--accent);box-shadow: var(--focus-ring)}
 .searchClear{position:absolute;right:10px;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:none;background:var(--bg-overlay);color:var(--text-tertiary);cursor:pointer;transition:background var(--t-fast)}
 .searchClear:hover{background:var(--border-default)}
 .loading{font-size:var(--text-body);color:var(--text-tertiary);padding:48px 0;text-align:center}
@@ -21,7 +21,7 @@
 .emptyIcon{width:52px;height:52px;border-radius:var(--r-lg);background:var(--bg-overlay);display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);margin-bottom:6px}
 .emptyTitle{font-size:var(--text-section);font-weight:600;color:var(--text-primary)}
 .emptySub{font-size:var(--text-body);color:var(--text-secondary);margin-bottom:8px}
-.emptyBtn{display:inline-block;padding:8px 18px;background:var(--text-primary);color:var(--bg-base);border-radius:var(--r-md);font-size:var(--text-body);font-weight:500;transition:opacity var(--t-fast)}
+.emptyBtn{display:inline-block;padding:8px 18px;background:var(--primary);color:var(--on-primary);border-radius:var(--r-md);font-size:var(--text-body);font-weight:500;transition:opacity var(--t-fast)}
 .emptyBtn:hover{opacity:0.82}
 .sectionLabel{font-size:var(--text-section);font-weight:600;text-transform:none;letter-spacing:0;color:var(--text-tertiary)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
@@ -40,7 +40,7 @@
 .studyBtn{font-size:var(--text-body);font-weight:500;color:var(--accent-text);background:var(--accent-subtle);border:1px solid var(--accent-border);border-radius:var(--r-sm);padding:3px 10px;transition:background var(--t-fast)}
 .studyBtn:hover{background:var(--accent-border)}
 .dataErrorBanner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--red-subtle);border:1px solid var(--red-border);border-radius:var(--r-md);font-size:var(--text-body);color:var(--red-text)}
-.dataErrorBanner button{background:none;border:none;color:var(--red-text);cursor:pointer;font-size:var(--text-body);opacity:0.7;flex-shrink:0}
+.dataErrorBanner button{background:none;border:none;color:var(--red-text);cursor:pointer;font-size:var(--text-body);flex-shrink:0}
 .dataErrorBanner button:hover{opacity:1}
 .masteryOverlay{
   position:absolute;inset:0;background:var(--bg-overlay);
@@ -48,7 +48,7 @@
   opacity:0;transition:opacity 0.18s ease;pointer-events:none;z-index:2;
 }
 .setCard:hover .masteryOverlay,.setCard:focus-within .masteryOverlay{opacity:1}
-.masteryFill{position:absolute;inset:0;background:#24613d;color:#fff;display:flex;align-items:center;justify-content:center;clip-path:inset(0 calc(100% - var(--mastery-fill)) 0 0)}
+.masteryFill{position:absolute;inset:0;background:var(--accent-text);color:var(--on-accent);display:flex;align-items:center;justify-content:center;clip-path:inset(0 calc(100% - var(--mastery-fill)) 0 0)}
 .masteryReadout{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;color:inherit}
 .masteryOverlayPct{font-family:var(--font-display);font-size:var(--text-page);font-weight:400;letter-spacing:-0.03em;line-height:1}
 .masteryOverlayLabel{font-size:var(--text-body);color:inherit;font-weight:500}
@@ -75,7 +75,7 @@
 .masterCard:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(132, 204, 22, 0.12);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .masterBadge {
   display: inline-flex;

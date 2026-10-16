@@ -21,10 +21,10 @@ function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
   const { description } = MASTERY_INFO[level]
   return (
     <div className={styles.starWrap}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill={color}>
+      <svg width="20" height="20" viewBox="0 0 24 24" style={{ fill: color }}>
         <path d={d} />
       </svg>
-      <span className={styles.starLevel} style={{ color }}>{level}</span>
+      <span className={styles.starLevel}>{level}</span>
       <div className={styles.starTooltip}>
         <strong>{label}</strong> · Level {level}<br />
         <span>{description}</span>

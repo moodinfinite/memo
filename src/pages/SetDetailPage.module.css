@@ -51,8 +51,8 @@ font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
   height: 36px;
   padding: 0 16px;
   border-radius: var(--radius-md);
-  background: var(--text-primary);
-  color: var(--bg-base);
+  background: var(--primary);
+  color: var(--on-primary);
   font-size:var(--text-body);
   font-weight: 500;
   display: flex;
@@ -248,14 +248,14 @@ font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
 }
 .progressBarMastered {
   height: 100%;
-  background: #84cc16;
+  background: var(--accent-text);
   border-radius: 4px 0 0 4px;
   transition: width 0.5s ease;
   flex-shrink: 0;
 }
 .progressBarLearning {
   height: 100%;
-  background: #f59e0b;
+  background: var(--mastery-2);
   transition: width 0.5s ease;
   flex-shrink: 0;
 }
@@ -263,8 +263,8 @@ font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
   display: flex;
   gap: 16px;
 }
-.legendMastered { font-size:var(--text-body); color: #84cc16; }
-.legendLearning  { font-size:var(--text-body); color: #f59e0b; }
+.legendMastered { font-size:var(--text-body); color: var(--red-text); }
+.legendLearning  { font-size:var(--text-body); color: var(--accent-text); }
 .legendUntouched { font-size:var(--text-body); color: var(--text-tertiary); }
 
 /* ── Starburst badge ── */
@@ -281,6 +281,7 @@ font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
   font-size:var(--text-body);
   font-weight: 700;
   line-height: 1;
+  color: var(--text-secondary);
 }
 .starTooltip {
   position: absolute;

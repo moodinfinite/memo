@@ -25,12 +25,11 @@
 .modeOptions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:400px}
 .modeOption{padding:14px 18px;border-radius:var(--r-lg);border:1px solid var(--border-default);background:var(--bg-raised);cursor:pointer;text-align:left;font-family:var(--font);transition:border-color 0.15s,background 0.15s;width:100%}
 .modeOption:hover:not(.modeDisabled){border-color:var(--border-strong);background:var(--bg-overlay)}
-.modeSelected{border-color:var(--accent)!important;background:var(--accent-subtle)!important;box-shadow:0 0 0 3px rgba(132,204,22,0.12)}
+.modeSelected{border-color:var(--accent)!important;background:var(--accent-subtle)!important;box-shadow: var(--focus-ring)}
 .modeDisabled{opacity:0.4;cursor:not-allowed}
 .modeLabel{font-size:var(--text-body);font-weight:500;color:var(--text-primary);margin-bottom:2px}
 .modeDesc{font-size:var(--text-body);color:var(--text-secondary)}
-.modeSelected .modeLabel,.modeSelected .modeDesc{color:var(--accent-text)}
-.modeSelected .modeDesc{opacity:0.7}
+.modeSelected .modeLabel{color:var(--accent-text)}
 
 /* Start-side expand row (inside flashcard mode button) */
 .startSideRow {
@@ -60,7 +59,7 @@
   white-space: nowrap;
   margin-right: 2px;
 }
-.modeSelected .startSideLabel { color: var(--accent-text); opacity: 0.55; }
+.modeSelected .startSideLabel { color: var(--text-secondary); }
 .startSidePill {
   padding: 4px 11px;
   border-radius: 6px;
@@ -74,7 +73,7 @@
 .startSidePill:hover { border-color: var(--border-strong); color: var(--text-primary); }
 .startSidePillActive {
   border-color: var(--accent-border) !important;
-  background: rgba(132,204,22,0.14) !important;
+  background: var(--bg-raised) !important;
   color: var(--accent-text) !important;
 }
 /* non-selected hover state: keep pills subtle */
@@ -88,14 +87,14 @@
 .sessionOptActive{border-color:var(--accent)!important;background:var(--accent-subtle)!important;color:var(--accent-text)!important}
 .sessionOptLabel{font-weight:500;font-size:var(--text-body)}
 .sessionOptDesc{font-size:var(--text-body);color:var(--text-tertiary)}
-.sessionOptActive .sessionOptDesc{color:var(--accent-text);opacity:0.7}
+.sessionOptActive .sessionOptDesc{color:var(--text-secondary)}
 
 /* Timer picker */
 .timerPicker{display:flex;gap:6px;width:100%;max-width:400px}
 .timerOpt{flex:1;padding:8px 4px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-raised);font-size:var(--text-body);font-weight:500;font-family:var(--font);color:var(--text-secondary);cursor:pointer;text-align:center;transition:border-color 0.15s,background 0.15s}
 .timerOpt:hover{border-color:var(--border-strong)}
 .timerOptSelected{border-color:var(--accent)!important;background:var(--accent-subtle)!important;color:var(--accent-text)!important}
-.startBtn{width:100%;max-width:400px;padding:13px;border-radius:var(--r-md);border:none;background:var(--text-primary);color:var(--bg-base);font-size:var(--text-body);font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
+.startBtn{width:100%;max-width:400px;padding:13px;border-radius:var(--r-md);border:none;background:var(--primary);color:var(--on-primary);font-size:var(--text-body);font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
 .startBtn:hover{opacity:0.82}
 
 /* Mastery filter */
@@ -105,7 +104,7 @@
 .masteryOpt{flex:1;padding:7px 4px;border-radius:var(--r-md);border:1px solid var(--border-default);background:var(--bg-raised);font-size:var(--text-body);font-weight:500;font-family:var(--font);color:var(--text-secondary);cursor:pointer;text-align:center;transition:border-color 0.15s,background 0.15s;white-space:nowrap}
 .masteryOpt:hover{border-color:var(--border-strong);color:var(--text-primary)}
 .masteryOptActive{border-color:var(--accent)!important;background:var(--accent-subtle)!important;color:var(--accent-text)!important}
-.masteryOptCount{opacity:0.6;font-weight:400}
+.masteryOptCount{font-weight:400}
 
 /* Resume prompt */
 .resumePrompt{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 0;text-align:center}
@@ -153,7 +152,7 @@
 .checkpointSaved{display:flex;align-items:center;justify-content:center;gap:6px;font-size:var(--text-body);color:var(--accent-text);padding:10px 0 4px}
 
 .summaryActions{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:12px}
-.retryBtn{width:100%;padding:11px;border-radius:var(--r-md);background:var(--text-primary);color:var(--bg-base);font-size:var(--text-body);font-weight:500;border:none;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
+.retryBtn{width:100%;padding:11px;border-radius:var(--r-md);background:var(--primary);color:var(--on-primary);font-size:var(--text-body);font-weight:500;border:none;font-family:var(--font);cursor:pointer;transition:opacity var(--t-fast)}
 .retryBtn:hover{opacity:0.82}
 .changeModeBtn{width:100%;padding:11px;border-radius:var(--r-md);background:transparent;color:var(--text-secondary);font-size:var(--text-body);border:1px solid var(--border-default);font-family:var(--font);cursor:pointer;transition:background var(--t-fast),color var(--t-fast)}
 .changeModeBtn:hover{background:var(--bg-overlay);color:var(--text-primary)}
@@ -163,9 +162,9 @@
 /* Streak burst overlay */
 .burstOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:60;pointer-events:none;animation:burstOverlayAnim 2s ease-out forwards}
 @keyframes burstOverlayAnim{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
-.burstRing{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(132,204,22,0.22) 0%,transparent 60%);animation:burstRingAnim 2s ease-out forwards}
+.burstRing{position:absolute;inset:0;background:radial-gradient(circle at center,color-mix(in srgb, var(--ink-red) 22%, transparent) 0%,transparent 60%);animation:burstRingAnim 2s ease-out forwards}
 @keyframes burstRingAnim{0%{transform:scale(0.1);opacity:0}10%{opacity:1}100%{transform:scale(2.4);opacity:0}}
-.burstRing2{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(132,204,22,0.10) 0%,transparent 50%);animation:burstRingAnim 2s ease-out forwards;animation-delay:0.12s}
+.burstRing2{position:absolute;inset:0;background:radial-gradient(circle at center,color-mix(in srgb, var(--ink-red) 10%, transparent) 0%,transparent 50%);animation:burstRingAnim 2s ease-out forwards;animation-delay:0.12s}
 .burstContent{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;animation:burstContentAnim 2s ease-out forwards}
 @keyframes burstContentAnim{0%{opacity:0;transform:scale(0.5)}10%{opacity:1;transform:scale(1.08)}18%{transform:scale(1)}72%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
 .burstStreak{font-size:var(--text-body);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent-text);background:var(--accent-subtle);border:1px solid var(--accent-border);padding:3px 12px;border-radius:20px}

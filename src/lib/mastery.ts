@@ -54,11 +54,11 @@ export function getSetMastery(setId: string, cardCount: number, cardSRS: Record<
 }
 
 export const MASTERY_INFO: Record<MasteryLevel, MasteryInfo> = {
-  0: { level: 0, label: 'Unseen',     color: '#94a3b8', description: 'Not studied yet' },
-  1: { level: 1, label: 'Introduced', color: '#60a5fa', description: 'Studied at least once' },
-  2: { level: 2, label: 'Familiar',   color: '#f59e0b', description: '2+ correct, short interval' },
-  3: { level: 3, label: 'Confident',  color: '#f97316', description: '3+ correct, medium interval' },
-  4: { level: 4, label: 'Mastered',   color: '#84cc16', description: '4+ correct, 21+ day interval' },
+  0: { level: 0, label: 'Unseen',     color: 'var(--mastery-0)', description: 'Not studied yet' },
+  1: { level: 1, label: 'Introduced', color: 'var(--mastery-1)', description: 'Studied at least once' },
+  2: { level: 2, label: 'Familiar',   color: 'var(--mastery-2)', description: '2+ correct, short interval' },
+  3: { level: 3, label: 'Confident',  color: 'var(--mastery-3)', description: '3+ correct, medium interval' },
+  4: { level: 4, label: 'Mastered',   color: 'var(--mastery-4)', description: '4+ correct, 21+ day interval' },
 }
 
 /** One shared score for Home, set detail, and session changes. Not a recall probability. */

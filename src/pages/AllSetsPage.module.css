@@ -50,7 +50,7 @@
 .masterCard:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(132, 204, 22, 0.12);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .masterBadge {
   display: inline-flex;

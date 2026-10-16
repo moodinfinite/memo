@@ -1,27 +1,58 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
 
+/*
+ * Two-ink palette, after a risograph-printed wall calendar: warm paper,
+ * red-orange and cyan. Every color in the app should come from these
+ * families; the bright "ink" values are for large type, rules and fills,
+ * and the "-strong" values are the ones that stay readable as small text.
+ */
 :root {
-  --accent:          #84cc16;
-  --accent-hover:    #65a30d;
-  --accent-subtle:   #f7fee7;
-  --accent-text:     #3f6212;
-  --accent-border:   #bef264;
-  --bg-base:         #ffffff;
-  --bg-surface:      #f5f5f3;
-  --bg-raised:       #ffffff;
-  --bg-overlay:      #ebebea;
-  --text-primary:    #1a1a18;
-  --text-secondary:  #4d4d46;
-  --text-tertiary:   #6e6e66;
-  --border-subtle:   rgba(0,0,0,0.18);
-  --border-default:  rgba(0,0,0,0.28);
-  --border-strong:   rgba(0,0,0,0.42);
-  --green-subtle:    #f0fdf4;
-  --green-text:      #166534;
-  --green-border:    #bbf7d0;
-  --red-subtle:      #fef2f2;
-  --red-text:        #991b1b;
-  --red-border:      #fecaca;
+  --ink-red:           #ee432d;
+  --ink-red-strong:    #c2311e;
+  --ink-red-tint:      #fce1da;
+  --ink-red-border:    #f2a597;
+  --ink-cyan:          #36bed7;
+  --ink-cyan-strong:   #0a7590;
+  --ink-cyan-tint:     #ddf3f8;
+  --ink-cyan-border:   #9fdcea;
+
+  --primary:         var(--ink-red-strong);
+  --primary-hover:   #a82816;
+  --on-primary:      #fff8f0;
+  --accent:          var(--ink-cyan);
+  --accent-hover:    var(--ink-cyan-strong);
+  --accent-subtle:   var(--ink-cyan-tint);
+  --accent-text:     var(--ink-cyan-strong);
+  --accent-border:   var(--ink-cyan-border);
+  --on-accent:       #fffdf8;
+  --focus-ring:      0 0 0 3px color-mix(in srgb, var(--ink-cyan) 30%, transparent);
+
+  --bg-base:         #fbf8f1;
+  --bg-surface:      #f4efe4;
+  --bg-raised:       #fffdf8;
+  --bg-overlay:      #ede6d8;
+  --text-primary:    #2a2321;
+  --text-secondary:  #5a504a;
+  --text-tertiary:   #756a62;
+  --border-subtle:   rgba(58,36,22,0.18);
+  --border-default:  rgba(58,36,22,0.28);
+  --border-strong:   rgba(58,36,22,0.42);
+
+  /* Study feedback: correct answers in cyan, misses in red — always with a label or icon */
+  --correct-subtle:  var(--ink-cyan-tint);
+  --correct-text:    var(--ink-cyan-strong);
+  --correct-border:  var(--ink-cyan-border);
+  --red-subtle:      var(--ink-red-tint);
+  --red-text:        var(--ink-red-strong);
+  --red-border:      var(--ink-red-border);
+
+  /* Mastery levels 0–4: one cyan ramp, with Mastered stamped in red */
+  --mastery-0:       #b9aea4;
+  --mastery-1:       var(--ink-cyan-border);
+  --mastery-2:       var(--ink-cyan);
+  --mastery-3:       var(--ink-cyan-strong);
+  --mastery-4:       var(--ink-red);
+
   --sidebar-width:   220px;
   --font:            'Inter', 'Noto Sans TC', system-ui, sans-serif;
   --font-display:    'Archivo Black', 'Noto Sans TC', sans-serif;
@@ -36,28 +67,44 @@
   --r-md:  8px;
   --r-lg:  12px;
   --r-xl:  16px;
+  /* Older names still used by some stylesheets */
+  --radius-sm:       var(--r-sm);
+  --radius-md:       var(--r-md);
+  --radius-lg:       var(--r-lg);
+  --radius-xl:       var(--r-xl);
+  --transition-fast: var(--t-fast);
 }
 
 [data-theme="dark"] {
-  --bg-base:         #111110;
-  --bg-surface:      #1a1a18;
-  --bg-raised:       #222220;
-  --bg-overlay:      #2a2a28;
-  --text-primary:    #eeeee9;
-  --text-secondary:  #b2b2aa;
-  --text-tertiary:   #8a8a82;
-  --border-subtle:   rgba(255,255,255,0.09);
-  --border-default:  rgba(255,255,255,0.15);
-  --border-strong:   rgba(255,255,255,0.26);
-  --accent-subtle:   #1a2e05;
-  --accent-text:     #a3e635;
-  --accent-border:   #365314;
-  --green-subtle:    #052e16;
-  --green-text:      #4ade80;
-  --green-border:    #14532d;
-  --red-subtle:      #2d0a0a;
-  --red-text:        #f87171;
-  --red-border:      #7f1d1d;
+  --ink-red:           #ff6b55;
+  --ink-red-strong:    #ff7b66;
+  --ink-red-tint:      #3b1e18;
+  --ink-red-border:    #74342a;
+  --ink-cyan:          #4fcde6;
+  --ink-cyan-strong:   #6ed7ec;
+  --ink-cyan-tint:     #11313a;
+  --ink-cyan-border:   #1f5966;
+
+  --primary:         var(--ink-red);
+  --primary-hover:   #ff8a77;
+  --on-primary:      #1a1210;
+  --on-accent:       #0e1c20;
+
+  --bg-base:         #171412;
+  --bg-surface:      #1d1916;
+  --bg-raised:       #221e1a;
+  --bg-overlay:      #2b2622;
+  --text-primary:    #f1eadf;
+  --text-secondary:  #c4baae;
+  --text-tertiary:   #9e9488;
+  --border-subtle:   rgba(255,240,225,0.10);
+  --border-default:  rgba(255,240,225,0.17);
+  --border-strong:   rgba(255,240,225,0.28);
+
+  --mastery-0:       #6e655d;
+  --mastery-1:       #2f6f7d;
+  --mastery-2:       #3fa9c0;
+  --mastery-3:       var(--ink-cyan-strong);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

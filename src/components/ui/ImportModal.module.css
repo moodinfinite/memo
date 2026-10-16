@@ -96,7 +96,7 @@
 
 .textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 .textarea::placeholder {
@@ -156,8 +156,8 @@
   padding: 0 16px;
   border-radius: var(--r-md);
   border: none;
-  background: var(--text-primary);
-  color: var(--bg-base);
+  background: var(--primary);
+  color: var(--on-primary);
   font-size:var(--text-body);
   font-weight: 500;
   font-family: var(--font);
