@@ -1,15 +1,15 @@
 # Memo — project handoff
 
-Updated: 16 October 2026. Start here when switching editors or coding assistants.
+Updated: 17 October 2026. Start here when switching editors or coding assistants.
 
 ## Current state
 
 - App: personal flashcards and language-learning tool, built with React, TypeScript, Vite and Zustand; Supabase stores accounts and study data.
 - Live app: https://memo-mocha-nine.vercel.app/
 - GitHub: https://github.com/moodinfinite/memo
-- Last verified deployed commit: `6498fe7` — unified mastery and hardened Learn recovery, scheduling and activity tracking. Vercel success and matching live bundle were verified on 16 October.
-- Latest verification: 51 automated tests passed; production build passed. Browser checks used synthetic cards rather than real study data.
-- This handoff and the palette plan are documentation updates after that deployment. The palette has NOT been implemented or approved.
+- Last verified deployed commit: `ae85281` — two-ink calendar palette across the app. Vercel success and the new tokens in the live stylesheet were verified on 17 October.
+- Latest verification: 51 automated tests passed; type check and production build passed. A contrast audit of every visible text element found no WCAG AA failures in light or dark on Home, all sets, set details, new set, master deck, mode picker, Learn and flashcards. Story and sentence screens need the AI endpoints and were checked from CSS only. Browser checks used synthetic cards rather than real study data.
+- Jeffrey prefers changes to go live straight away: work in the release checkout and push to main, after tests and build.
 
 ## Where the work lives
 
@@ -17,7 +17,7 @@ Updated: 16 October 2026. Start here when switching editors or coding assistants
 - Release checkout: `/Users/JeffreyWu/Documents/Codex/2026-10-13/thi/work/memo-release`
 - Synthetic browser preview: `/Users/JeffreyWu/Documents/Codex/2026-10-13/thi/work/memo-ui-preview`
 
-The original folder's Git HEAD is still `07be8e1`, with newer source changes present as uncommitted files. It was synced from the release checkout after `6498fe7`; do not discard those changes or assume the original HEAD reflects the deployed app. Compare files before copying between folders, especially if another program has edited them. The preview contains a fake backend and must never be copied over the production Supabase client.
+The original folder's Git HEAD is still `07be8e1`, with newer source changes present as uncommitted files. It was synced from the release checkout after `ae85281`; do not discard those changes or assume the original HEAD reflects the deployed app. Compare files before copying between folders, especially if another program has edited them. The preview contains a fake backend and must never be copied over the production Supabase client.
 
 ## Completed
 
@@ -30,17 +30,18 @@ The original folder's Git HEAD is still `07be8e1`, with newer source changes pre
 - Recognition alone does not advance Learn's review schedule; successful recall does. Early and repeated same-day practice cannot repeatedly increase an established interval. Due cards are prioritised.
 - Reading a story or tapping a definition no longer silently changes mastery.
 - Local-day review dates, paginated history/SRS reads, account-scoped offline caches, pending activity overlays, and protection against stale activity fetches.
-- Removed Home's “Cards studied total” and “Sets created” statistics.
+- Removed Home’s “Cards studied total” and “Sets created” statistics.
+- Two-ink palette (17 October): all app colors come from shared tokens; the previously undefined `--radius-*` / `--transition-fast` names are now aliases, so flashcards, sign-in and set-page buttons are rounded again.
 
 Details and boundaries: [Learn/progress audit](docs/learn-progress-audit.md).
 
-## Current discussion — palette, planning only
+## Palette — shipped 17 October
 
-Jeffrey feels the current combination of lime app accents, forest-green calendar, red header and cream background is too busy. New reference: a printed calendar with warm white paper, vivid red-orange typography and cyan-blue rules/headers.
+Jeffrey found lime accents + forest-green calendar + red header + cream too busy. He chose to follow his reference photo (a risograph wall calendar: warm paper, red-orange and cyan). Now live: one two-ink palette in `src/styles/globals.css`, with the almanac restyled from the same tokens. Roles and rules are in the [palette plan](docs/palette-plan.md).
 
-See [palette plan](docs/palette-plan.md). Proposed direction: one shared red/blue family across the app, restrained color outside the calendar. Decision pending: blue-led controls with red calendar accents, or stronger red-led poster styling. No live palette change yet.
+Typography, layout, week/month behavior, mastery logic and saving behavior were unchanged. Do not add more fonts to solve a color problem.
 
-Preserve the approved typography, layout, week/month behavior, mastery logic and saving behavior while evaluating color. Do not add more fonts to solve a color problem.
+Next concrete step: Jeffrey reviews the live app; then decide which calendar motifs (display numerals, rules, striped bands, pills, overprint) to carry into the rest of the app — options are listed in the palette plan.
 
 ## Next-generation learning — proposed, not implemented
 
