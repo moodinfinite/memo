@@ -1,36 +1,41 @@
-# Memo palette plan — decision pending
+# Memo palette — two inks, shipped
 
-16 October 2026. This is a discussion proposal; no app styles have been changed.
+17 October 2026. Deployed in `ae85281`. Replaces the 16 October discussion proposal.
 
-## Intent
+## Decision
 
-Borrow the supplied printed calendar's two-ink character: warm white, red-orange, cyan/blue, and dark text. Simplify the current lime + forest green + rust combination. Keep the approved layout, typography and paper texture subtle.
+Jeffrey chose to follow his reference photo — a risograph-printed wall calendar — over the quieter "paper + blue" option. The whole app now uses one palette: warm paper, a red-orange ink and a cyan ink, plus dark warm text. No other accent families.
 
-## Two directions to compare
+## Tokens (`src/styles/globals.css`)
 
-**Paper + blue (recommended):** mostly warm-white surfaces. Red gives the big date and a few calendar details personality. Blue owns primary actions, selected states, mastery fill and studied-day marks. A neutral greeting area with a thin red rule reduces the large block of color. This is quieter during long study sessions.
+| Family | Expressive (large type, rules, fills) | Strong (small text, filled buttons) | Tint | Border |
+|---|---|---|---|---|
+| Red | `--ink-red` #ee432d | `--ink-red-strong` #c2311e | `--ink-red-tint` | `--ink-red-border` |
+| Cyan | `--ink-cyan` #36bed7 | `--ink-cyan-strong` #0a7590 | `--ink-cyan-tint` | `--ink-cyan-border` |
 
-**Poster red:** keep a red greeting band and more prominent red calendar typography; use red for primary actions and mastery, cyan/blue for calendar structure. This is closer to the reference but stronger throughout the app, and needs especially clear labels/icons to distinguish ordinary actions from destructive ones.
+Paper `--bg-base` #fbf8f1, raised #fffdf8; ink `--text-primary` #2a2321. Dark theme redefines the same names. The bright inks fail small-text contrast; use the strong shades for anything under ~18px.
 
-Suggested light-theme starting colors (to refine with Jeffrey): paper `#FAF8F2`, dark ink `#252928`, expressive red `#EE432D`, darker red for small text/buttons `#B93225`, cyan detail `#36BED7`, darker blue for small text/buttons `#087A96`. Lighter/darker values are shades of the same two color families, not additional accent families. These are proposed values, not claimed pixel samples from the photo.
+## Roles
 
-## Roles, not arbitrary recoloring
+- **Red = do / emphasis:** primary buttons (`--primary`), display type, calendar numerals, the Mastered stamp, misses ("Still learning", errors — always labelled or iconed).
+- **Cyan = structure / state:** selection, focus ring, progress bars and Home's mastery fill, correct answers (with ✓), calendar rules and headers.
+- **Mastery ramp:** levels 1–3 deepen through cyan, level 4 (Mastered) is red, matching the calendar's weekend suns. Level numbers use body text color for legibility.
+- **Neutral:** sentence feedback "Good" is neutral rather than a third color.
+- **Untouched:** user-chosen folder colors.
 
-- Neutral paper/white surfaces and dark readable text do most of the work.
-- One primary action color, shared by buttons, links, active shuffle, mastery and navigation selection.
-- One editorial accent for calendar typography and limited decoration.
-- Study outcomes stay explicit: “Got it” with a check, “Still learning” with its label; do not rely on red/green alone. Consider a neutral retry state to avoid another competing color.
-- Errors and destructive actions remain clearly labelled with their own semantic tokens. Brand red must not make a normal button look like an error.
-- Replace the multicolor mastery badge rainbow with levels, labels and a restrained shared color family; confirm this in the next preview.
-- Do not silently recolor user-selected folder colors; discuss a subdued badge treatment separately.
-- Preserve readable small text. Bright cyan is suitable for rules and illustration; use a darker blue for small text or filled controls with light text, verified against the actual background.
+Rule of thumb: one loud red thing per screen — the calendar on Home, the primary button elsewhere.
 
-## Rollout after the direction is chosen
+## Calendar treatment (Home almanac)
 
-1. Confirm blue-led or red-led, then confirm how much of the reference's saturation to retain.
-2. Preview the same palette on Home, set details and an active study card, in light and dark themes. Keep existing layout and type unchanged unless separately approved.
-3. Define shared theme tokens for surfaces, ink, primary actions, editorial accents and feedback; make the calendar consume the same families as the rest of the app.
-4. Replace hardcoded greens/rust and competing mastery colors across those screens and shared controls; preserve user-authored folder colors.
-5. Verify contrast, keyboard focus, hover/pressed/error states and mobile layout. Run the build and relevant checks, then deploy after the design is agreed.
+Red display greeting on paper over a double cyan rule (no solid header block); cyan month band with the Chinese month on a red tint; red date with a cyan offset like print misregistration; striped cyan weekday band with red pills (weekend inverted); dashed red column rules on faint cyan graph paper; studied days get a ringed red disc, today a cyan ring, days ahead outlined cyan numerals. Paper grain kept.
 
-Open decision: **Paper + blue** or **Poster red**? The inline mockups explore placement and intensity; they are not a deployed redesign.
+## Options to carry the calendar into the rest of the app — not yet decided
+
+1. Display numerals for counts that matter (card counter, session score, mastery %, streak burst) in red Archivo Black.
+2. Print rules as the divider language: double cyan rule under page titles, dashed red divider between term and definition.
+3. Pills and stamps for small labels (mode tag, Master Deck badge, mastery levels) like the weekday pills.
+4. Striped cyan band as the selected / active marker (selected mode card, progress-bar track).
+5. Cyan offset (misregistration) on page titles, as on the big date.
+6. Faint cyan graph-paper texture on the flashcard face.
+
+Suggested order: 1–3 first (low risk, most cohesion), 4–6 as optional flourishes.
