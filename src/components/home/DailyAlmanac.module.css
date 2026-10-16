@@ -46,5 +46,9 @@
 .totals strong{font-family:var(--font-display);font-size:var(--text-page);font-weight:400;line-height:1;color:var(--ink-red)}
 .totals span{font-size:var(--text-body);font-weight:600;max-width:110px;line-height:1.4;color:var(--ink-cyan-strong)}
 .streak{border-right:1px solid var(--ink-cyan-border)}
+:global([data-theme="dark"]) .calendar::after{opacity:.05;mix-blend-mode:screen}
+:global([data-theme="dark"]) .day{background-image:linear-gradient(color-mix(in srgb,var(--ink-cyan) 6%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--ink-cyan) 6%,transparent) 1px,transparent 1px)}
+:global([data-theme="dark"]) .dayHeading::before{opacity:.18}
+:global([data-theme="dark"]) .date{text-shadow:5px 4px 0 color-mix(in srgb,var(--ink-cyan) 55%,transparent)}
 @media(max-width:700px){.body{grid-template-columns:1fr}.dateLeaf{border-right:0;padding:18px 20px 0}.date{font-size:128px}.activity{padding:20px}.binding{padding:18px 20px 14px}.totals{grid-template-columns:1fr 1fr;padding-bottom:20px}.totals>div{gap:8px}.totals span{max-width:80px}.dayHeading>span{padding:0 4px}.dayNumber{width:32px;height:32px}}
 @media(pointer:coarse){.newSet,.toggle button{min-height:44px}}

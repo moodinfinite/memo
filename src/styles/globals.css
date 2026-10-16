@@ -53,6 +53,14 @@
   --mastery-3:       var(--ink-cyan-strong);
   --mastery-4:       var(--ink-red);
 
+  /* Folder dots, assigned in order as folders are created */
+  --folder-1:        var(--ink-cyan);
+  --folder-2:        var(--ink-red);
+  --folder-3:        var(--ink-cyan-strong);
+  --folder-4:        #6a5aa8;
+  --folder-5:        var(--ink-red-border);
+  --folder-6:        #8c8178;
+
   --sidebar-width:   220px;
   --font:            'Inter', 'Noto Sans TC', system-ui, sans-serif;
   --font-display:    'Archivo Black', 'Noto Sans TC', sans-serif;
@@ -75,36 +83,42 @@
   --transition-fast: var(--t-fast);
 }
 
+/* Night: the same two inks printed on midnight-blue paper */
 [data-theme="dark"] {
-  --ink-red:           #ff6b55;
-  --ink-red-strong:    #ff7b66;
-  --ink-red-tint:      #3b1e18;
-  --ink-red-border:    #74342a;
-  --ink-cyan:          #4fcde6;
-  --ink-cyan-strong:   #6ed7ec;
-  --ink-cyan-tint:     #11313a;
-  --ink-cyan-border:   #1f5966;
+  --ink-red:           #ff8064;
+  --ink-red-strong:    #ff9279;
+  --ink-red-tint:      #3b2328;
+  --ink-red-border:    #7d3e3b;
+  --ink-cyan:          #6fd2e6;
+  --ink-cyan-strong:   #8adcee;
+  --ink-cyan-tint:     #133446;
+  --ink-cyan-border:   #275d72;
 
   --primary:         var(--ink-red);
-  --primary-hover:   #ff8a77;
-  --on-primary:      #1a1210;
-  --on-accent:       #0e1c20;
+  --primary-hover:   #ff9a82;
+  --on-primary:      #1a0f0c;
+  --on-accent:       #0b1a22;
 
-  --bg-base:         #171412;
-  --bg-surface:      #1d1916;
-  --bg-raised:       #221e1a;
-  --bg-overlay:      #2b2622;
-  --text-primary:    #f1eadf;
-  --text-secondary:  #c4baae;
-  --text-tertiary:   #9e9488;
-  --border-subtle:   rgba(255,240,225,0.10);
-  --border-default:  rgba(255,240,225,0.17);
-  --border-strong:   rgba(255,240,225,0.28);
+  --bg-base:         #0f1923;
+  --bg-surface:      #13202c;
+  --bg-raised:       #182836;
+  --bg-overlay:      #1f3343;
+  --text-primary:    #f1e9dc;
+  --text-secondary:  #b9c2c8;
+  --text-tertiary:   #8f9ba4;
+  --border-subtle:   rgba(190,220,240,0.10);
+  --border-default:  rgba(190,220,240,0.17);
+  --border-strong:   rgba(190,220,240,0.28);
 
-  --mastery-0:       #6e655d;
-  --mastery-1:       #2f6f7d;
-  --mastery-2:       #3fa9c0;
+  --mastery-0:       #5d6b77;
+  --mastery-1:       #2d6c80;
+  --mastery-2:       #45a8c2;
   --mastery-3:       var(--ink-cyan-strong);
+
+  --folder-3:        #3a9cb4;
+  --folder-4:        #a596e6;
+  --folder-5:        #f2a597;
+  --folder-6:        #9aa5ae;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

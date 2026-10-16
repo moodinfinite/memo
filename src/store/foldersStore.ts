@@ -13,9 +13,18 @@ export interface Folder {
 }
 
 const FOLDER_COLORS = [
-  '#84cc16', '#3b82f6', '#f97316',
-  '#a855f7', '#ec4899', '#14b8a6',
+  'var(--folder-1)', 'var(--folder-2)', 'var(--folder-3)',
+  'var(--folder-4)', 'var(--folder-5)', 'var(--folder-6)',
 ]
+
+// Folders created before the two-ink palette stored these hex values (by position)
+const LEGACY_FOLDER_COLORS: Record<string, string> = {
+  '#84cc16': FOLDER_COLORS[0], '#3b82f6': FOLDER_COLORS[1], '#f97316': FOLDER_COLORS[2],
+  '#a855f7': FOLDER_COLORS[3], '#ec4899': FOLDER_COLORS[4], '#14b8a6': FOLDER_COLORS[5],
+}
+
+const withPaletteColor = (folder: Folder): Folder =>
+  ({ ...folder, color: LEGACY_FOLDER_COLORS[folder.color?.toLowerCase()] ?? folder.color })
 
 interface FoldersState {
   folders: Folder[]
@@ -47,7 +56,7 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
       .order('position', { ascending: true })
     if (useAuthStore.getState().user?.id !== userId) return
     if (error) { set({ error: error.message, isLoading: false }); return }
-    set({ folders: data ?? [], isLoading: false, foldersLastFetched: Date.now() })
+    set({ folders: (data ?? []).map(withPaletteColor), isLoading: false, foldersLastFetched: Date.now() })
   },
 
   createFolder: async (name) => {
@@ -64,8 +73,9 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
       .single()
 
     if (error) throw error
-    set((state) => ({ folders: [...state.folders, data] }))
-    return data
+    const folder = withPaletteColor(data)
+    set((state) => ({ folders: [...state.folders, folder] }))
+    return folder
   },
 
   updateFolder: async (id, name) => {

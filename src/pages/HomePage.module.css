@@ -50,7 +50,7 @@
 .setCard:hover .masteryOverlay,.setCard:focus-within .masteryOverlay{opacity:1}
 .masteryFill{position:absolute;inset:0;background:var(--accent-text);color:var(--on-accent);display:flex;align-items:center;justify-content:center;clip-path:inset(0 calc(100% - var(--mastery-fill)) 0 0)}
 .masteryReadout{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;color:inherit}
-.masteryOverlayPct{font-family:var(--font-display);font-size:var(--text-page);font-weight:400;letter-spacing:-0.03em;line-height:1}
+.masteryOverlayPct{font-size:var(--text-page);font-weight:600;letter-spacing:-0.02em;line-height:1}
 .masteryOverlayLabel{font-size:var(--text-body);color:inherit;font-weight:500}
 .setTitle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .setCard:focus-within{outline:2px solid var(--accent);outline-offset:2px}
