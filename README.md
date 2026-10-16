@@ -1,5 +1,7 @@
 # Memo — Phase 3
 
+For current progress, deployment status, open decisions and handoff notes, start with [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
 ## Quick start
 ```bash
 npm install
