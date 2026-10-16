@@ -97,8 +97,6 @@ export default function SetDetailPage() {
   const progress = getSetMastery(currentSet.id, total, cardSRS, cards.map(card => card.id))
   const { masteredCount, learningCount } = progress
   const untouchedCount = total - masteredCount - learningCount
-  const masteredPct = total > 0 ? (masteredCount / total) * 100 : 0
-  const learningPct = total > 0 ? (learningCount / total) * 100 : 0
 
   const isSyncing = id ? pendingSaves.includes(id) : false
   const syncError = id ? saveErrors[id] : undefined
@@ -166,12 +164,11 @@ export default function SetDetailPage() {
 
       <div className={styles.progressSummary}>
         <div className={styles.progressSummaryTop}>
-          <span className={styles.progressSummaryTitle}>Set progress</span>
-          <span className={styles.progressSummaryPct}>{progress.pct}% studied</span>
+          <span className={styles.progressSummaryTitle}>Mastery</span>
+          <span className={styles.progressSummaryPct}>{progress.pct}%</span>
         </div>
-        <div className={styles.progressBar}>
-          <div className={styles.progressBarMastered} style={{ width: `${masteredPct}%` }} />
-          <div className={styles.progressBarLearning} style={{ width: `${learningPct}%` }} />
+        <div className={styles.progressBar} role="progressbar" aria-label="Mastery" aria-valuenow={progress.pct} aria-valuemin={0} aria-valuemax={100} title="Average card mastery. Correct recall on separate days builds it.">
+          <div className={styles.progressBarMastered} style={{ width: `${progress.pct}%` }} />
         </div>
         <div className={styles.progressLegend}>
           <span className={styles.legendMastered}>● {masteredCount} mastered</span>

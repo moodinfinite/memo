@@ -12,12 +12,14 @@ import { getMasteryLevel } from '@/lib/mastery'
 import { shuffle } from '@/lib/shuffle'
 
 interface StudyState {
+  answeredAt: string | null
   editingCard: boolean
   masteryBefore: Record<string, number> | null
   replaceCard: (card: Card) => void
   sessionId: string | null
   sentenceError: string | null
   // ── Learn mode ──────────────────────────────────────────────
+  learnTurn: number
   learnActive: boolean
   learnCards: Card[]
   learnBatch: Card[]
@@ -31,7 +33,7 @@ interface StudyState {
   learnBatchSummary: Card[]             // cards that graduated in the just-finished batch
   learnStoryReady: boolean              // batch fully graduated — show story before advancing
   startLearnSession: (cards: Card[], setId: string) => void
-  answerLearnCard: (correct: boolean) => void
+  answerLearnCard: (correct: boolean, expected?: { sessionId: string | null; turn: number }) => void
   advanceToNextBatch: () => void
   completeLearnStory: () => void
   resetLearn: () => void
@@ -44,7 +46,7 @@ interface StudyState {
   typedAnswer: string; typedResult: 'idle' | 'correct' | 'incorrect'
   selectedOption: number | null; mcResult: 'idle' | 'correct' | 'incorrect'; mcStreak: number; flashStreak: number
   isAdvancing: boolean
-  lastAction: { prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number; cardId: string; prevCardSRS: import('./srsStore').CardSRS | null } | null
+  lastAction: { prevAnsweredAt: string | null; prevKnown: string[]; prevUnknown: string[]; prevIndex: number; prevFlashStreak: number; cardId: string; prevCardSRS: import('./srsStore').CardSRS | null } | null
   persistError: string | null
   persistAttempt: number
   _lastPersistArgs: Parameters<StudyState['_persist']> | null
@@ -77,12 +79,12 @@ interface StudyState {
 const LEARN_BATCH_SIZE = 5
 const draftKey = (user: string, scope: string) => `memo:draft:${user}:${scope}`
 const initialLearn = {
-  learnActive: false, learnCards: [] as Card[], learnBatch: [] as Card[], learnQueue: [] as Card[],
+  learnTurn: 0, learnActive: false, learnCards: [] as Card[], learnBatch: [] as Card[], learnQueue: [] as Card[],
   learnGraduated: [] as string[], learnScores: {} as Record<string, number>, learnBatchIdx: 0,
   learnComplete: false, learnSetId: '', learnBatchComplete: false, learnBatchSummary: [] as Card[], learnStoryReady: false,
 }
 const initialSession = {
-  editingCard: false, masteryBefore: null as Record<string, number> | null,
+  answeredAt: null as string | null, editingCard: false, masteryBefore: null as Record<string, number> | null,
   sessionId: null as string | null, mode: 'flashcard' as StudyMode, setId: '', sessionCards: [] as Card[], mcQuestions: [] as MCQuestion[],
   currentIndex: 0, known: [] as string[], unknown: [] as string[], isComplete: false,
   unshuffledOrder: [] as string[],
@@ -125,20 +127,25 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   startLearnSession: (cards, setId) => {
     get().saveProgress()
-    const ordered = shuffle([...cards])
+    if (!cards.length) return
+    const due = new Set(useSRSStore.getState().getDueCards(setId, cards))
+    const ordered = [...shuffle(cards.filter(c => due.has(c.id))), ...shuffle(cards.filter(c => !due.has(c.id)))]
     set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), masteryBefore: snapshotMastery(), mode: 'learn', setId,
       sessionCards: ordered, learnActive: true, learnCards: ordered, learnSetId: setId,
       learnBatch: ordered.slice(0, LEARN_BATCH_SIZE), learnQueue: ordered.slice(LEARN_BATCH_SIZE) })
     get().saveProgress()
   },
-  answerLearnCard: correct => {
+  answerLearnCard: (correct, expected) => {
     const s = get(), card = s.learnBatch[s.learnBatchIdx]
-    if (s.editingCard || !s.learnActive || s.learnComplete || s.learnStoryReady || !card) return
-    useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
+    if (s.editingCard || !s.learnActive || s.learnComplete || s.learnStoryReady || s.learnBatchComplete || !card) return
+    if (expected && (s.sessionId !== expected.sessionId || s.learnTurn !== expected.turn)) return
     const scores = { ...s.learnScores, [card.id]: correct ? (s.learnScores[card.id] ?? 0) + 1 : 0 }
     const graduated = scores[card.id] >= 2
+    // Recognition is practice; successful recall earns the review credit.
+    // Record mistakes immediately so retrying cannot hide a lapse.
+    if (!correct || graduated) void useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
     const batch = graduated ? s.learnBatch.filter(c => c.id !== card.id) : s.learnBatch
-    set({ learnScores: scores, learnBatch: batch,
+    set({ answeredAt: new Date().toISOString(), learnTurn: s.learnTurn + 1, learnScores: scores, learnBatch: batch,
       learnGraduated: graduated ? [...s.learnGraduated, card.id] : s.learnGraduated,
       learnBatchSummary: graduated ? [...s.learnBatchSummary, card] : s.learnBatchSummary,
       learnBatchIdx: batch.length ? (graduated ? s.learnBatchIdx : s.learnBatchIdx + 1) % batch.length : 0,
@@ -149,13 +156,15 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     get().saveProgress()
   },
   advanceToNextBatch: () => {
-    const { learnQueue } = get()
+    const { learnQueue, learnActive, learnBatchComplete, learnComplete } = get()
+    if (!learnActive || !learnBatchComplete || learnComplete || !learnQueue.length) return
     set({ learnBatch: learnQueue.slice(0, LEARN_BATCH_SIZE), learnQueue: learnQueue.slice(LEARN_BATCH_SIZE),
       learnBatchComplete: false, learnBatchSummary: [], learnBatchIdx: 0, learnScores: {}, learnStoryReady: false })
     get().saveProgress()
   },
   completeLearnStory: () => {
     const s = get()
+    if (!s.learnActive || !s.learnStoryReady || s.learnComplete || s.learnBatch.length) return
     if (s.learnQueue.length) { set({ learnStoryReady: false, learnBatchComplete: true }); get().saveProgress() }
     else {
       set({ learnStoryReady: false, learnBatchComplete: false, learnComplete: true, isComplete: true })
@@ -172,7 +181,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     if (s.editingCard || !last || s.isComplete) return
     const card = s.sessionCards[last.prevIndex]
     useSRSStore.getState().revertSRS(last.cardId, card.set_id, last.prevCardSRS)
-    set({ currentIndex: last.prevIndex, known: last.prevKnown, unknown: last.prevUnknown,
+    set({ answeredAt: last.prevAnsweredAt, currentIndex: last.prevIndex, known: last.prevKnown, unknown: last.prevUnknown,
       flashStreak: last.prevFlashStreak, isComplete: false, isAdvancing: false, lastAction: null })
     const user = useAuthStore.getState().user
     if (user) queueSession(get(), user.id) // zero answers must replace a previously recorded answer, too
@@ -256,7 +265,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       sentence: s.sentenceInput.trim(), feedback: s.sentenceFeedback, improved: s.sentenceImproved, score: s.sentenceScore }]
     const known = [...s.known, ...(correct ? [card.id] : [])], unknown = [...s.unknown, ...(!correct ? [card.id] : [])]
     const complete = s.currentIndex + 1 >= s.sessionCards.length
-    set({ sentenceEntries: entries, currentIndex: s.currentIndex + 1, known, unknown, isComplete: complete,
+    set({ answeredAt: new Date().toISOString(), sentenceEntries: entries, currentIndex: s.currentIndex + 1, known, unknown, isComplete: complete,
       sentenceInput: '', sentenceStatus: 'idle', sentenceFeedback: '', sentenceImproved: null, sentenceScore: null })
     if (complete) void get()._persist(known, unknown, entries.length, s.mode, s.setId, true)
     else get().saveProgress()
@@ -266,7 +275,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const s = get(), user = useAuthStore.getState().user
     if (!user || !s.sessionId || !s.setId || !s.sessionCards.length || s.isComplete) return
     const state = {
-      unshuffledOrder: s.unshuffledOrder,
+      answeredAt: s.answeredAt, unshuffledOrder: s.unshuffledOrder,
       masteryBefore: s.masteryBefore, timerSecsLeft: s.timerSecsLeft, sentenceInput: s.sentenceInput, sentenceEntries: s.sentenceEntries,
       sentenceStatus: s.sentenceStatus === 'submitting' ? 'idle' : s.sentenceStatus,
       sentenceFeedback: s.sentenceFeedback, sentenceImproved: s.sentenceImproved, sentenceScore: s.sentenceScore,
@@ -324,7 +333,26 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     // Recompute position after removed cards; an old numeric index would skip survivors.
     const index = resolve(draft.card_order.slice(0, draft.current_index)).length
     const learning = draft.mode === 'learn'
+    // Reconcile by identity: deleted cards must not shift the current card or skip survivors.
+    const valid = new Set(ordered.map(c => c.id))
+    const graduated = [...new Set(state.learnGraduated ?? [])].filter(id => valid.has(id))
+    const assigned = new Set(graduated)
+    const uniqueCards = (ids: string[] = []) => resolve(ids).filter(c => {
+      if (!valid.has(c.id) || assigned.has(c.id)) return false
+      assigned.add(c.id); return true
+    })
+    let batch = uniqueCards(state.learnBatch)
+    let queue = uniqueCards(state.learnQueue)
+    queue.push(...ordered.filter(c => !assigned.has(c.id)))
+    const summary = resolve(state.learnBatchSummary).filter(c => graduated.includes(c.id))
+    const betweenBatches = !batch.length && summary.length > 0 && (state.learnStoryReady || state.learnBatchComplete)
+    if (!batch.length && !betweenBatches && queue.length) {
+      batch = queue.slice(0, LEARN_BATCH_SIZE); queue = queue.slice(LEARN_BATCH_SIZE)
+    }
+    const nextSurvivor = (state.learnBatch ?? []).slice(state.learnBatchIdx ?? 0).find(id => batch.some(c => c.id === id))
+    const batchIndex = Math.max(0, batch.findIndex(c => c.id === nextSurvivor))
     set({ ...initialSession, ...initialLearn, sessionId: draft.session_id ?? draft.id ?? crypto.randomUUID(),
+      answeredAt: state.answeredAt ?? (known.length + unknown.length ? draft.updated_at : null),
       masteryBefore: state.masteryBefore ?? null, setId: scope, mode: draft.mode, sessionCards: ordered, known, unknown, currentIndex: index,
       unshuffledOrder: (state.unshuffledOrder ?? cards.map(card => card.id)).filter(id => byId.has(id)),
       isComplete: !learning && index >= ordered.length, doShuffle: draft.do_shuffle,
@@ -336,11 +364,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       sentenceStatus: state.sentenceStatus === 'reviewed' ? 'reviewed' : 'idle', sentenceFeedback: state.sentenceFeedback ?? '',
       sentenceImproved: state.sentenceImproved ?? null, sentenceScore: state.sentenceScore ?? null,
       ...(learning ? { learnActive: true, learnCards: ordered, learnSetId: scope,
-        learnBatch: resolve(state.learnBatch), learnQueue: resolve(state.learnQueue),
-        learnGraduated: (state.learnGraduated ?? []).filter(id => byId.has(id)), learnScores: state.learnScores ?? {},
-        learnBatchIdx: Math.min(state.learnBatchIdx ?? 0, Math.max(0, resolve(state.learnBatch).length - 1)),
-        learnBatchComplete: !!state.learnBatchComplete, learnBatchSummary: resolve(state.learnBatchSummary),
-        learnStoryReady: !!state.learnStoryReady || resolve(state.learnBatch).length === 0 } : {}),
+        learnBatch: batch, learnQueue: queue,
+        learnGraduated: graduated, learnScores: Object.fromEntries(batch.map(c => [c.id, Math.min(1, Math.max(0, state.learnScores?.[c.id] ?? 0))])),
+        learnBatchIdx: batchIndex,
+        learnBatchComplete: !!betweenBatches && !!state.learnBatchComplete, learnBatchSummary: summary,
+        learnStoryReady: !batch.length && !(betweenBatches && state.learnBatchComplete) } : {}),
     })
     get().saveProgress()
   },
@@ -378,7 +406,7 @@ function queueSession(s: StudyState, userId: string) {
   queueWrite({ userId, key: `session:${s.sessionId}`, table: 'study_sessions', operation: 'upsert', conflict: 'id', data: {
     id: s.sessionId, user_id: userId, set_id: s.setId === '__master__' ? null : s.setId, mode: s.mode,
     total_cards: total, known_count: s.known.length, unknown_count: s.unknown.length,
-    score_pct: total ? Math.round(s.known.length / total * 100) : 0, completed_at: new Date().toISOString(), sentence_entries: s.sentenceEntries,
+    score_pct: total ? Math.round(s.known.length / total * 100) : 0, completed_at: s.answeredAt ?? new Date().toISOString(), sentence_entries: s.sentenceEntries,
   } })
 }
 function answer(correct: boolean) {
@@ -388,9 +416,9 @@ function answer(correct: boolean) {
   const complete = s.currentIndex + 1 >= s.sessionCards.length
   const previous = useSRSStore.getState().cardSRS[card.id] ?? null
   useSRSStore.getState().updateSRS(card.id, card.set_id, correct)
-  useStudyStore.setState({ known, unknown, currentIndex: s.currentIndex + 1, isComplete: complete, isAdvancing: true,
+  useStudyStore.setState({ answeredAt: new Date().toISOString(), known, unknown, currentIndex: s.currentIndex + 1, isComplete: complete, isAdvancing: true,
     flashStreak: correct ? s.flashStreak + 1 : 0,
-    lastAction: { prevKnown: s.known, prevUnknown: s.unknown, prevIndex: s.currentIndex, prevFlashStreak: s.flashStreak, cardId: card.id, prevCardSRS: previous } })
+    lastAction: { prevAnsweredAt: s.answeredAt, prevKnown: s.known, prevUnknown: s.unknown, prevIndex: s.currentIndex, prevFlashStreak: s.flashStreak, cardId: card.id, prevCardSRS: previous } })
   setTimeout(() => { if (useStudyStore.getState().sessionId === s.sessionId) useStudyStore.setState({ isAdvancing: false }) }, 400)
   if (complete) void useStudyStore.getState()._persist(known, unknown, known.length + unknown.length, s.mode, s.setId, true)
   else useStudyStore.getState().saveProgress()

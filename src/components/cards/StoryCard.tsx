@@ -1,7 +1,5 @@
-import { useAuthStore } from '@/store/authStore'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
-import { useSRSStore } from '@/store/srsStore'
 import { useSetsStore } from '@/store/setsStore'
 import { supabase } from '@/lib/supabase'
 import styles from './StoryCard.module.css'
@@ -28,7 +26,7 @@ function buildSegments(text: string, terms: Card[]): { text: string; highlighted
   })
 }
 
-export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComplete }: Props) {
+export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: Props) {
   const [story, setStory] = useState('')
   const [loading, setLoading] = useState(false)
   const [slowLoad, setSlowLoad] = useState(false)
@@ -36,27 +34,11 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
-  const ownerId = useRef(useAuthStore.getState().user?.id)
-  const tappedIds = useRef<Set<string>>(new Set())
-  const storyRef = useRef('')
   const storyElRef = useRef<HTMLParagraphElement>(null)
   const saveBarRef = useRef<HTMLDivElement>(null)
-  const termsRef = useRef(terms)
-  const setIdRef = useRef(setId)
   const { saveToSavedWords } = useSetsStore()
 
-  useEffect(() => { storyRef.current = story }, [story])
-  useEffect(() => { termsRef.current = terms }, [terms])
-  useEffect(() => { setIdRef.current = setId }, [setId])
-
-  // On unmount: log mastery signals using refs so we always have the current batch's terms
-  useEffect(() => {
-    return () => {
-      if (!storyRef.current || useAuthStore.getState().user?.id !== ownerId.current) return
-      const updateSRS = useSRSStore.getState().updateSRS
-      termsRef.current.forEach(t => updateSRS(t.id, setIdRef.current, !tappedIds.current.has(t.id)))
-    }
-  }, [])
+  // Reading and dictionary lookups are not recall tests. Only explicit study answers update SRS.
 
   // Watch for text selection inside the story. The save bar is a fixed
   // snackbar at the bottom of the screen — no coordinate math, so it can
@@ -115,7 +97,6 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
   }
 
   const generate = useCallback(async () => {
-    tappedIds.current.clear()
     setLoading(true)
     setSlowLoad(false)
     setError(null)
@@ -180,8 +161,6 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
                   key={i}
                   className={[styles.highlight, tooltip?.term === seg.text.toLowerCase() ? styles.highlightActive : ''].join(' ')}
                   onClick={() => {
-                    const termObj = terms.find(t => t.term.toLowerCase() === seg.text.toLowerCase())
-                    if (termObj) tappedIds.current.add(termObj.id)
                     setTooltip(t => t?.term === seg.text.toLowerCase() ? null : { term: seg.text.toLowerCase(), def: seg.definition! })
                   }}
                 >
@@ -217,7 +196,6 @@ export default function StoryCard({ terms, setId, setTitle, onNewBatch, onComple
                 key={t.id}
                 className={[styles.termChip, tooltip?.term === t.term.toLowerCase() ? styles.termChipActive : ''].join(' ')}
                 onClick={() => {
-                  tappedIds.current.add(t.id)
                   setTooltip(v => v?.term === t.term.toLowerCase() ? null : { term: t.term.toLowerCase(), def: t.definition })
                 }}
               >

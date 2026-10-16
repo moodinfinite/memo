@@ -1,4 +1,7 @@
-import { onSynced } from '@/lib/sync'
+import { readAllRows } from '@/lib/readAllRows'
+import { localDayStr } from '@/lib/localDate'
+export { localDayStr } from '@/lib/localDate'
+import { onSynced, pendingWrites, readLocal, writeLocal } from '@/lib/sync'
 import { registerAccountReset } from '@/lib/accountState'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
@@ -57,7 +60,8 @@ function toISOWeekStr(d: Date): string {
   return `${weekYear}-W${String(weekNum).padStart(2, '0')}`
 }
 
-type SessionRow = { completed_at: string; total_cards: number }
+type SessionRow = { id: string; completed_at: string; total_cards: number }
+let fetchSequence = 0
 
 function calculateWeekStreak(sessions: SessionRow[]): number {
   if (sessions.length === 0) return 0
@@ -79,12 +83,6 @@ function calculateWeekStreak(sessions: SessionRow[]): number {
   }
 
   return streak
-}
-
-// Local calendar day 'YYYY-MM-DD' — uses the user's timezone, since "studied
-// today" should follow their clock, not UTC
-export function localDayStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 /**
@@ -118,31 +116,37 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   fetchProgress: async (force = false) => {
     // Skip refetch if data is fresh (< 60s old) — unless forced,
     // e.g. right after a session save so new stats show immediately
-    if (!force && Date.now() - get().progressLastFetched < 60_000) return
     set({ isLoading: true })
     const user = useAuthStore.getState().user
     if (!user) { set({ isLoading: false }); return }
 
-    const { data: sessions, error } = await supabase
-      .from('study_sessions')
-      .select('completed_at, total_cards')
-      .eq('user_id', user.id)
-      .gt('total_cards', 0)
-      .order('completed_at', { ascending: false })
-
-    if (useAuthStore.getState().user?.id !== user.id) return
-    if (error) { console.error('fetchProgress error:', error.message); set({ isLoading: false }); return }
-
-    const s = sessions ?? []
-    const totalCardsStudied = s.reduce((acc, sess) => acc + sess.total_cards, 0)
-    const weekStreak = calculateWeekStreak(s)
-    const daySet = new Set(s.map((sess) => localDayStr(new Date(sess.completed_at))))
-    const dayStreak = calculateDayStreak(daySet)
-
-    set({ weekStreak, dayStreak, studiedDays: Array.from(daySet), totalCardsStudied, isLoading: false, progressLastFetched: Date.now() })
+    const cacheKey = `memo:activity:${user.id}`
+    const apply = (rows: SessionRow[]) => {
+      const map = new Map(rows.map(row => [row.id, row]))
+      for (const job of pendingWrites(user.id)) {
+        if (job.table !== 'study_sessions') continue
+        if (job.operation === 'upsert') map.set(job.data!.id as string, job.data as unknown as SessionRow)
+        else map.delete(job.filters!.id)
+      }
+      const s = [...map.values()].filter(row => row.total_cards > 0)
+      const daySet = new Set(s.map(row => localDayStr(new Date(row.completed_at))))
+      set({ weekStreak: calculateWeekStreak(s), dayStreak: calculateDayStreak(daySet),
+        studiedDays: [...daySet], totalCardsStudied: s.reduce((sum, row) => sum + row.total_cards, 0) })
+    }
+    apply(readLocal<SessionRow[]>(cacheKey) ?? [])
+    if (!force && Date.now() - get().progressLastFetched < 60_000) { set({ isLoading: false }); return }
+    const sequence = ++fetchSequence
+    const { data: sessions, error } = await readAllRows<SessionRow>((from, to, signal) => supabase
+      .from('study_sessions').select('id, completed_at, total_cards').eq('user_id', user.id)
+      .order('id').range(from, to).abortSignal(signal))
+    if (useAuthStore.getState().user?.id !== user.id || sequence !== fetchSequence) return
+    if (error) { set({ isLoading: false }); return }
+    writeLocal(cacheKey, sessions)
+    apply(sessions ?? [])
+    set({ isLoading: false, progressLastFetched: Date.now() })
   },
 }))
 
-registerAccountReset(() => useProgressStore.setState(useProgressStore.getInitialState(), true))
+registerAccountReset(() => { fetchSequence++; useProgressStore.setState(useProgressStore.getInitialState(), true) })
 
 onSynced(job => { if (job.table === 'study_sessions') void useProgressStore.getState().fetchProgress(true) })

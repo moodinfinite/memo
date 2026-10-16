@@ -2,7 +2,7 @@ import type { CardSRS } from '@/store/srsStore'
 
 export interface SetMastery {
   level: MasteryLevel   // floor of average level across all cards
-  pct: number           // % of cards studied at least once (level 1+)
+  pct: number           // average card level / 4, as a percentage
   seenCount: number     // cards currently at level 1+
   masteredCount: number
   learningCount: number
@@ -27,7 +27,7 @@ export interface MasteryInfo {
  * Level 4 — Mastered:   4+ correct in a row, interval 21+ days
  */
 export function getMasteryLevel(srs: CardSRS | null | undefined): MasteryLevel {
-  if (!srs || srs.repetitions === 0) return 0
+  if (!srs) return 0
   const { repetitions: r, interval: i } = srs
   if (r >= 4 && i >= 21) return 4
   if (r >= 3 && i >= 10) return 3
@@ -45,11 +45,11 @@ export function getSetMastery(setId: string, cardCount: number, cardSRS: Record<
   const levels = Object.entries(cardSRS)
     .filter(([id, s]) => s.set_id === setId && (!ids || ids.has(id)))
     .map(([, s]) => getMasteryLevel(s))
-  const masteredCount = Math.min(total, levels.filter(level => level >= 3).length)
-  const learningCount = Math.min(total - masteredCount, levels.filter(level => level >= 1 && level <= 2).length)
+  const masteredCount = Math.min(total, levels.filter(level => level === 4).length)
+  const learningCount = Math.min(total - masteredCount, levels.filter(level => level >= 1 && level < 4).length)
   const seenCount = masteredCount + learningCount
   const level = total ? Math.min(4, Math.floor(levels.reduce((sum, level) => sum + level, 0) / total)) as MasteryLevel : 0
-  const pct = total ? Math.round(seenCount / total * 100) : 0
+  const pct = masteryPercent(levels.reduce((sum, level) => sum + level, 0), total)
   return { level, pct, seenCount, masteredCount, learningCount }
 }
 
@@ -61,12 +61,15 @@ export const MASTERY_INFO: Record<MasteryLevel, MasteryInfo> = {
   4: { level: 4, label: 'Mastered',   color: '#84cc16', description: '4+ correct, 21+ day interval' },
 }
 
-/** Percentage of recall strength across these cards, distinct from study coverage. */
+/** One shared score for Home, set detail, and session changes. Not a recall probability. */
 export function getMasteryChange(cards: { id: string }[], before: Record<string, number>, current: Record<string, CardSRS>) {
   const ids = [...new Set(cards.map(card => card.id))]
-  const score = (level: (id: string) => number) => ids.length
-    ? Math.round(ids.reduce((sum, id) => sum + level(id), 0) / (ids.length * 4) * 1000) / 10 : 0
+  const score = (level: (id: string) => number) => masteryPercent(ids.reduce((sum, id) => sum + level(id), 0), ids.length)
   const previous = score(id => before[id] ?? 0)
   const next = score(id => getMasteryLevel(current[id]))
   return { before: previous, after: next, delta: Math.round((next - previous) * 10) / 10 }
+}
+
+function masteryPercent(points: number, count: number): number {
+  return count ? Math.min(100, Math.round(points / (count * 4) * 1000) / 10) : 0
 }

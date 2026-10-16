@@ -106,7 +106,7 @@ export default function MasterDeckPage() {
     const level = getMasteryLevel(cardSRS[cardId])
     if (filter === null) return true
     if (filter === 3) return level < 4
-    if (filter === 2) return level >= 1 && level <= 2
+    if (filter === 2) return level >= 1 && level < 4
     if (filter === 1) return level === 0
     return true
   }

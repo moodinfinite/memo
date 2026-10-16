@@ -15,7 +15,7 @@ export default function HomePage() {
   const { user, profile } = useAuthStore()
   const { sets, fetchSets, searchSets, togglePin, isLoading } = useSetsStore()
   const { folders } = useFoldersStore()
-  const { studiedDays, totalCardsStudied, fetchProgress, progressLastFetched } = useProgressStore()
+  const { studiedDays, fetchProgress, progressLastFetched } = useProgressStore()
   const { cardSRS, fetchAllSRS } = useSRSStore()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -47,17 +47,6 @@ export default function HomePage() {
   const rest = sets.filter((s) => !s.pinned)
   const totalCards = sets.reduce((a, s) => a + (s.cardCount ?? 0), 0)
 
-  // Bootstrap validation: if sets have cards but SRS is empty, retry once then warn
-  useEffect(() => {
-    if (isLoading) return
-    if (totalCards > 0 && totalCardsStudied > 0 && Object.keys(cardSRS).length === 0) {
-      fetchAllSRS().then(() => {
-        if (Object.keys(useSRSStore.getState().cardSRS).length === 0) {
-          setDataError('Mastery data failed to load [SRS_EMPTY] — send this to support.')
-        }
-      })
-    }
-  }, [isLoading])
 
   return (
     <div className={styles.page}>
@@ -67,12 +56,7 @@ export default function HomePage() {
           <button onClick={() => setDataError(null)}>✕</button>
         </div>
       )}
-      <DailyAlmanac firstName={firstName} studiedDays={studiedDays} ready={progressLastFetched > 0} />
-
-      <div className={styles.statsRow}>
-        <div className={styles.statCard}><div className={styles.statLabel}>Cards studied total</div><div className={styles.statValue}>{totalCardsStudied.toLocaleString()}</div><div className={styles.statSub}>across all sessions</div></div>
-        <div className={styles.statCard}><div className={styles.statLabel}>Sets created</div><div className={styles.statValue}>{sets.length}</div><div className={styles.statSub}>{totalCards} cards total</div></div>
-      </div>
+      <DailyAlmanac firstName={firstName} studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />
 
       <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
@@ -141,24 +125,24 @@ function SetCard({ set, folderMap, cardSRS, onPin, onNavigate }: {
       <button className={`${styles.pinBtn}${set.pinned ? ' ' + styles.pinBtnActive : ''}`} onClick={(e) => { e.stopPropagation(); onPin() }} title={set.pinned ? 'Unpin' : 'Pin'}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill={set.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5"><path d="M9 1L5 5H2l2 2-3 5 5-3 2 2V8l4-4z"/></svg>
       </button>
-      <Link to={`/sets/${set.id}`} className={styles.setTitle} aria-label={`${set.title}, ${mastery.pct}% set progress`} onClick={e => e.stopPropagation()}>{set.title}</Link>
+      <Link to={`/sets/${set.id}`} className={styles.setTitle} aria-label={`${set.title}, ${mastery.pct}% mastery`} onClick={e => e.stopPropagation()}>{set.title}</Link>
       {set.description && <div className={styles.setDesc}>{set.description}</div>}
       {folder && <div className={styles.folderBadge}><span className={styles.folderDot} style={{ background: folder.color }} />{folder.name}</div>}
       <div className={styles.masteryOverlay} aria-hidden="true" style={{ '--mastery-fill': `${mastery.pct}%` } as React.CSSProperties}>
         <div className={styles.masteryReadout}>
           <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
-          <div className={styles.masteryOverlayLabel}>Set progress</div>
+          <div className={styles.masteryOverlayLabel}>Mastery</div>
         </div>
         <div className={styles.masteryFill}>
           <div className={styles.masteryReadout}>
             <div className={styles.masteryOverlayPct}>{mastery.pct}%</div>
-            <div className={styles.masteryOverlayLabel}>Set progress</div>
+            <div className={styles.masteryOverlayLabel}>Mastery</div>
           </div>
         </div>
       </div>
       <div className={styles.setMeta}>
         <span className={styles.setCount}>{cardCount} cards</span>
-        <span className={styles.touchProgress}>{mastery.pct}% progress</span>
+        <span className={styles.touchProgress}>{mastery.pct}% mastery</span>
       </div>
     </div>
   )

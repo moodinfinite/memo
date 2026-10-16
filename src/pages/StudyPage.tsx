@@ -134,7 +134,7 @@ export default function StudyPage() {
     const level = getMasteryLevel(srsMap[cardId])
     if (filter === null) return true
     if (filter === 3) return level < 4            // Not mastered: levels 0,1,2,3
-    if (filter === 2) return level >= 1 && level <= 2  // Still learning: seen but not confident
+    if (filter === 2) return level >= 1 && level < 4  // Still learning: introduced through confident
     if (filter === 1) return level === 0          // New only: never studied
     return true
   }
@@ -212,7 +212,7 @@ export default function StudyPage() {
 
   const handleEnd = () => {
     if (storyTerms.length > 0) {
-      // Save terms for summary, unmount StoryCard (triggers SRS updates), show checkpoint
+      // Save terms for summary, unmount StoryCard, show checkpoint
       setStorySummary(storyTerms)
       setStoryTerms([])
       return
@@ -361,7 +361,7 @@ export default function StudyPage() {
         </div>
         <div className={styles.learnStoryHint}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 1a6 6 0 1 1 0 12A6 6 0 0 1 7 1zm0 3v4l2.5 1.5"/></svg>
-          Nice work! See these words in a story, then tap <strong>Continue</strong> to lock them in.
+          Nice work! See these words in a story, then tap <strong>Continue</strong> to move on.
         </div>
         <StoryCard
           terms={storyCards}
@@ -400,9 +400,9 @@ export default function StudyPage() {
         <div className={styles.summaryWrap}>
           <div className={styles.summary}>
             <div className={styles.countScore}>🎉</div>
-            <div className={styles.summaryTitle}>All cards learned!</div>
+            <div className={styles.summaryTitle}>Practice complete!</div>
             <MasteryChange cards={currentSet.cards ?? []} />
-            <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards graduated this session</div>
+            <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards practised this session</div>
             {learnGraduated.length > 0 && (
               <div className={styles.checkpointChips}>
                 {learnCards.filter(c => learnGraduated.includes(c.id)).map((c, i) => (
@@ -412,7 +412,7 @@ export default function StudyPage() {
             )}
             <div className={styles.checkpointSaved}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7l3 3 6-6"/></svg>
-              Mastery updated for all {learnGraduated.length} words
+              Review these cards when due to keep building mastery
             </div>
             <div className={styles.summaryActions}>
               <button className={styles.retryBtn} onClick={() => startLearnSession(learnCards, id!)}>Study again</button>
@@ -444,7 +444,7 @@ export default function StudyPage() {
             )}
             <div className={styles.checkpointSaved}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7l3 3 6-6"/></svg>
-              Mastery updated — words you tapped marked for review
+              Practise recall in Learn mode to build mastery
             </div>
             <div className={styles.summaryActions}>
               <button className={styles.retryBtn} onClick={() => { setStorySummary(null); setStoryTerms(storySummary) }}>Read another story</button>

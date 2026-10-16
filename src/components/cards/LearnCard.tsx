@@ -1,73 +1,71 @@
 import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import { useStudyStore } from '@/store/studyStore'
-import { shuffle } from '@/lib/shuffle'
+import { makeLearnChoices } from '@/lib/learnChoices'
 import type { Card } from '@/lib/database.types'
 import styles from './LearnCard.module.css'
 
-function makeMCOptions(card: Card, allCards: Card[]) {
-  const others = allCards.filter(c => c.id !== card.id)
-  const distractors = shuffle(others).slice(0, 3).map(c => c.term)
-  return shuffle([
-    { text: card.term, correct: true },
-    ...distractors.map(d => ({ text: d, correct: false })),
-  ])
-}
-
 export default function LearnCard() {
   const {
-    learnBatch, learnBatchIdx, learnScores, learnGraduated, learnCards, learnQueue, answerLearnCard,
+    sessionId, learnTurn, learnBatch, learnBatchIdx, learnScores, learnGraduated, learnCards, answerLearnCard,
     learnBatchComplete, learnBatchSummary, advanceToNextBatch,
   } = useStudyStore()
 
-  const card = learnBatch[learnBatchIdx]
+  const activeCard = learnBatch[learnBatchIdx]
+  const [feedback, setFeedback] = useState<{ card: Card; recall: boolean } | null>(null)
+  const answerLock = useRef(false)
   const answerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => () => { if (answerTimer.current) clearTimeout(answerTimer.current) }, [card?.id])
+  const flipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (answerTimer.current) clearTimeout(answerTimer.current)
+    if (flipTimer.current) clearTimeout(flipTimer.current)
+  }, [sessionId])
+  const card = feedback?.card ?? activeCard
   const score = learnScores[card?.id ?? ''] ?? 0
-  const isFlashcard = score >= 1   // MC first (recognition), then flashcard (recall)
-  const totalCards = learnGraduated.length + learnBatch.length + learnQueue.length
-
-  const canMC = learnCards.length >= 4
+  const isFlashcard = feedback?.recall ?? (score >= 1)
+  const totalCards = learnCards.length
+  const canMC = !!card && makeLearnChoices(card, learnCards).length === 4
 
   const [showDef, setShowDef] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const [isFlipping, setIsFlipping] = useState(false)
   const [flash, setFlash] = useState<'correct' | 'incorrect' | null>(null)
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
-  const [mcResult, setMcResult] = useState<'idle' | 'correct' | 'incorrect'>('idle')
   const [mcOptions, setMcOptions] = useState<{ text: string; correct: boolean }[]>([])
 
+  const recordAnswer = (correct: boolean, duration: number) => {
+    if (!card || answerLock.current || useStudyStore.getState().editingCard) return false
+    answerLock.current = true
+    setFeedback({ card, recall: isFlashcard })
+    // Save now. The timer only controls feedback, so closing the page cannot lose the answer.
+    answerLearnCard(correct, { sessionId, turn: learnTurn })
+    answerTimer.current = setTimeout(() => setFeedback(null), duration)
+    return true
+  }
   const handleFlashAnswer = (correct: boolean) => {
-    if (flash) return
+    if (!recordAnswer(correct, correct ? 800 : 2000)) return
     setFlash(correct ? 'correct' : 'incorrect')
     setFlipped(false)
-    if (!correct) {
-      setShowDef(true)
-      answerTimer.current = setTimeout(() => answerLearnCard(false), 2000)
-    } else {
-      answerTimer.current = setTimeout(() => answerLearnCard(true), 800)
-    }
+    setShowDef(!correct)
   }
-
   const handleMCSelect = (idx: number, correct: boolean) => {
-    if (selectedIdx !== null) return
-    setSelectedIdx(idx)
-    setMcResult(correct ? 'correct' : 'incorrect')
-    answerTimer.current = setTimeout(() => answerLearnCard(correct), 1000)
+    if (recordAnswer(correct, 1000)) setSelectedIdx(idx)
   }
 
   // Reset local UI state when card or view type changes
   useEffect(() => {
+    if (feedback) return
+    answerLock.current = false
+    if (flipTimer.current) clearTimeout(flipTimer.current)
     setShowDef(false)
     setFlipped(false)
     setIsFlipping(false)
     setFlash(null)
     setSelectedIdx(null)
-    setMcResult('idle')
     if (!isFlashcard && card && canMC) {
-      setMcOptions(makeMCOptions(card, learnCards))
+      setMcOptions(makeLearnChoices(card, learnCards))
     }
-  }, [card?.id, card?.term, card?.definition, isFlashcard])
+  }, [card?.id, card?.term, card?.definition, isFlashcard, learnTurn, feedback, sessionId])
 
   // Keyboard shortcuts for MC (1-4)
   useEffect(() => {
@@ -87,13 +85,6 @@ export default function LearnCard() {
     return () => window.removeEventListener('keydown', handler)
   }, [isFlashcard, canMC, selectedIdx, mcOptions])
 
-  // Auto-clear flash (safety net)
-  useEffect(() => {
-    if (!flash) return
-    const t = setTimeout(() => setFlash(null), 950)
-    return () => clearTimeout(t)
-  }, [flash])
-
   // ── Batch complete screen ──────────────────────────────────────
   if (learnBatchComplete) {
     return (
@@ -102,7 +93,7 @@ export default function LearnCard() {
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 13l6 6L22 7"/></svg>
         </div>
         <div className={styles.batchCompleteTitle}>Batch complete!</div>
-        <div className={styles.batchCompleteSub}>You locked in {learnBatchSummary.length} {learnBatchSummary.length === 1 ? 'word' : 'words'} this round</div>
+        <div className={styles.batchCompleteSub}>You practised {learnBatchSummary.length} {learnBatchSummary.length === 1 ? 'word' : 'words'} this round</div>
         <div className={styles.chipGrid}>
           {learnBatchSummary.map((c, i) => (
             <div key={c.id} className={styles.chip} style={{ animationDelay: `${i * 55}ms` }}>
@@ -113,7 +104,7 @@ export default function LearnCard() {
         <div className={styles.batchProgressBar}>
           <div className={styles.batchProgressFill} style={{ width: `${(learnGraduated.length / totalCards) * 100}%` }} />
         </div>
-        <div className={styles.batchProgressLabel}>{learnGraduated.length} of {totalCards} words learned</div>
+        <div className={styles.batchProgressLabel}>{learnGraduated.length} of {totalCards} cards practised</div>
         <button className={styles.continueBtn} onClick={advanceToNextBatch}>
           Continue
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 7h8M7 3l4 4-4 4"/></svg>
@@ -142,7 +133,7 @@ export default function LearnCard() {
             )
           })}
         </div>
-        <div className={styles.learnedCount}>{learnGraduated.length} / {totalCards} learned</div>
+        <div className={styles.learnedCount}>{learnGraduated.length} / {totalCards} practised</div>
       </div>
 
       {isFlashcard || !canMC ? (
@@ -153,7 +144,7 @@ export default function LearnCard() {
             onClick={() => {
             if (flash || isFlipping) return
             setIsFlipping(true)
-            setTimeout(() => { setFlipped(v => !v); setIsFlipping(false) }, 140)
+            flipTimer.current = setTimeout(() => { setFlipped(v => !v); setIsFlipping(false) }, 140)
           }}
             style={{ cursor: flash ? 'default' : 'pointer' }}
             title="Tap to flip"

@@ -1,5 +1,7 @@
+import { readAllRows } from '@/lib/readAllRows'
+import { localDayStr } from '@/lib/localDate'
 import { registerAccountReset } from '@/lib/accountState'
-import { queueWrite, pendingWrites } from '@/lib/sync'
+import { queueWrite, pendingWrites, readLocal, writeLocal } from '@/lib/sync'
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from './authStore'
@@ -32,15 +34,22 @@ interface SRSState {
   getDueCards: (setId: string, allCards: { id: string }[]) => string[]
 }
 
-function calcNextSRS(current: CardSRS | null, known: boolean): Omit<CardSRS, 'card_id' | 'set_id' | 'last_seen_at'> {
+export function calcNextSRS(current: CardSRS | null, known: boolean): Omit<CardSRS, 'card_id' | 'set_id' | 'last_seen_at'> {
   const ef = current?.easiness ?? 2.5
   const reps = current?.repetitions ?? 0
   const interval = current?.interval ?? 1
 
+  const sameDay = !!current && localDayStr(new Date(current.last_seen_at)) === localDayStr(new Date())
+  // Extra practice must not advance an existing schedule; use persisted review dates.
+  // A failed card can recover to the introductory step, but cannot climb again today.
+  if (known && current && reps > 0 && (sameDay || !isDue(current.next_review))) {
+    const { easiness, interval, repetitions, next_review } = current
+    return { easiness, interval, repetitions, next_review }
+  }
   if (!known) {
     // Wrong answer — reset
     return {
-      easiness: Math.max(1.3, ef - 0.2),
+      easiness: sameDay && reps === 0 ? ef : Math.max(1.3, ef - 0.2),
       interval: 1,
       repetitions: 0,
       next_review: daysFromNow(1),
@@ -67,11 +76,11 @@ function calcNextSRS(current: CardSRS | null, known: boolean): Omit<CardSRS, 'ca
 function daysFromNow(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  return localDayStr(d)
 }
 
 function isDue(dateStr: string): boolean {
-  const today = new Date().toISOString().split('T')[0]
+  const today = localDayStr(new Date())
   return dateStr <= today
 }
 
@@ -100,12 +109,12 @@ export const useSRSStore = create<SRSState>((set, get) => ({
 
     const userId = useAuthStore.getState().user?.id
     if (!userId) return
+    if (!Object.keys(get().cardSRS).length) set({ cardSRS: withPendingSRS(readLocal<Record<string, CardSRS>>(`memo:srs:${userId}`) ?? {}, userId) })
     const started = Date.now()
     set({ isLoading: true })
-    const { data, error } = await supabase
-      .from('card_srs')
-      .select('*')
-      .eq('set_id', setId).eq('user_id', userId)
+    const { data, error } = await readAllRows<CardSRS>((from, to, signal) => supabase
+      .from('card_srs').select('*').eq('set_id', setId).eq('user_id', userId)
+      .order('card_id').range(from, to).abortSignal(signal))
     if (useAuthStore.getState().user?.id !== userId) return
     if ((get().lastLocalUpdate[setId] ?? 0) >= started) { set({ isLoading: false }); return }
     if (error) { set(state => ({ cardSRS: withPendingSRS(state.cardSRS, userId), isLoading: false })); return }
@@ -121,8 +130,9 @@ export const useSRSStore = create<SRSState>((set, get) => ({
     // Skip refetch if data is fresh (< 30s old)
     if (Date.now() - get().srsAllFetchedAt < 30_000 && Object.keys(get().cardSRS).length > 0) return
 
+    if (!Object.keys(get().cardSRS).length) set({ cardSRS: withPendingSRS(readLocal<Record<string, CardSRS>>(`memo:srs:${userId}`) ?? {}, userId) })
     const started = Date.now()
-    const { data, error } = await supabase.from('card_srs').select('*').eq('user_id', userId)
+    const { data, error } = await readAllRows<CardSRS>((from, to, signal) => supabase.from('card_srs').select('*').eq('user_id', userId).order('card_id').range(from, to).abortSignal(signal))
     if (useAuthStore.getState().user?.id !== userId) return
     if (error) { set(state => ({ cardSRS: withPendingSRS(state.cardSRS, userId) })); return }
     const map: Record<string, CardSRS> = {}
@@ -194,3 +204,8 @@ export const useSRSStore = create<SRSState>((set, get) => ({
 }))
 
 registerAccountReset(() => useSRSStore.setState(useSRSStore.getInitialState(), true))
+
+useSRSStore.subscribe((state, previous) => {
+  const userId = useAuthStore.getState().user?.id
+  if (userId && state !== useSRSStore.getInitialState() && state.cardSRS !== previous.cardSRS) writeLocal(`memo:srs:${userId}`, state.cardSRS)
+})

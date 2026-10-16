@@ -31,6 +31,7 @@ export interface SessionDraft {
   scope_id?: string
   session_id?: string
   state?: {
+    answeredAt?: string | null
     unshuffledOrder?: string[]
     masteryBefore?: Record<string, number> | null
     timerSecsLeft?: number; typedAnswer?: string; sentenceInput?: string; sentenceEntries?: SentenceEntry[]

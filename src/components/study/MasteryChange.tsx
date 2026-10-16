@@ -28,6 +28,6 @@ export default function MasteryChange({ cards, label = 'Set mastery' }: { cards:
       {showAfter && change.delta !== 0 && <div className={[styles.change, direction].join(' ')} style={{ left: `${Math.min(change.before, change.after)}%`, width: `${Math.abs(change.delta)}%` }} />}
       <div className={styles.marker} style={{ left: `${change.before}%` }} title={`Before this session: ${change.before}%`} />
     </div>
-    <p>Recall strength across {cards.length} cards. Repeated correct answers build it; missed answers can lower it.</p>
+    <p>Mastery across {cards.length} cards. Correct recall on separate days builds it; missed answers can lower it.</p>
   </section>
 }

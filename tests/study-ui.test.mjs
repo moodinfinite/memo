@@ -94,10 +94,10 @@ test('Home and set detail agree on progress after missed answers, with empty and
   other:{set_id:'other',repetitions:4,interval:21},
  };
  const home=getSetMastery('deck',4,records),detail=getSetMastery('deck',4,records,['a','b','c','d']);
- assert.equal(home.pct,50);assert.equal(home.pct,detail.pct);
- assert.equal(detail.learningCount,1);assert.equal(detail.masteredCount,1);
+ assert.equal(home.pct,37.5);assert.equal(home.pct,detail.pct);
+ assert.equal(detail.learningCount,2);assert.equal(detail.masteredCount,1);
  assert.equal(getSetMastery('deck',0,records).pct,0);
- assert.equal(getSetMastery('deck',2,records,['b','c']).pct,100);
+ assert.equal(getSetMastery('deck',2,records,['b','c']).pct,62.5);
  assert.equal(getSetMastery('deck',4,{},['a','b','c','d']).pct,0);
- assert.equal(getSetMastery('deck',1,records,['a']).pct,0);
+ assert.equal(getSetMastery('deck',1,records,['a']).pct,25);
 });

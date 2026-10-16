@@ -12,7 +12,7 @@ export class Storage {
   setItem(k,v) { this.values.set(k,String(v)) }
   removeItem(k) { this.values.delete(k) }
 }
-export function harness(storage = new Storage()) {
+export function harness(storage = new Storage(), clock = null) {
   const calls = [], timers = new Map(), modules = new Map(); let timerId=0;
   const db = { error: null, rows: {}, authCallback: null, registrations: 0 };
   const supabase = {
@@ -25,15 +25,22 @@ export function harness(storage = new Storage()) {
     from: table => {
       const call={table,op:'select',data:null,filters:{}};
       const chain={};
-      for(const op of ['select','insert','upsert','delete','update','eq','gt','in','order','limit','single','maybeSingle','abortSignal']) {
+      for(const op of ['select','insert','upsert','delete','update','eq','gt','in','order','limit','range','single','maybeSingle','abortSignal']) {
         chain[op]=(...args)=>{ if(['insert','upsert','delete','update'].includes(op)){call.op=op;call.data=args[0]}
+          if(op==='range')call.range=args;
           if(op==='eq')call.filters[args[0]]=args[1];return chain };
       }
-      chain.then=(resolve,reject)=>{calls.push(structuredClone(call));return Promise.resolve(db.handle?.(call) ?? {error:db.error,data:db.rows[table]??(table==='sets'?{id:'deck',cards:[]}:table==='session_drafts'?null:[])}).then(resolve,reject)};
+      chain.then=(resolve,reject)=>{
+        calls.push(structuredClone(call));
+        const rows=db.rows[table]??(table==='sets'?{id:'deck',cards:[]}:table==='session_drafts'?null:[]);
+        const data=call.op==='select'&&call.range&&Array.isArray(rows)?rows.slice(call.range[0],call.range[1]+1):rows;
+        return Promise.resolve(db.handle?.(call) ?? {error:db.error,data}).then(resolve,reject)
+      };
       return chain;
     },
   };
   const sandbox=vm.createContext({ console, crypto, AbortController, localStorage:storage,
+    ...(clock ? {Date:class extends Date {constructor(...args){super(...(args.length?args:[clock.now]))} static now(){return new Date(clock.now).getTime()}}} : {}),
     setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId},clearTimeout:id=>timers.delete(id),
     fetch:async()=>({ok:false,json:async()=>({error:'Service unavailable'})}) });
   const root=path.resolve('src');
