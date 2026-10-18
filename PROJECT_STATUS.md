@@ -7,8 +7,8 @@ Updated: 17 October 2026. Start here when switching editors or coding assistants
 - App: personal flashcards and language-learning tool, built with React, TypeScript, Vite and Zustand; Supabase stores accounts and study data.
 - Live app: https://memo-mocha-nine.vercel.app/
 - GitHub: https://github.com/moodinfinite/memo
-- Last verified deployed commit: `e1a4514` — night palette on midnight-blue paper, palette folder colors, body-font mastery % (follows `ae85281`, the two-ink palette). Vercel success and the new tokens and folder translation in the live bundle were verified on 17 October.
-- Latest verification: 51 automated tests passed; type check and production build passed. A contrast audit of every visible text element found no WCAG AA failures in light or dark on Home, all sets, set details, new set, master deck, mode picker, Learn and flashcards. Story and sentence screens need the AI endpoints and were checked from CSS only. Browser checks used synthetic cards rather than real study data.
+- Last verified deployed commit: `856b47a` — resume prompt shows real progress (Learn counts practised + started cards) and is skipped for sessions with no answers. Vercel success and the new wording in the live study chunk were verified on 18 October. Earlier: `e1a4514` night palette / folder colors, `ae85281` two-ink palette.
+- Latest verification: 53 automated tests passed (2 new resume-progress tests); earlier palette checks: 51 tests passed; type check and production build passed. A contrast audit of every visible text element found no WCAG AA failures in light or dark on Home, all sets, set details, new set, master deck, mode picker, Learn and flashcards. Story and sentence screens need the AI endpoints and were checked from CSS only. Browser checks used synthetic cards rather than real study data.
 - Jeffrey prefers changes to go live straight away: work in the release checkout and push to main, after tests and build.
 
 ## Where the work lives
@@ -17,7 +17,7 @@ Updated: 17 October 2026. Start here when switching editors or coding assistants
 - Release checkout: `/Users/JeffreyWu/Documents/Codex/2026-10-13/thi/work/memo-release`
 - Synthetic browser preview: `/Users/JeffreyWu/Documents/Codex/2026-10-13/thi/work/memo-ui-preview`
 
-The original folder's Git HEAD is still `07be8e1`, with newer source changes present as uncommitted files. It was synced from the release checkout after `e1a4514`; do not discard those changes or assume the original HEAD reflects the deployed app. Compare files before copying between folders, especially if another program has edited them. The preview contains a fake backend and must never be copied over the production Supabase client.
+The original folder's Git HEAD is still `07be8e1`, with newer source changes present as uncommitted files. It was synced from the release checkout after `856b47a`; do not discard those changes or assume the original HEAD reflects the deployed app. Compare files before copying between folders, especially if another program has edited them. The preview contains a fake backend and must never be copied over the production Supabase client.
 
 ## Completed
 
@@ -41,7 +41,10 @@ Jeffrey found lime accents + forest-green calendar + red header + cream too busy
 
 Typography, layout, week/month behavior, mastery logic and saving behavior were unchanged. Do not add more fonts to solve a color problem.
 
-Next concrete step: Jeffrey reviews the live app; then decide which calendar motifs (display numerals, rules, striped bands, pills, overprint) to carry into the rest of the app — options are listed in the palette plan.
+Open decisions (18 October), mocked up in the synthetic preview, nothing shipped:
+- **Night palette:** Jeffrey finds red as the night accent clashing. Options shown: Moonlight (cream display type + cyan on navy; red only for misses/errors — recommended), Lamplight (amber replaces red on navy), Graphite (cream + cyan on neutral near-black). All three pass the contrast audit on Home.
+- **Chinese size on mobile flashcards:** the card term drops to 24px on phones (Learn 26px), which is too small for characters. Options shown: bigger everywhere (40px), Chinese-aware (Chinese 56px, English unchanged), sized by length (1–2 chars 88px, 3–4 chars 60px, longer 40px). Recommended: combine Chinese-aware with length sizing.
+- Later: which calendar motifs (display numerals, rules, striped bands, pills, overprint) to carry into the rest of the app — listed in the palette plan.
 
 ## Next-generation learning — proposed, not implemented
 
