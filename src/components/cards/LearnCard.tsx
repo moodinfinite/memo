@@ -2,6 +2,7 @@ import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import { makeLearnChoices } from '@/lib/learnChoices'
+import { chineseLang } from '@/lib/cjk'
 import type { Card } from '@/lib/database.types'
 import styles from './LearnCard.module.css'
 
@@ -207,7 +208,7 @@ export default function LearnCard() {
                   disabled={selectedIdx !== null}
                 >
                   <span className={styles.mcLetter}>{['1', '2', '3', '4'][i]}</span>
-                  <span className={styles.mcText}>{opt.text}</span>
+                  <span className={styles.mcText} lang={chineseLang(opt.text)}>{opt.text}</span>
                   {state === 'correct' && <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7.5l3.5 3.5 7-7"/></svg>}
                   {state === 'incorrect' && <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 2l11 11M13 2L2 13"/></svg>}
                 </button>

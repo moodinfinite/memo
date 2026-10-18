@@ -109,6 +109,7 @@
   color: var(--text-primary);
   line-height: 1.4;
 }
+.mcOptionText:lang(zh) { font-size: 24px; line-height: 1.3; letter-spacing: 0.02em; }
 
 .mcIcon {
   flex-shrink: 0;
@@ -291,6 +292,7 @@
   .mcOptionText {
     font-size:var(--text-body);
   }
+  .mcOptionText:lang(zh) { font-size: 22px; }
   .typedTerm {
     font-size:var(--text-body);
   }

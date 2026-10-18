@@ -1,5 +1,6 @@
 import QuickEditCard from '@/components/study/QuickEditCard'
 import { useStudyStore } from '@/store/studyStore'
+import { chineseLang } from '@/lib/cjk'
 import styles from './StudyModes.module.css'
 
 export default function MultipleChoiceCard() {
@@ -40,7 +41,7 @@ export default function MultipleChoiceCard() {
               <span className={styles.mcOptionLetter}>
                 {['1', '2', '3', '4'][i]}
               </span>
-              <span className={styles.mcOptionText}>{opt}</span>
+              <span className={styles.mcOptionText} lang={chineseLang(opt)}>{opt}</span>
               {state === 'correct' && (
                 <svg className={styles.mcIcon} width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 8l4 4 8-8"/></svg>
               )}
