@@ -15,7 +15,7 @@ Jeffrey chose to follow his reference photo — a risograph-printed wall calenda
 
 Paper `--bg-base` #fbf8f1, raised #fffdf8; ink `--text-primary` #2a2321. The bright inks fail small-text contrast; use the strong shades for anything under ~18px.
 
-Night theme (17 Oct, second pass): the same two inks printed on midnight-blue paper — base #0f1923, raised #182836, cream text #f1e9dc, red #ff8064, cyan #6fd2e6. Chosen over charcoal and warm-brown variants because cyan sits naturally on blue and red-orange reads as its complement; the first warm near-black version looked muddy. At night the almanac's grain, graph paper, stripes and date offset are toned down.
+Night theme — "graphite" (18 Oct, third pass, `97960d7`): near-black paper (base #141516, raised #1e1f22) with cream #efe9df and cyan #6cc3d3 / #8bd2df. Red as the main accent clashed at night on both warm near-black (17 Oct, first pass) and midnight blue (17 Oct, second pass), so at night the red ink's **emphasis** role (display type, calendar numerals, Mastered, `--ink-red*` tokens) is remapped to cream and primary actions use cyan. Red stays only as the **miss** color (`--miss` #ff8a70 and `--red-*`): "Still learning", wrong answers, errors, warnings. Use `--miss` — not `--ink-red` — for anything that means a mistake, so it stays red in both themes. At night the almanac's grain, graph paper, stripes and date offset are toned down. Rejected night options: Moonlight (cream + cyan on navy) and Lamplight (amber replacing red on navy).
 
 ## Roles
 
@@ -25,6 +25,7 @@ Night theme (17 Oct, second pass): the same two inks printed on midnight-blue pa
 - **Neutral:** sentence feedback "Good" is neutral rather than a third color.
 - **Folders:** colors are auto-assigned by position (there is no picker), now from `--folder-1…6` (cyan, red, deep cyan, overprint violet, salmon, gray). Folders saved with the six pre-palette hex values are translated on load in `foldersStore`; the database rows are unchanged.
 - **Mastery % on Home's hover overlay** uses the body font, not the display font.
+- **Chinese text size:** text containing Chinese is tagged `lang="zh-Hant"` (`chineseLang()` in `src/lib/cjk.ts`). Multiple-choice options show it at 24px (22px phones); flashcard terms scale by length via `data-length` (`termLength()`): 1–2 chars 96/88px, 3–4 chars 72/60px, longer 48/40px. English keeps its size.
 
 Rule of thumb: one loud red thing per screen — the calendar on Home, the primary button elsewhere.
 

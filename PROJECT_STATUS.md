@@ -7,7 +7,7 @@ Updated: 17 October 2026. Start here when switching editors or coding assistants
 - App: personal flashcards and language-learning tool, built with React, TypeScript, Vite and Zustand; Supabase stores accounts and study data.
 - Live app: https://memo-mocha-nine.vercel.app/
 - GitHub: https://github.com/moodinfinite/memo
-- Last verified deployed commit: `432c2e4` — multiple-choice options containing Chinese are tagged `lang="zh-Hant"` (`src/lib/cjk.ts`) and shown at 24px (22px on phones) in Learn and Multiple choice mode. Before it, `856b47a` made the resume prompt show real progress (Learn counts practised + started cards) and skip sessions with no answers. Vercel success and the live study CSS/wording were verified on 18 October. Earlier: `e1a4514` night palette / folder colors, `ae85281` two-ink palette.
+- Last verified deployed commit: `97960d7` — graphite night palette (cream emphasis + cyan actions, red only for misses via `--miss`) and Chinese flashcard terms sized by length. Vercel success and the live tokens/CSS were verified on 18 October. Before it, `432c2e4` tagged Chinese multiple-choice options `lang="zh-Hant"` (`src/lib/cjk.ts`) at 24px (22px on phones), and `856b47a` made the resume prompt show real progress (Learn counts practised + started cards) and skip sessions with no answers. Vercel success and the live study CSS/wording were verified on 18 October. Earlier: `e1a4514` night palette / folder colors, `ae85281` two-ink palette.
 - Latest verification: 54 automated tests passed (new: 2 resume-progress, 1 Chinese-detection); earlier palette checks: 51 tests passed; type check and production build passed. A contrast audit of every visible text element found no WCAG AA failures in light or dark on Home, all sets, set details, new set, master deck, mode picker, Learn and flashcards. Story and sentence screens need the AI endpoints and were checked from CSS only. Browser checks used synthetic cards rather than real study data.
 - Jeffrey prefers changes to go live straight away: work in the release checkout and push to main, after tests and build.
 
@@ -17,7 +17,7 @@ Updated: 17 October 2026. Start here when switching editors or coding assistants
 - Release checkout: `/Users/JeffreyWu/Documents/Codex/2026-10-13/thi/work/memo-release`
 - Synthetic browser preview: `/Users/JeffreyWu/Documents/Codex/2026-10-13/thi/work/memo-ui-preview`
 
-The original folder's Git HEAD is still `07be8e1`, with newer source changes present as uncommitted files. It was synced from the release checkout after `432c2e4`; do not discard those changes or assume the original HEAD reflects the deployed app. Compare files before copying between folders, especially if another program has edited them. The preview contains a fake backend and must never be copied over the production Supabase client.
+The original folder's Git HEAD is still `07be8e1`, with newer source changes present as uncommitted files. It was synced from the release checkout after `97960d7`; do not discard those changes or assume the original HEAD reflects the deployed app. Compare files before copying between folders, especially if another program has edited them. The preview contains a fake backend and must never be copied over the production Supabase client.
 
 ## Completed
 
@@ -41,10 +41,11 @@ Jeffrey found lime accents + forest-green calendar + red header + cream too busy
 
 Typography, layout, week/month behavior, mastery logic and saving behavior were unchanged. Do not add more fonts to solve a color problem.
 
-Open decisions (18 October), mocked up in the synthetic preview, nothing shipped:
-- **Night palette:** Jeffrey finds red as the night accent clashing. Options shown: Moonlight (cream display type + cyan on navy; red only for misses/errors — recommended), Lamplight (amber replaces red on navy), Graphite (cream + cyan on neutral near-black). All three pass the contrast audit on Home.
-- **Chinese size on mobile flashcards:** the card term drops to 24px on phones (Learn 26px), which is too small for characters. Options shown: bigger everywhere (40px), Chinese-aware (Chinese 56px, English unchanged), sized by length (1–2 chars 88px, 3–4 chars 60px, longer 40px). Recommended: combine Chinese-aware with length sizing. Multiple-choice options already use the Chinese-aware tagging (`432c2e4`), so the flashcard change can reuse `chineseLang()`.
-- Later: which calendar motifs (display numerals, rules, striped bands, pills, overprint) to carry into the rest of the app — listed in the palette plan.
+Decided 18 October and shipped in `97960d7`:
+- **Night palette: Graphite** (Jeffrey's pick over Moonlight/navy and Lamplight/amber). Red read as clashing at night, so the dark theme maps the red ink's emphasis role to cream and leads actions with cyan; red is reserved for misses/errors through `--miss` / `--red-*`.
+- **Chinese size on flashcards: sized by length** (option C), applied only to text containing Chinese: 1–2 chars 96px (88px phones), 3–4 chars 72px (60px), longer 48px (40px). Uses `chineseLang()` / `termLength()` in `src/lib/cjk.ts`, same tagging as multiple-choice options.
+
+Still open: which calendar motifs (display numerals, rules, striped bands, pills, overprint) to carry into the rest of the app — listed in the palette plan.
 
 ## Next-generation learning — proposed, not implemented
 
