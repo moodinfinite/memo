@@ -8,8 +8,9 @@ import styles from './LearnCard.module.css'
 export default function LearnCard() {
   const {
     sessionId, learnTurn, learnBatch, learnBatchIdx, learnScores, learnGraduated, learnCards, answerLearnCard,
-    learnBatchComplete, learnBatchSummary, advanceToNextBatch,
+    learnBatchComplete, learnBatchSummary, advanceToNextBatch, known, unknown,
   } = useStudyStore()
+  const startedCount = new Set([...known, ...unknown, ...learnGraduated]).size
 
   const activeCard = learnBatch[learnBatchIdx]
   const [feedback, setFeedback] = useState<{ card: Card; recall: boolean } | null>(null)
@@ -133,7 +134,10 @@ export default function LearnCard() {
             )
           })}
         </div>
-        <div className={styles.learnedCount}>{learnGraduated.length} / {totalCards} practised</div>
+        <div className={styles.learnedCount}>
+          {learnGraduated.length} / {totalCards} practised
+          {startedCount > learnGraduated.length && ` · ${startedCount} started`}
+        </div>
       </div>
 
       {isFlashcard || !canMC ? (

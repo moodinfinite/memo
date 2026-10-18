@@ -3,7 +3,7 @@ import MasteryChange from '@/components/study/MasteryChange'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
-import { useStudyStore } from '@/store/studyStore'
+import { useStudyStore, draftProgress } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
 import { getMasteryLevel } from '@/lib/mastery'
 import type { MasteryLevel } from '@/lib/mastery'
@@ -166,7 +166,8 @@ export default function StudyPage() {
     try {
       if (selectedMode !== 'story') {
         const draft = await loadProgress(id)
-        if (draft && draft.card_order.some(cid => currentSet.cards!.some(c => c.id === cid))) {
+        // A session left before any answer has nothing to resume; starting overwrites it
+        if (draft && draftProgress(draft).hasProgress && draft.card_order.some(cid => currentSet.cards!.some(c => c.id === cid))) {
           setResumePrompt(draft)
           return
         }
@@ -256,8 +257,13 @@ export default function StudyPage() {
         <div className={styles.resumePrompt}>
           <div className={styles.resumeTitle}>Resume where you left off?</div>
           <div className={styles.resumeMeta}>
-            {resumePrompt.current_index} of {resumePrompt.card_order.length} cards completed
-            · {MODES.find(m => m.id === resumePrompt.mode)?.label}
+            {(() => {
+              const { done, started, total } = draftProgress(resumePrompt)
+              return resumePrompt.mode === 'learn'
+                ? `${done} of ${total} cards practised${started > done ? ` · ${started} started` : ''}`
+                : `${done} of ${total} cards done`
+            })()}
+            {' · '}{MODES.find(m => m.id === resumePrompt.mode)?.label}
           </div>
           <div className={styles.resumeActions}>
             <button className={styles.startBtn} onClick={() => handleResume(resumePrompt)} disabled={isStarting}>{isStarting ? 'Loading…' : 'Resume session'}</button>

@@ -78,6 +78,22 @@ interface StudyState {
 
 const LEARN_BATCH_SIZE = 5
 const draftKey = (user: string, scope: string) => `memo:draft:${user}:${scope}`
+
+/**
+ * What a saved draft holds, for the resume prompt. Learn never advances
+ * current_index, so its progress comes from practised (graduated) cards and
+ * the cards answered at least once.
+ */
+export function draftProgress(draft: SessionDraft) {
+  const total = draft.card_order.length
+  const graduated = draft.state?.learnGraduated ?? []
+  const started = draft.mode === 'learn'
+    ? new Set([...draft.known_ids, ...draft.unknown_ids, ...graduated]).size
+    : Math.min(draft.current_index, total)
+  const done = draft.mode === 'learn' ? new Set(graduated).size : started
+  const hasProgress = started > 0 || !!draft.state?.sentenceInput?.trim()
+  return { total, done, started, hasProgress }
+}
 const initialLearn = {
   learnTurn: 0, learnActive: false, learnCards: [] as Card[], learnBatch: [] as Card[], learnQueue: [] as Card[],
   learnGraduated: [] as string[], learnScores: {} as Record<string, number>, learnBatchIdx: 0,
