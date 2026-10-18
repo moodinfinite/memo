@@ -127,7 +127,7 @@
 }
 .floatingSaveBtnRetry {
   border-color: var(--red-border);
-  background: color-mix(in srgb, var(--ink-red) 8%, transparent);
+  background: color-mix(in srgb, var(--miss) 8%, transparent);
   color: var(--red-text);
 }
 .floatingSaveSpinner {

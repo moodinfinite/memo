@@ -9,7 +9,7 @@
 .tallyGreat,.tallyGood,.tallyNeeds{font-size:var(--text-body);font-weight:500;padding:3px 10px;border-radius:20px}
 .tallyGreat{background:color-mix(in srgb, var(--accent) 12%, transparent);color:var(--accent-text);border:1px solid var(--accent-border)}
 .tallyGood{background:var(--bg-overlay);color:var(--text-secondary);border:1px solid var(--border-default)}
-.tallyNeeds{background:color-mix(in srgb, var(--ink-red) 10%, transparent);color:var(--red-text);border:1px solid color-mix(in srgb, var(--ink-red) 25%, transparent)}
+.tallyNeeds{background:color-mix(in srgb, var(--miss) 10%, transparent);color:var(--red-text);border:1px solid color-mix(in srgb, var(--miss) 25%, transparent)}
 
 /* Save status */
 .saveStatus{display:flex;align-items:center;gap:6px;font-size:var(--text-body);color:var(--text-tertiary);justify-content:center}
@@ -27,7 +27,7 @@
 .badge{font-size:var(--text-body);font-weight:500;padding:2px 8px;border-radius:20px;flex-shrink:0}
 .great{background:color-mix(in srgb, var(--accent) 12%, transparent);color:var(--accent-text);border:1px solid var(--accent-border)}
 .good{background:var(--bg-overlay);color:var(--text-secondary);border:1px solid var(--border-default)}
-.needsWork{background:color-mix(in srgb, var(--ink-red) 10%, transparent);color:var(--red-text);border:1px solid color-mix(in srgb, var(--ink-red) 25%, transparent)}
+.needsWork{background:color-mix(in srgb, var(--miss) 10%, transparent);color:var(--red-text);border:1px solid color-mix(in srgb, var(--miss) 25%, transparent)}
 .entrySentence{font-size:var(--text-body);color:var(--text-primary);line-height:1.5;font-style:italic}
 .entryFeedback{font-size:var(--text-body);color:var(--text-secondary);line-height:1.5}
 .entryImproved{background:var(--bg-overlay);border-radius:var(--r-sm);padding:10px 12px;display:flex;flex-direction:column;gap:3px}

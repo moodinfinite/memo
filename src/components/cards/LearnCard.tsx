@@ -2,7 +2,7 @@ import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import { makeLearnChoices } from '@/lib/learnChoices'
-import { chineseLang } from '@/lib/cjk'
+import { chineseLang, termLength } from '@/lib/cjk'
 import type { Card } from '@/lib/database.types'
 import styles from './LearnCard.module.css'
 
@@ -158,19 +158,19 @@ export default function LearnCard() {
             {!flipped ? (
               <>
                 <div className={styles.cardSideLabel}>Definition</div>
-                <div className={styles.cardTerm}>{card.definition}</div>
+                <div className={styles.cardTerm} lang={chineseLang(card.definition)} data-length={termLength(card.definition)}>{card.definition}</div>
               </>
             ) : (
               <>
                 <div className={styles.cardSideLabel}>Term</div>
-                <div className={styles.cardTerm}>{card.term}</div>
+                <div className={styles.cardTerm} lang={chineseLang(card.term)} data-length={termLength(card.term)}>{card.term}</div>
               </>
             )}
             {showDef && !flipped && (
               <div className={styles.definitionReveal}>
                 <div className={styles.defDivider} />
                 <div className={styles.defLabel}>Term</div>
-                <div className={styles.defText}>{card.term}</div>
+                <div className={styles.defText} lang={chineseLang(card.term)}>{card.term}</div>
               </div>
             )}
           </div>

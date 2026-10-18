@@ -263,7 +263,7 @@ font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
   display: flex;
   gap: 16px;
 }
-.legendMastered { font-size:var(--text-body); color: var(--red-text); }
+.legendMastered { font-size:var(--text-body); color: var(--ink-red-strong); }
 .legendLearning  { font-size:var(--text-body); color: var(--accent-text); }
 .legendUntouched { font-size:var(--text-body); color: var(--text-tertiary); }
 

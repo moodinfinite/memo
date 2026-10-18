@@ -45,6 +45,7 @@
   --red-subtle:      var(--ink-red-tint);
   --red-text:        var(--ink-red-strong);
   --red-border:      var(--ink-red-border);
+  --miss:            var(--ink-red);
 
   /* Mastery levels 0–4: one cyan ramp, with Mastered stamped in red */
   --mastery-0:       #b9aea4;
@@ -83,42 +84,51 @@
   --transition-fast: var(--t-fast);
 }
 
-/* Night: the same two inks printed on midnight-blue paper */
+/*
+ * Night ("graphite"): near-black paper, cream takes over the red ink's
+ * emphasis role (display type, calendar numerals, Mastered) and cyan leads
+ * actions. Red stays only as the miss/error color.
+ */
 [data-theme="dark"] {
-  --ink-red:           #ff8064;
-  --ink-red-strong:    #ff9279;
-  --ink-red-tint:      #3b2328;
-  --ink-red-border:    #7d3e3b;
-  --ink-cyan:          #6fd2e6;
-  --ink-cyan-strong:   #8adcee;
-  --ink-cyan-tint:     #133446;
-  --ink-cyan-border:   #275d72;
+  --ink-red:           #efe9df;
+  --ink-red-strong:    #efe9df;
+  --ink-red-tint:      #2a2c30;
+  --ink-red-border:    #3a3d42;
+  --ink-cyan:          #6cc3d3;
+  --ink-cyan-strong:   #8bd2df;
+  --ink-cyan-tint:     #1a2f34;
+  --ink-cyan-border:   #2c4c54;
 
-  --primary:         var(--ink-red);
-  --primary-hover:   #ff9a82;
-  --on-primary:      #1a0f0c;
-  --on-accent:       #0b1a22;
+  --primary:         var(--ink-cyan-strong);
+  --primary-hover:   #a6dde7;
+  --on-primary:      #0e1a1d;
+  --on-accent:       #0e1a1d;
 
-  --bg-base:         #0f1923;
-  --bg-surface:      #13202c;
-  --bg-raised:       #182836;
-  --bg-overlay:      #1f3343;
-  --text-primary:    #f1e9dc;
-  --text-secondary:  #b9c2c8;
-  --text-tertiary:   #8f9ba4;
-  --border-subtle:   rgba(190,220,240,0.10);
-  --border-default:  rgba(190,220,240,0.17);
-  --border-strong:   rgba(190,220,240,0.28);
+  --bg-base:         #141516;
+  --bg-surface:      #18191b;
+  --bg-raised:       #1e1f22;
+  --bg-overlay:      #27292c;
+  --text-primary:    #efe9df;
+  --text-secondary:  #bdb8b0;
+  --text-tertiary:   #959089;
+  --border-subtle:   rgba(255,255,255,0.09);
+  --border-default:  rgba(255,255,255,0.15);
+  --border-strong:   rgba(255,255,255,0.25);
 
-  --mastery-0:       #5d6b77;
-  --mastery-1:       #2d6c80;
-  --mastery-2:       #45a8c2;
+  --red-subtle:      #3b2328;
+  --red-text:        #ff8a70;
+  --red-border:      #7d3e3b;
+  --miss:            #ff8a70;
+
+  --mastery-0:       #5f5c58;
+  --mastery-1:       #3f7a87;
+  --mastery-2:       var(--ink-cyan);
   --mastery-3:       var(--ink-cyan-strong);
 
-  --folder-3:        #3a9cb4;
+  --folder-3:        #3f8a99;
   --folder-4:        #a596e6;
   --folder-5:        #f2a597;
-  --folder-6:        #9aa5ae;
+  --folder-6:        #9b968f;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
