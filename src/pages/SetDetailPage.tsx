@@ -8,7 +8,8 @@ import { SetDetailSkeleton } from '@/components/ui/Skeleton'
 import styles from './SetDetailPage.module.css'
 
 function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
-  if (level === 0) return null
+  // Unseen cards keep the badge's width so every row's term/definition divider lines up
+  if (level === 0) return <div className={styles.starPlaceholder} aria-hidden="true" />
   const { color, label } = MASTERY_INFO[level]
   // 8-point starburst path (24×24 viewBox, outer r=11, inner r=5)
   const pts: string[] = []
@@ -33,6 +34,14 @@ function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
   )
 }
 
+type CardSort = 'original' | 'weakest' | 'strongest'
+const sortPreferenceKey = 'memo-card-sort'
+const SORT_OPTIONS: { id: CardSort; label: string }[] = [
+  { id: 'original', label: 'Original' },
+  { id: 'weakest', label: 'Weakest first' },
+  { id: 'strongest', label: 'Strongest first' },
+]
+
 export default function SetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -41,7 +50,18 @@ export default function SetDetailPage() {
   const { cardSRS, fetchSRS } = useSRSStore()
   const [showFolderPicker, setShowFolderPicker] = useState(false)
   const [exported, setExported] = useState(false)
+  const [sort, setSort] = useState<CardSort>(() => {
+    try {
+      const saved = localStorage.getItem(sortPreferenceKey)
+      return saved === 'weakest' || saved === 'strongest' ? saved : 'original'
+    } catch { return 'original' }
+  })
   const folderPickerRef = useRef<HTMLDivElement>(null)
+
+  const chooseSort = (next: CardSort) => {
+    setSort(next)
+    try { localStorage.setItem(sortPreferenceKey, next) } catch { /* Sorting still works without device storage. */ }
+  }
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -97,6 +117,12 @@ export default function SetDetailPage() {
   const progress = getSetMastery(currentSet.id, total, cardSRS, cards.map(card => card.id))
   const { masteredCount, learningCount } = progress
   const untouchedCount = total - masteredCount - learningCount
+
+  // Ties within a mastery level go by review interval, then original position
+  const rows = cards.map((card, index) => ({ card, index, level: getMasteryLevel(cardSRS[card.id]), interval: cardSRS[card.id]?.interval ?? 0 }))
+  const direction = sort === 'strongest' ? -1 : 1
+  const sortedRows = sort === 'original' ? rows
+    : [...rows].sort((a, b) => direction * (a.level - b.level || a.interval - b.interval) || a.index - b.index)
 
   const isSyncing = id ? pendingSaves.includes(id) : false
   const syncError = id ? saveErrors[id] : undefined
@@ -177,7 +203,14 @@ export default function SetDetailPage() {
         </div>
       </div>
 
-      <div className={styles.sectionLabel}>All cards</div>
+      <div className={styles.listHeader}>
+        <div className={styles.sectionLabel}>All cards</div>
+        <div className={styles.sortToggle} role="group" aria-label="Sort cards">
+          {SORT_OPTIONS.map(option => (
+            <button key={option.id} type="button" aria-pressed={sort === option.id} onClick={() => chooseSort(option.id)}>{option.label}</button>
+          ))}
+        </div>
+      </div>
 
       <div className={styles.cardList}>
         {cardsLoading && Array.from({ length: Math.min(currentSet.cardCount ?? 3, 8) }).map((_, i) => (
@@ -190,11 +223,10 @@ export default function SetDetailPage() {
             </div>
           </div>
         ))}
-        {!cardsLoading && (currentSet.cards ?? []).map((card, i) => {
-          const level = getMasteryLevel(cardSRS[card.id])
+        {!cardsLoading && sortedRows.map(({ card, index, level }) => {
           return (
             <div key={card.id} className={styles.cardRow}>
-              <span className={styles.rowNum}>{i + 1}</span>
+              <span className={styles.rowNum}>{index + 1}</span>
               <div className={styles.rowContent}>
                 <div className={styles.term}>{card.term}</div>
                 <div className={styles.divider} />
