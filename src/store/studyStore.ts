@@ -60,7 +60,7 @@ interface StudyState {
   setSentenceInput: (val: string) => void
   submitSentence: () => Promise<void>
   nextSentenceCard: () => void
-  startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number }) => void
+  startSession: (cards: Card[], mode: StudyMode, setId: string, opts?: { shuffle?: boolean; timerDurMin?: number; sessionId?: string }) => void
   resumeSession: (draft: SessionDraft, cards: Card[]) => void
   saveProgress: () => void
   loadProgress: (setId: string) => Promise<SessionDraft | null>
@@ -78,6 +78,8 @@ interface StudyState {
 
 const LEARN_BATCH_SIZE = 5
 const draftKey = (user: string, scope: string) => `memo:draft:${user}:${scope}`
+// Cross-set scopes (Master Deck, Daily 10) are named __like_this__ and belong to no single set
+const setRowId = (scope: string) => (scope.startsWith('__') ? null : scope)
 
 /**
  * What a saved draft holds, for the resume prompt. Learn never advances
@@ -134,7 +136,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     let ordered = [...cards.filter(c => due.has(c.id)), ...cards.filter(c => !due.has(c.id))]
     const unshuffledOrder = ordered.map(c => c.id)
     if (opts.shuffle) ordered = shuffle(ordered)
-    set({ ...initialSession, ...initialLearn, sessionId: crypto.randomUUID(), masteryBefore: snapshotMastery(), mode, setId, sessionCards: ordered,
+    set({ ...initialSession, ...initialLearn, sessionId: opts.sessionId ?? crypto.randomUUID(), masteryBefore: snapshotMastery(), mode, setId, sessionCards: ordered,
       mcQuestions: mode === 'multiple_choice' ? generateMCQuestions(ordered) : [],
       unshuffledOrder, doShuffle: !!opts.shuffle, timerOn: !!opts.timerDurMin, timerDurMin: opts.timerDurMin ?? 0,
       timerSecsLeft: (opts.timerDurMin ?? 0) * 60 })
@@ -299,7 +301,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       learnGraduated: s.learnGraduated, learnScores: s.learnScores, learnBatchIdx: s.learnBatchIdx,
       learnBatchComplete: s.learnBatchComplete, learnBatchSummary: s.learnBatchSummary.map(c => c.id), learnStoryReady: s.learnStoryReady,
     }
-    const draft = { user_id: user.id, set_id: s.setId === '__master__' ? null : s.setId, scope_id: s.setId,
+    const draft = { user_id: user.id, set_id: setRowId(s.setId), scope_id: s.setId,
       session_id: s.sessionId, mode: s.mode, card_order: s.sessionCards.map(c => c.id), current_index: s.currentIndex,
       known_ids: s.known, unknown_ids: s.unknown, do_shuffle: s.doShuffle, timer_dur_min: s.timerDurMin,
       updated_at: new Date().toISOString(), state }
@@ -420,7 +422,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 function queueSession(s: StudyState, userId: string) {
   const total = s.known.length + s.unknown.length
   queueWrite({ userId, key: `session:${s.sessionId}`, table: 'study_sessions', operation: 'upsert', conflict: 'id', data: {
-    id: s.sessionId, user_id: userId, set_id: s.setId === '__master__' ? null : s.setId, mode: s.mode,
+    id: s.sessionId, user_id: userId, set_id: setRowId(s.setId), mode: s.mode,
     total_cards: total, known_count: s.known.length, unknown_count: s.unknown.length,
     score_pct: total ? Math.round(s.known.length / total * 100) : 0, completed_at: s.answeredAt ?? new Date().toISOString(), sentence_entries: s.sentenceEntries,
   } })

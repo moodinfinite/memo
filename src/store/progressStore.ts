@@ -11,6 +11,7 @@ interface ProgressState {
   weekStreak: number
   dayStreak: number
   studiedDays: string[]          // local 'YYYY-MM-DD' strings with ≥1 session
+  sessionIds: string[]           // recorded sessions with answers, including ones still waiting to sync
   totalCardsStudied: number
   isLoading: boolean
   progressLastFetched: number
@@ -109,6 +110,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   weekStreak: 0,
   dayStreak: 0,
   studiedDays: [],
+  sessionIds: [],
   totalCardsStudied: 0,
   isLoading: false,
   progressLastFetched: 0,
@@ -131,7 +133,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       const s = [...map.values()].filter(row => row.total_cards > 0)
       const daySet = new Set(s.map(row => localDayStr(new Date(row.completed_at))))
       set({ weekStreak: calculateWeekStreak(s), dayStreak: calculateDayStreak(daySet),
-        studiedDays: [...daySet], totalCardsStudied: s.reduce((sum, row) => sum + row.total_cards, 0) })
+        studiedDays: [...daySet], sessionIds: s.map(row => row.id), totalCardsStudied: s.reduce((sum, row) => sum + row.total_cards, 0) })
     }
     apply(readLocal<SessionRow[]>(cacheKey) ?? [])
     if (!force && Date.now() - get().progressLastFetched < 60_000) { set({ isLoading: false }); return }

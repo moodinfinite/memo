@@ -9,6 +9,7 @@ import { getSetMastery } from '@/lib/mastery'
 import type { FlashcardSet } from '@/lib/database.types'
 import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import DailyAlmanac from '@/components/home/DailyAlmanac'
+import DailyCard from '@/components/home/DailyCard'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
@@ -57,6 +58,7 @@ export default function HomePage() {
         </div>
       )}
       <DailyAlmanac firstName={firstName} studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />
+      {totalCards > 0 && <DailyCard />}
 
       <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
