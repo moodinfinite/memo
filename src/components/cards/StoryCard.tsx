@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { Card } from '@/lib/database.types'
 import { useSetsStore } from '@/store/setsStore'
 import { supabase } from '@/lib/supabase'
+import { cardDefinition, loadDictionary, lookupText, type LookupPart } from '@/lib/dictionary'
 import styles from './StoryCard.module.css'
+
+const MAX_LOOKUP_ROWS = 4
 
 interface Props {
   terms: Card[]
@@ -34,6 +38,8 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
   const [tooltip, setTooltip] = useState<{ term: string; def: string } | null>(null)
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'saved' | 'error'>('idle')
+  const [lookup, setLookup] = useState<{ status: 'loading' } | { status: 'ready'; parts: LookupPart[] } | { status: 'error' }>({ status: 'loading' })
+  const [lookupAttempt, setLookupAttempt] = useState(0)
   const storyElRef = useRef<HTMLParagraphElement>(null)
   const saveBarRef = useRef<HTMLDivElement>(null)
   const { saveToSavedWords } = useSetsStore()
@@ -76,18 +82,25 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
     }
   }, [])
 
+  // Offline dictionary lookup for the selection (downloaded once, on first use)
+  useEffect(() => {
+    if (!selectedWord) return
+    let current = true
+    setLookup({ status: 'loading' })
+    loadDictionary()
+      .then(dict => { if (current) setLookup({ status: 'ready', parts: lookupText(dict, selectedWord) }) })
+      .catch(() => { if (current) setLookup({ status: 'error' }) })
+    return () => { current = false }
+  }, [selectedWord, lookupAttempt])
+
+  const lookupParts = lookup.status === 'ready' ? lookup.parts : []
+  const definition = cardDefinition(lookupParts)
+
   const handleSaveWord = async () => {
-    if (!selectedWord || saveStatus === 'loading') return
+    if (!definition || saveStatus === 'loading') return
     setSaveStatus('loading')
     try {
-      const res = await fetch('/api/lookup-word', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ word: selectedWord }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      await saveToSavedWords(selectedWord, data.definition)
+      await saveToSavedWords(lookupParts.map(part => part.word).join(''), definition)
       setSaveStatus('saved')
       setTimeout(() => { window.getSelection()?.removeAllRanges(); setSelectedWord(null); setSaveStatus('idle') }, 1200)
     } catch {
@@ -206,43 +219,64 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
         </div>
       )}
 
-      {/* Save-to-deck snackbar — fixed at bottom center, never drifts */}
-      {selectedWord && story && (
-        <div
-          ref={saveBarRef}
-          className={[styles.floatingSave, saveStatus === 'error' ? styles.floatingSaveError : ''].join(' ')}
-        >
-          {saveStatus === 'error' ? (
-            <>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0 }}><circle cx="6.5" cy="6.5" r="5.5"/><path d="M6.5 4v3M6.5 8.5v.5" strokeLinecap="round"/></svg>
-              <span className={styles.floatingSaveWord} style={{ color: 'inherit' }}>Couldn't save</span>
-              <button className={[styles.floatingSaveBtn, styles.floatingSaveBtnRetry].join(' ')} onClick={handleSaveWord}>
-                Retry
-              </button>
-            </>
-          ) : (
-            <>
-              <span className={styles.floatingSaveWord}>「{selectedWord}」</span>
+      {/* Dictionary card for the selection, pinned to the bottom of the screen. Rendered into
+          <body>: the story wrapper's entrance animation leaves a transform, which would
+          otherwise make it the frame for position: fixed. */}
+      {selectedWord && story && createPortal(
+        <div ref={saveBarRef} className={styles.lookupCard} role="dialog" aria-label={`Dictionary: ${selectedWord}`}>
+          <button className={styles.floatingSaveDismiss} aria-label="Close" onClick={() => { window.getSelection()?.removeAllRanges(); setSelectedWord(null); setSaveStatus('idle') }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l8 8M9 1L1 9"/></svg>
+          </button>
+          {lookup.status === 'loading' && (
+            <div className={styles.lookupStatus}>
+              <svg className={styles.floatingSaveSpinner} width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="5.5" cy="5.5" r="4" strokeOpacity="0.25"/><path d="M5.5 1.5a4 4 0 0 1 4 4" strokeLinecap="round"/></svg>
+              Looking up 「{selectedWord}」…
+            </div>
+          )}
+          {lookup.status === 'error' && (
+            <div className={styles.lookupStatus}>
+              The dictionary didn't load.
+              <button className={[styles.floatingSaveBtn, styles.floatingSaveBtnRetry].join(' ')} onClick={() => setLookupAttempt(n => n + 1)}>Retry</button>
+            </div>
+          )}
+          {lookup.status === 'ready' && (
+            <ul className={styles.lookupRows}>
+              {(lookupParts.length === 1
+                ? lookupParts[0].entries.slice(0, 2).map(entry => ({ word: lookupParts[0].word, entry }))
+                : lookupParts.slice(0, MAX_LOOKUP_ROWS).map(part => ({ word: part.word, entry: part.entries[0] }))
+              ).map(({ word, entry }, i) => (
+                <li key={i} className={styles.lookupRow}>
+                  <span className={styles.lookupWord} lang="zh-Hant">{word}</span>
+                  <span className={styles.lookupText}>
+                    {entry ? <><span className={styles.lookupPinyin}>{entry.pinyin}</span>{entry.meaning}</> : 'Not in the dictionary'}
+                  </span>
+                </li>
+              ))}
+              {lookupParts.length === 1 && !lookupParts[0].entries.length && (
+                <li className={styles.lookupRow}><span className={styles.lookupWord} lang="zh-Hant">{lookupParts[0].word}</span><span className={styles.lookupText}>Not in the dictionary</span></li>
+              )}
+              {lookupParts.length > MAX_LOOKUP_ROWS && <li className={styles.lookupMore}>+{lookupParts.length - MAX_LOOKUP_ROWS} more words</li>}
+              {!lookupParts.length && <li className={styles.lookupText}>Select Chinese characters to look them up.</li>}
+            </ul>
+          )}
+          <div className={styles.lookupFooter}>
+            {saveStatus === 'error' ? (
+              <button className={[styles.floatingSaveBtn, styles.floatingSaveBtnRetry].join(' ')} onClick={handleSaveWord}>Couldn't save — retry</button>
+            ) : (
               <button
                 className={[styles.floatingSaveBtn, saveStatus === 'saved' ? styles.floatingSaveBtnSaved : ''].join(' ')}
                 onClick={handleSaveWord}
-                disabled={saveStatus === 'loading' || saveStatus === 'saved'}
+                disabled={!definition || saveStatus === 'loading' || saveStatus === 'saved'}
               >
-                {saveStatus === 'loading' && (
-                  <>
-                    <svg className={styles.floatingSaveSpinner} width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="5.5" cy="5.5" r="4" strokeOpacity="0.25"/><path d="M5.5 1.5a4 4 0 0 1 4 4" strokeLinecap="round"/></svg>
-                    Saving…
-                  </>
-                )}
+                {saveStatus === 'loading' && 'Saving…'}
                 {saveStatus === 'saved' && '✓ Saved'}
                 {saveStatus === 'idle' && '+ Save to deck'}
               </button>
-            </>
-          )}
-          <button className={styles.floatingSaveDismiss} onClick={() => { window.getSelection()?.removeAllRanges(); setSelectedWord(null); setSaveStatus('idle') }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l8 8M9 1L1 9"/></svg>
-          </button>
-        </div>
+            )}
+            <a className={styles.lookupCredit} href="https://www.mdbg.net/chinese/dictionary?page=cc-cedict" target="_blank" rel="noreferrer">CC-CEDICT</a>
+          </div>
+        </div>,
+        document.body,
       )}
 
       {/* Regenerate / New batch / Continue */}

@@ -86,3 +86,7 @@ npm run build
 `npm test` runs isolated store/recovery tests and an embedded PostgreSQL test suite. Tests use synthetic accounts and data; they never connect to the live database. The PostgreSQL setup substitutes a local `auth.uid()` function and uses the engine's built-in UUID generation instead of the Supabase `pgcrypto` extension.
 
 The historical security review still applies to the AI handlers: application-level endpoint authentication is a separate follow-up from these saving fixes.
+
+## Credits
+
+Story word lookups use [CC-CEDICT](https://www.mdbg.net/chinese/dictionary?page=cc-cedict), published by MDBG under the [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license. `public/cedict.txt` is a derived version of that dictionary (tone-marked pinyin, trimmed senses) and is distributed under the same license. To refresh it, download `cedict_1_0_ts_utf-8_mdbg.txt` from MDBG and run `node scripts/build-cedict.mjs <path to that file>`.
