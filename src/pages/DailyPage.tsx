@@ -9,6 +9,7 @@ import { localDayStr } from '@/lib/localDate'
 import { DAILY_SCOPE, dailySessionId, dailyState, pickDailyCards } from '@/lib/daily'
 import type { Card } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
+import StudyControls from '@/components/study/StudyControls'
 import MasteryChange from '@/components/study/MasteryChange'
 import { CountUpScore, PerfectScore } from './StudyPage'
 import { StudyPageSkeleton } from '@/components/ui/Skeleton'
@@ -16,6 +17,7 @@ import styles from './StudyPage.module.css'
 import dStyles from './DailyPage.module.css'
 
 type Phase = 'loading' | 'studying' | 'done-already' | 'empty' | 'error'
+const sidePreferenceKey = 'memo-daily-side'
 
 export default function DailyPage() {
   const navigate = useNavigate()
@@ -26,8 +28,15 @@ export default function DailyPage() {
   const [phase, setPhase] = useState<Phase>('loading')
   const [allCards, setAllCards] = useState<Card[]>([])
   const [flipKey, setFlipKey] = useState(0)
+  const [startSide, setStartSide] = useState<'term' | 'definition'>(() => {
+    try { return localStorage.getItem(sidePreferenceKey) === 'definition' ? 'definition' : 'term' } catch { return 'term' }
+  })
+  const toggleSide = () => {
+    const next = startSide === 'definition' ? 'term' : 'definition'
+    setStartSide(next)
+    try { localStorage.setItem(sidePreferenceKey, next) } catch { /* Still switches for this visit without device storage. */ }
+  }
 
-  // English first, recall the Chinese: retrieval is what makes the review stick.
   // Extra rounds (no fixed sessionId) skip cards already reviewed today, unless nothing else is left.
   const startRound = (cards: Card[], sessionId?: string, exclude: Set<string> = new Set()) => {
     const srs = useSRSStore.getState().cardSRS, today = localDayStr(new Date())
@@ -160,15 +169,18 @@ export default function DailyPage() {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
           Home
         </button>
-        <div className={dStyles.eyebrow}>Daily 10</div>
+        <div className={styles.topBarRight}>
+          <div className={dStyles.eyebrow}>Daily 10</div>
+          <StudyControls startSide={startSide} onToggleSide={toggleSide} />
+        </div>
       </div>
       <div className={styles.progressRow}>
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      <p className={dStyles.prompt}>Recall the Chinese, then flip to check.</p>
-      <FlashCard key={card.id} card={card} index={currentIndex} total={sessionCards.length}
-        onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} startSide="definition" />
+      <p className={dStyles.prompt}>{startSide === 'definition' ? 'Recall the Chinese' : 'Recall the meaning'}, then flip to check.</p>
+      <FlashCard key={`${card.id}-${startSide}`} card={card} index={currentIndex} total={sessionCards.length}
+        onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} startSide={startSide} />
       <div className={styles.kbdHint}>
         <span className={styles.kbd}><kbd>Space</kbd> flip</span>
         <span className={styles.kbd}><kbd>←</kbd> still learning</span>
