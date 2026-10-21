@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useStudyStore } from '@/store/studyStore'
 import { makeLearnChoices } from '@/lib/learnChoices'
 import { chineseLang, termLength } from '@/lib/cjk'
+import SpeakButton from '@/components/ui/SpeakButton'
 import type { Card } from '@/lib/database.types'
 import styles from './LearnCard.module.css'
 
@@ -158,11 +159,13 @@ export default function LearnCard() {
             {!flipped ? (
               <>
                 <div className={styles.cardSideLabel}>Definition</div>
+                <SpeakButton text={card.definition} className={styles.cardSpeak} />
                 <div className={styles.cardTerm} lang={chineseLang(card.definition)} data-length={termLength(card.definition)}>{card.definition}</div>
               </>
             ) : (
               <>
                 <div className={styles.cardSideLabel}>Term</div>
+                <SpeakButton text={card.term} className={styles.cardSpeak} />
                 <div className={styles.cardTerm} lang={chineseLang(card.term)} data-length={termLength(card.term)}>{card.term}</div>
               </>
             )}
@@ -171,6 +174,7 @@ export default function LearnCard() {
                 <div className={styles.defDivider} />
                 <div className={styles.defLabel}>Term</div>
                 <div className={styles.defText} lang={chineseLang(card.term)}>{card.term}</div>
+                <SpeakButton text={card.term} />
               </div>
             )}
           </div>

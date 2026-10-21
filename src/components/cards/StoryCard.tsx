@@ -4,6 +4,7 @@ import type { Card } from '@/lib/database.types'
 import { useSetsStore } from '@/store/setsStore'
 import { supabase } from '@/lib/supabase'
 import { cardDefinition, loadDictionary, lookupText, type LookupPart } from '@/lib/dictionary'
+import SpeakButton from '@/components/ui/SpeakButton'
 import styles from './StoryCard.module.css'
 
 const MAX_LOOKUP_ROWS = 4
@@ -250,6 +251,7 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
                   <span className={styles.lookupText}>
                     {entry ? <><span className={styles.lookupPinyin}>{entry.pinyin}</span>{entry.meaning}</> : 'Not in the dictionary'}
                   </span>
+                  <SpeakButton text={word} className={styles.lookupSpeak} />
                 </li>
               ))}
               {lookupParts.length === 1 && !lookupParts[0].entries.length && (

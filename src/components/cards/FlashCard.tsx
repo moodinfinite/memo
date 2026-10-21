@@ -2,6 +2,7 @@ import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
 import { chineseLang, termLength } from '@/lib/cjk'
+import SpeakButton from '@/components/ui/SpeakButton'
 import styles from './FlashCard.module.css'
 
 interface Props {
@@ -75,11 +76,13 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAn
         <div className={[styles.scene, flipped ? styles.flipped : ''].join(' ')}>
           <div className={[styles.face, styles.front].join(' ')}>
             <div className={styles.sideLabel}>{frontLabel}</div>
+            {!flipped && <SpeakButton text={frontContent} className={styles.faceSpeak} />}
             <div className={styles.content} lang={chineseLang(frontContent)} data-length={termLength(frontContent)}>{frontContent}</div>
             <div className={styles.tapHint}>tap to flip</div>
           </div>
           <div className={[styles.face, styles.back].join(' ')}>
             <div className={styles.sideLabel}>{backLabel}</div>
+            {flipped && <SpeakButton text={backContent} className={styles.faceSpeak} />}
             <div className={styles.content} lang={chineseLang(backContent)} data-length={termLength(backContent)}>{backContent}</div>
             <div className={styles.tapHint}>tap to flip back</div>
           </div>

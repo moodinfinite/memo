@@ -5,6 +5,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
 import { useFoldersStore } from '@/store/foldersStore'
+import { isLevelCheckDue, levelHistory } from '@/lib/levelTest'
 import styles from './AppLayout.module.css'
 
 export default function AppLayout() {
@@ -15,6 +16,8 @@ export default function AppLayout() {
   const location = useLocation()
   const { folders, fetchFolders, createFolder } = useFoldersStore()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const levels = levelHistory(user?.user_metadata)
+  const levelDue = isLevelCheckDue(levels)
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true')
 
   const toggleCollapsed = () => setCollapsed(v => {
@@ -39,8 +42,9 @@ export default function AppLayout() {
     <div className={styles.shell}>
       {/* Mobile top bar */}
       <header className={styles.mobileHeader}>
-        <button className={styles.hamburger} onClick={() => setMobileOpen(true)} aria-label="Open menu">
+        <button className={styles.hamburger} onClick={() => setMobileOpen(true)} aria-label={levelDue ? 'Open menu (level check due)' : 'Open menu'}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+          {levelDue && <span className={styles.nudge} />}
         </button>
         <div className={styles.mobileTitle}>Memo</div><SyncIndicator />
         <button className={styles.mobileThemeBtn} onClick={toggle}>
@@ -69,6 +73,15 @@ export default function AppLayout() {
           <NavLink to="/sets" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
             <span>All sets</span>
+          </NavLink>
+          <NavLink to="/level" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}
+            title={levelDue ? 'Level check due' : levels[0] ? `HSK ${levels[0].level}` : 'Level check'}>
+            <span className={styles.navIcon}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 14h12M4 14V9M8 14V5M12 14V2"/></svg>
+              {levelDue && <span className={styles.nudge} aria-label="Due" />}
+            </span>
+            <span>Level check</span>
+            {levels[0] && <span className={styles.levelBadge}>HSK {levels[0].level}</span>}
           </NavLink>
         </nav>
 

@@ -64,6 +64,7 @@
 .flashCorrect { background: color-mix(in srgb, var(--accent) 28%, transparent); border: 2px solid var(--accent-border); }
 .flashIncorrect { background: color-mix(in srgb, var(--miss) 24%, transparent); border: 2px solid var(--red-border); }
 
+.cardSpeak { position: absolute; top: 12px; right: 14px; }
 .cardSideLabel {
   position: absolute; top: 16px; left: 20px;
   font-size:var(--text-body); font-weight: 500; letter-spacing: 0.08em;

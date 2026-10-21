@@ -1,0 +1,4 @@
+.speak{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid var(--border-default);background:var(--bg-raised);color:var(--accent-text);cursor:pointer;transition:background var(--t-fast),border-color var(--t-fast)}
+.speak:hover{background:var(--accent-subtle);border-color:var(--accent-border)}
+.speak:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+@media(pointer:coarse){.speak{width:40px;height:40px}}

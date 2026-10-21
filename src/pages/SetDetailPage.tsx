@@ -5,6 +5,7 @@ import { useFoldersStore } from '@/store/foldersStore'
 import { useSRSStore } from '@/store/srsStore'
 import { getMasteryLevel, getSetMastery, MASTERY_INFO } from '@/lib/mastery'
 import { SetDetailSkeleton } from '@/components/ui/Skeleton'
+import SpeakButton from '@/components/ui/SpeakButton'
 import styles from './SetDetailPage.module.css'
 
 function StarburstBadge({ level }: { level: 0 | 1 | 2 | 3 | 4 }) {
@@ -228,7 +229,7 @@ export default function SetDetailPage() {
             <div key={card.id} className={styles.cardRow}>
               <span className={styles.rowNum}>{index + 1}</span>
               <div className={styles.rowContent}>
-                <div className={styles.term}>{card.term}</div>
+                <div className={styles.term}><span>{card.term}</span><SpeakButton text={card.term} className={styles.rowSpeak} /></div>
                 <div className={styles.divider} />
                 <div className={styles.definition}>{card.definition}</div>
               </div>

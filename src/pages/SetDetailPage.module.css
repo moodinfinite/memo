@@ -203,11 +203,16 @@ font-family:var(--font-display);line-height:1.2;overflow-wrap:anywhere;}
 
 .term {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size:var(--text-body);
   font-weight: 500;
   color: var(--text-primary);
   min-width: 0;
 }
+.rowSpeak { width: 28px; height: 28px; }
+@media (pointer: coarse) { .rowSpeak { width: 36px; height: 36px; } }
 
 .divider {
   width: 1px;

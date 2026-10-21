@@ -93,6 +93,7 @@
 .lookupWord { flex-shrink: 0; font-size: 22px; font-weight: 500; line-height: 1.2; color: var(--text-primary); }
 .lookupText { min-width: 0; font-size: var(--text-body); line-height: 1.45; color: var(--text-secondary); }
 .lookupPinyin { display: block; font-weight: 600; color: var(--accent-text); }
+.lookupSpeak { margin-left: auto; align-self: center; }
 .lookupMore { font-size: var(--text-body); color: var(--text-tertiary); }
 .lookupFooter { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .lookupCredit { font-size: 12px; color: var(--text-tertiary); text-decoration: underline; text-underline-offset: 2px; }

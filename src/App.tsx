@@ -18,6 +18,7 @@ const FolderPage     = lazy(() => import('@/pages/FolderPage'))
 const MasterDeckPage = lazy(() => import('@/pages/MasterDeckPage'))
 const AllSetsPage    = lazy(() => import('@/pages/AllSetsPage'))
 const DailyPage      = lazy(() => import('@/pages/DailyPage'))
+const LevelPage      = lazy(() => import('@/pages/LevelPage'))
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, initialised } = useAuthStore()
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/sets/:id/study" element={<Suspense fallback={<FullPageSkeleton />}><StudyPage /></Suspense>} />
           <Route path="/master" element={<Suspense fallback={<FullPageSkeleton />}><MasterDeckPage /></Suspense>} />
           <Route path="/daily" element={<Suspense fallback={<FullPageSkeleton />}><DailyPage /></Suspense>} />
+          <Route path="/level" element={<Suspense fallback={<FullPageSkeleton />}><LevelPage /></Suspense>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
