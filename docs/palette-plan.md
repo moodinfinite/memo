@@ -43,3 +43,7 @@ Red display greeting on paper over a double cyan rule (no solid header block); c
 6. Faint cyan graph-paper texture on the flashcard face.
 
 Suggested order: 1–3 first (low risk, most cohesion), 4–6 as optional flourishes.
+
+## Reference kept for later (21 October)
+
+Jeffrey liked how clean a vocabulary app looked: pastel-tinted cards (one soft tint per card), simple black line illustrations, serif card titles, generous white space, and a compact "Learning fast" stats card. Kept as a future reference only — not adopted. If borrowed, map the tints onto the existing `--ink-*-tint` tokens rather than adding colors.

@@ -9,6 +9,11 @@ const SKILLS = ['vocabulary', 'grammar', 'reading'] as const
 type Skill = typeof SKILLS[number]
 export interface Item { skill: Skill; passage: string; question: string; options: string[]; answer: number; explanation: string }
 
+// Public project values (also shipped in the browser bundle). Vercel functions don't see the
+// tracked .env that Vite builds from, so these are the fallback.
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://rjdamlnfoaxcgcjcjehg.supabase.co'
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqZGFtbG5mb2F4Y2djamNqZWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNDYzMjMsImV4cCI6MjA4OTgyMjMyM30.kCGsR08uqvrLp15uduCtR_Ru8_ZFXe-dI07eSmJwHpw'
+
 const requestLog = new Map<string, number[]>()
 const MAX_REQUESTS = 30
 const WINDOW_MS = 10 * 60_000
@@ -26,12 +31,11 @@ const clean = (value: unknown, max: number) =>
 
 async function signedInUser(req: any): Promise<string | null> {
   const token = String(req.headers.authorization ?? '').replace(/^Bearer\s+/i, '').trim()
-  const url = process.env.VITE_SUPABASE_URL, anonKey = process.env.VITE_SUPABASE_ANON_KEY
-  if (!token || !url || !anonKey) return null
+  if (!token) return null
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 8000)
   try {
-    const res = await fetch(`${url}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: anonKey }, signal: controller.signal })
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON_KEY }, signal: controller.signal })
     if (!res.ok) return null
     const user = await res.json()
     return typeof user?.id === 'string' ? user.id : null
@@ -134,7 +138,6 @@ function validItems(raw: unknown): Item[] {
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'API key not configured' })
-  if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) return res.status(500).json({ error: 'Sign-in check not configured' })
 
   const userId = await signedInUser(req)
   if (!userId) return res.status(401).json({ error: 'Please sign in again to take the level check.' })
