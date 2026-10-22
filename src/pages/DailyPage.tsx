@@ -6,7 +6,7 @@ import { useStudyStore, draftProgress } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
 import { useProgressStore } from '@/store/progressStore'
 import { localDayStr } from '@/lib/localDate'
-import { DAILY_SCOPE, dailySessionId, dailyState, pickDailyCards } from '@/lib/daily'
+import { DAILY_SCOPE, dailySessionId, dailyState, pickDailyCards, saveDailyResult } from '@/lib/daily'
 import type { Card } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
 import StudyControls from '@/components/study/StudyControls'
@@ -95,6 +95,14 @@ export default function DailyPage() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [phase, isComplete])
+
+  // The day's own round (not "10 more") feeds the score on Home's Daily 10 card
+  useEffect(() => {
+    const user = useAuthStore.getState().user
+    if (!isComplete || !user) return
+    const today = localDayStr(new Date())
+    if (useStudyStore.getState().sessionId === dailySessionId(user.id, today)) saveDailyResult(today, known.length, known.length + unknown.length)
+  }, [isComplete])
 
   const leave = () => {
     if (phase === 'studying' && !isComplete) persistSession()

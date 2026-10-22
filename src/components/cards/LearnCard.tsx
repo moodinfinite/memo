@@ -194,7 +194,8 @@ export default function LearnCard() {
         <div className={styles.mcWrap}>
           <div className={styles.mcQuestion}>
             <div className={styles.mcLabel}>Which term matches this definition?</div>
-            <div className={styles.mcTerm}>{card.definition}</div>
+            <div className={styles.mcTerm} lang={chineseLang(card.definition)}>{card.definition}</div>
+            <SpeakButton text={card.definition} className={styles.cardSpeak} />
           </div>
           <div className={styles.mcOptions}>
             {mcOptions.map((opt, i) => {
@@ -205,9 +206,9 @@ export default function LearnCard() {
                 else state = 'dim'
               }
               return (
+                <div key={i} className={styles.mcOptionRow}>
                 <button
-                  key={i}
-                  className={[styles.mcOption, styles[`mcOption_${state}`]].join(' ')}
+                  className={[styles.mcOption, styles[`mcOption_${state}`], chineseLang(opt.text) ? styles.mcOptionSpoken : ''].join(' ')}
                   onClick={() => handleMCSelect(i, opt.correct)}
                   disabled={selectedIdx !== null}
                 >
@@ -216,6 +217,8 @@ export default function LearnCard() {
                   {state === 'correct' && <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7.5l3.5 3.5 7-7"/></svg>}
                   {state === 'incorrect' && <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 2l11 11M13 2L2 13"/></svg>}
                 </button>
+                <SpeakButton text={opt.text} className={styles.mcOptionSpeak} />
+                </div>
               )
             })}
           </div>

@@ -58,3 +58,25 @@ export function dailySessionId(userId: string, day: string): string {
   const hex = [h1, h2, h3, h4].map(h => (h >>> 0).toString(16).padStart(8, '0')).join('')
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${'89ab'[parseInt(hex[16], 16) & 3]}${hex.slice(17, 20)}-${hex.slice(20, 32)}`
 }
+
+const resultKey = 'memo-daily-result'
+const celebratedKey = 'memo-daily-celebrated'
+
+/** Today's score, kept on this device so Home can show it; other devices just show the day as done */
+export function saveDailyResult(day: string, known: number, total: number) {
+  try { localStorage.setItem(resultKey, JSON.stringify({ day, known, total })) } catch { /* Home falls back to a plain done state. */ }
+}
+export function readDailyResult(day: string): { known: number; total: number } | null {
+  try {
+    const r = JSON.parse(localStorage.getItem(resultKey) ?? 'null')
+    return r?.day === day && Number.isInteger(r.known) && Number.isInteger(r.total) && r.total > 0 ? { known: r.known, total: r.total } : null
+  } catch { return null }
+}
+/** True only the first time Home shows today's finished round, so the stamp animates once */
+export function firstDoneView(day: string): boolean {
+  try {
+    if (localStorage.getItem(celebratedKey) === day) return false
+    localStorage.setItem(celebratedKey, day)
+    return true
+  } catch { return false }
+}

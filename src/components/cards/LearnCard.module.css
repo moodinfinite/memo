@@ -238,3 +238,10 @@
   .defText:lang(zh) { font-size: 30px; }
   .dontKnowBtn, .knowBtn { padding: 11px; font-size:var(--text-body); }
 }
+
+/* Pronunciation on multiple choice */
+.mcQuestion { position: relative; }
+.mcOptionRow { position: relative; }
+.mcOptionRow > .mcOption { width: 100%; }
+.mcOptionSpoken { padding-right: 56px; }
+.mcOptionSpeak { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); }

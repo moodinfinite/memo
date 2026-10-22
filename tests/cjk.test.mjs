@@ -11,3 +11,16 @@ test('only text containing Chinese characters is tagged for larger Chinese sizin
  assert.equal(chineseLang('Excuse me; sorry'),undefined);
  assert.equal(chineseLang(''),undefined);
 });
+
+test('written answers match on Chinese characters only and accept any listed form',()=>{
+ const {writingMatches}=harness().load('src/lib/cjk.ts');
+ assert.equal(writingMatches('棟','棟'),true);
+ assert.equal(writingMatches(' 棟。','棟 (dòng)'),true);
+ assert.equal(writingMatches('栋','棟／栋'),true);
+ assert.equal(writingMatches('看到','看見、看到'),true);
+ assert.equal(writingMatches('看見看到','看見、看到'),true);
+ assert.equal(writingMatches('東','棟'),false);
+ assert.equal(writingMatches('','棟'),false);
+ assert.equal(writingMatches('dong','棟'),false);
+ assert.equal(writingMatches('看','看見'),false);
+});

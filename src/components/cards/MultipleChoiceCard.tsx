@@ -1,6 +1,7 @@
 import QuickEditCard from '@/components/study/QuickEditCard'
 import { useStudyStore } from '@/store/studyStore'
 import { chineseLang } from '@/lib/cjk'
+import SpeakButton from '@/components/ui/SpeakButton'
 import styles from './StudyModes.module.css'
 
 export default function MultipleChoiceCard() {
@@ -19,7 +20,8 @@ export default function MultipleChoiceCard() {
       <QuickEditCard card={card} disabled={selectedOption !== null} />
       <div className={styles.mcQuestion}>
         <div className={styles.mcLabel}>What is the definition of…</div>
-        <div className={styles.mcTerm}>{card.term}</div>
+        <div className={styles.mcTerm} lang={chineseLang(card.term)}>{card.term}</div>
+        <SpeakButton text={card.term} className={styles.mcQuestionSpeak} />
       </div>
 
       <div className={styles.mcOptions}>
@@ -32,9 +34,9 @@ export default function MultipleChoiceCard() {
           }
 
           return (
+            <div key={i} className={styles.mcOptionRow}>
             <button
-              key={i}
-              className={[styles.mcOption, styles[`mcOption-${state}`]].join(' ')}
+              className={[styles.mcOption, styles[`mcOption-${state}`], chineseLang(opt) ? styles.mcOptionSpoken : ''].join(' ')}
               onClick={() => selectMCOption(i)}
               disabled={selectedOption !== null}
             >
@@ -49,6 +51,8 @@ export default function MultipleChoiceCard() {
                 <svg className={styles.mcIcon} width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 2l12 12M14 2L2 14"/></svg>
               )}
             </button>
+            <SpeakButton text={opt} className={styles.mcOptionSpeak} />
+            </div>
           )
         })}
       </div>

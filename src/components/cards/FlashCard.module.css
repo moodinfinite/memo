@@ -279,3 +279,41 @@
     font-size:var(--text-body);
   }
 }
+
+/* Write the answer (definition side up) */
+.writeToggle {
+  display: inline-flex; align-items: center; gap: 6px; margin: -8px 0 -4px;
+  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--accent-border);
+  background: var(--accent-subtle); color: var(--accent-text);
+  font-size: var(--text-body); font-weight: 500; font-family: var(--font); cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.writeToggle:hover { background: var(--accent-border); }
+.writeForm { width: 100%; display: flex; flex-direction: column; gap: 8px; margin: -8px 0 -4px; }
+.writeRow { display: flex; gap: 8px; align-items: stretch; }
+.writeInput {
+  flex: 1; min-width: 0; padding: 10px 14px; border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default); background: var(--bg-raised); color: var(--text-primary);
+  font-family: var(--font); font-size: 26px; line-height: 1.3; letter-spacing: 0.04em;
+}
+.writeInput::placeholder { font-size: var(--text-body); letter-spacing: 0; color: var(--text-tertiary); }
+.writeInput:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
+.writeCheck {
+  padding: 0 18px; border-radius: var(--radius-lg); border: none;
+  background: var(--accent-text); color: var(--on-accent);
+  font-size: var(--text-body); font-weight: 600; font-family: var(--font); cursor: pointer;
+}
+.writeCheck:hover:not(:disabled) { opacity: 0.85; }
+.writeClose {
+  width: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background: none; color: var(--text-tertiary); cursor: pointer;
+}
+.writeClose:hover { color: var(--text-primary); background: var(--bg-overlay); }
+.writeToggle:focus-visible, .writeCheck:focus-visible, .writeClose:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.writeResult { font-size: var(--text-body); font-weight: 500; animation: flashIn 0.18s ease-out both; }
+.writeResult span:lang(zh) { font-size: 20px; letter-spacing: 0.04em; }
+.writeRight { color: var(--correct-text); }
+.writeWrong { color: var(--red-text); }
+/* The answer the writing check suggests */
+.suggested { box-shadow: 0 0 0 2px currentColor; }
+@media (pointer: coarse) { .writeToggle, .writeCheck, .writeClose { min-height: 44px; } .writeClose { width: 44px; } }
