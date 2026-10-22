@@ -1,5 +1,6 @@
 import { useSyncStatus } from '@/lib/sync'
 import SyncIndicator from './SyncIndicator'
+import ProfileStats from './ProfileStats'
 import { useEffect, useState, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
@@ -16,6 +17,8 @@ export default function AppLayout() {
   const location = useLocation()
   const { folders, fetchFolders, createFolder } = useFoldersStore()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
+  const displayName = profile?.name ?? user?.email ?? ''
   const levels = levelHistory(user?.user_metadata)
   const levelDue = isLevelCheckDue(levels)
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true')
@@ -28,7 +31,7 @@ export default function AppLayout() {
   useEffect(() => { fetchFolders() }, [])
 
   // Close sidebar on navigation (mobile)
-  useEffect(() => { setMobileOpen(false) }, [location.pathname])
+  useEffect(() => { setMobileOpen(false); setStatsOpen(false) }, [location.pathname])
 
   const handleNewFolder = async () => {
     const name = window.prompt('Folder name:')
@@ -125,12 +128,16 @@ export default function AppLayout() {
               : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13.5 10A6 6 0 0 1 6 2.5a6 6 0 1 0 7.5 7.5Z"/></svg>
             }
           </button>
+          <button className={styles.avatarBtn} onClick={() => setStatsOpen(true)} aria-haspopup="dialog" title="Your stats">
+            {displayName.slice(0, 1).toUpperCase()}
+          </button>
           <div className={styles.userInfo}>
-            <div className={styles.userName}>{profile?.name ?? user?.email}</div>
+            <button className={styles.userName} onClick={() => setStatsOpen(true)} aria-haspopup="dialog">{displayName}</button>
             <button className={styles.logoutBtn} onClick={logout}>Sign out</button>
           </div>
         </div>
       </aside>
+      {statsOpen && <ProfileStats name={displayName} collapsed={collapsed} onClose={() => setStatsOpen(false)} />}
       <main className={styles.main}>
         {sync.storageError && <div role="alert" className={styles.storageWarning}>Device storage is unavailable. Keep this tab open until progress finishes syncing.</div>}
         <Outlet key={user?.id} />

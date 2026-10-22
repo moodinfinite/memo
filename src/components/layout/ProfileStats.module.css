@@ -1,0 +1,67 @@
+.backdrop { position: fixed; inset: 0; z-index: 60; }
+.panel {
+  position: fixed; z-index: 61; bottom: 16px; left: calc(var(--sidebar-width) + 12px);
+  width: 340px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
+  padding: 20px; border-radius: var(--r-xl);
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  box-shadow: 0 12px 36px rgba(42, 35, 33, 0.16);
+  animation: rise 0.22s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+.panel:focus { outline: none; }
+.panelCollapsed { left: 64px; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+.head { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 22px; color: var(--on-primary); background: var(--primary);
+}
+.who { flex: 1; min-width: 0; }
+.name { font-weight: 600; font-size: 1rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank { font-size: var(--text-body); color: var(--text-tertiary); }
+.close {
+  align-self: flex-start; width: 28px; height: 28px; display: grid; place-items: center; flex-shrink: 0;
+  border: none; border-radius: var(--r-md); background: none; color: var(--text-tertiary); cursor: pointer;
+}
+.close:hover { background: var(--bg-overlay); color: var(--text-primary); }
+
+.stats { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.stat { display: grid; grid-template-columns: 24px 82px 1fr 22px; align-items: center; gap: 8px; font-size: var(--text-body); }
+.icon {
+  width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center;
+  background: var(--accent-subtle); color: var(--accent-text); font-weight: 700; font-size: 12px;
+}
+.skill { text-transform: capitalize; color: var(--text-secondary); }
+.bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+.bar i, .legend i { height: 12px; border-radius: 2px; background: var(--bg-overlay); transform: skewX(-14deg); }
+.bar .on, .bar .gained { animation: fill 0.3s cubic-bezier(0.34, 1.5, 0.64, 1) both; }
+.on { background: var(--accent) !important; }
+.gained { background: var(--ink-red) !important; }
+@keyframes fill { from { opacity: 0; transform: skewX(-14deg) scaleX(0.2); } to { opacity: 1; transform: skewX(-14deg); } }
+.value { font-weight: 700; text-align: right; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.75rem; color: var(--text-tertiary); }
+.legend i { display: inline-block; width: 14px; height: 8px; }
+
+.counts {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-default);
+}
+.counts div { text-align: center; font-size: 0.6875rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+.counts b { display: block; font-size: 1.125rem; color: var(--text-primary); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+.cta, .ctaQuiet {
+  display: flex; align-items: center; justify-content: center; margin-top: 16px; min-height: 40px; padding: 0 14px;
+  border-radius: var(--r-md); font-size: var(--text-body); font-weight: 600; text-decoration: none;
+}
+.cta { background: var(--primary); color: var(--on-primary); }
+.cta:hover { background: var(--primary-hover); }
+.ctaQuiet { border: 1px solid var(--border-default); color: var(--text-secondary); font-weight: 500; }
+.ctaQuiet:hover { background: var(--bg-overlay); color: var(--text-primary); }
+.close:focus-visible, .cta:focus-visible, .ctaQuiet:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) { .panel, .bar .on, .bar .gained { animation: none; } }
+@media (max-width: 768px) {
+  .backdrop { background: rgba(0, 0, 0, 0.35); }
+  .panel, .panelCollapsed { left: 16px; right: 16px; width: auto; max-width: none; bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+@media (pointer: coarse) { .close { width: 40px; height: 40px; } }

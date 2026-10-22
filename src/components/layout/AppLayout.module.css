@@ -83,3 +83,11 @@
 @media (prefers-reduced-motion:reduce){.nudge{animation:none}}
 .levelBadge{margin-left:auto;padding:1px 7px;border-radius:999px;font-size:0.75rem;font-weight:600;color:var(--accent-text);background:var(--accent-subtle);border:1px solid var(--accent-border);white-space:nowrap}
 .sidebarCollapsed .levelBadge{display:none}
+
+/* Profile: avatar and name open the stat sheet */
+.avatarBtn{width:30px;height:30px;flex-shrink:0;border-radius:50%;border:none;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font-family:var(--font-display);font-size:13px;cursor:pointer;transition:transform var(--t-fast)}
+.avatarBtn:hover{transform:scale(1.06)}
+button.userName{display:block;max-width:100%;background:none;border:none;padding:0;text-align:left;font-family:var(--font);cursor:pointer}
+button.userName:hover{color:var(--accent-text)}
+.avatarBtn:focus-visible,button.userName:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+@media(pointer:coarse){.avatarBtn{width:36px;height:36px}}

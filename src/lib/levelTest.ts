@@ -110,3 +110,23 @@ export const WRITING_TASKS: Record<number, { prompt: string; hint: string }> = {
 }
 export const writingTask = (level: number) => WRITING_TASKS[clampLevel(level)]
 export const isParagraphTask = (level: number) => clampLevel(level) >= 4
+
+/** A rank for each HSK level, shown on the profile stat sheet */
+export const RANKS: Record<number, { en: string; zh: string }> = {
+  1: { en: 'Novice', zh: '新手' },
+  2: { en: 'Wanderer', zh: '旅人' },
+  3: { en: 'Scholar', zh: '學者' },
+  4: { en: 'Writer', zh: '文人' },
+  5: { en: 'Master', zh: '師傅' },
+  6: { en: 'Grandmaster', zh: '宗師' },
+}
+export const rankFor = (level: number) => RANKS[clampLevel(level)]
+
+export type StatSkill = Skill | 'writing'
+export const STAT_SKILLS: StatSkill[] = ['vocabulary', 'grammar', 'reading', 'writing']
+
+/** Each skill's level now and at the previous check, so gained levels can be marked */
+export function skillStats(history: LevelResult[]): { skill: StatSkill; level: number | null; previous: number | null }[] {
+  const [latest, before] = history
+  return STAT_SKILLS.map(skill => ({ skill, level: latest?.skills?.[skill] ?? null, previous: before?.skills?.[skill] ?? null }))
+}

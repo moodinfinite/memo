@@ -63,3 +63,16 @@ test('writing is a sentence through HSK 3 and a paragraph from HSK 4',()=>{
  assert.equal(isParagraphTask(3),false);assert.equal(isParagraphTask(4),true);
  assert.ok(writingTask(9).prompt.includes('200'));
 });
+
+test('profile stats compare each skill with the previous check and name a rank',()=>{
+ const {skillStats,rankFor}=lib();
+ const history=[{date:'2026-10-01T00:00:00Z',level:3,skills:{vocabulary:4,grammar:3,reading:null,writing:2}},
+  {date:'2026-09-01T00:00:00Z',level:2,skills:{vocabulary:3,grammar:3,reading:2,writing:2}}];
+ const stats=skillStats(history);
+ assert.equal(stats.length,4);
+ assert.equal(stats[0].skill,'vocabulary');assert.equal(stats[0].level,4);assert.equal(stats[0].previous,3);
+ assert.equal(stats[2].level,null);
+ assert.equal(skillStats([]).every(s=>s.level===null&&s.previous===null),true);
+ assert.equal(skillStats([history[0]])[0].previous,null);
+ assert.equal(rankFor(3).en,'Scholar');assert.equal(rankFor(9).zh,'宗師');
+});
