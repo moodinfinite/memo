@@ -3,16 +3,8 @@
   position:relative;isolation:isolate;overflow:hidden;
 }
 .calendar::after{content:'';position:absolute;inset:0;background-image:url('/paper-grain.svg');opacity:.1;mix-blend-mode:multiply;pointer-events:none;z-index:1}
-.binding{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 18px;padding:20px 24px 16px;border-bottom:4px double var(--ink-cyan)}
-.greeting{font-family:var(--font-display);font-size:var(--text-page);font-weight:400;line-height:1.2;color:var(--ink-red);overflow-wrap:anywhere;flex:1;min-width:180px}
-.newSet{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:7px 12px;border:0;border-radius:3px;background:var(--primary);color:var(--on-primary);font-size:var(--text-body);font-weight:500;white-space:nowrap;transition:background var(--t-fast)}
-.newSet:hover{background:var(--primary-hover)}
-.newSet:focus-visible{outline:2px solid var(--ink-cyan-strong);outline-offset:3px}
 .body{display:grid;grid-template-columns:42% 58%}
 .dateLeaf{text-align:center;padding:24px 20px 0;border-right:1px solid var(--ink-cyan-border);min-width:0}
-.monthBand{display:flex;justify-content:space-between;align-items:center;gap:10px;border:3px double var(--ink-cyan);border-radius:17px 17px 0 0;padding:8px 10px;color:var(--ink-cyan-strong);font-size:var(--text-body);font-weight:600;text-transform:uppercase}
-.monthBand>span:first-child{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.monthBand [lang]{background:var(--ink-red-tint);color:var(--ink-red-strong);padding:0 5px}
 .dateLeaf time{display:flex;flex-direction:column;align-items:center;padding:20px 0 12px}
 .date{font-family:var(--font-display);font-size:clamp(112px,12vw,154px);line-height:1.15;letter-spacing:-8px;padding-right:8px;color:var(--ink-red);text-shadow:5px 4px 0 color-mix(in srgb,var(--ink-cyan) 80%,transparent)}
 .chinese{font-size:var(--text-page);font-weight:600;letter-spacing:4px;line-height:1.4;padding-left:4px;color:var(--ink-red-strong)}
@@ -50,5 +42,6 @@
 :global([data-theme="dark"]) .day{background-image:linear-gradient(color-mix(in srgb,var(--ink-cyan) 6%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--ink-cyan) 6%,transparent) 1px,transparent 1px)}
 :global([data-theme="dark"]) .dayHeading::before{opacity:.18}
 :global([data-theme="dark"]) .date{text-shadow:5px 4px 0 color-mix(in srgb,var(--ink-cyan) 55%,transparent)}
-@media(max-width:700px){.body{grid-template-columns:1fr}.dateLeaf{border-right:0;padding:18px 20px 0}.date{font-size:128px}.activity{padding:20px}.binding{padding:18px 20px 14px}.totals{grid-template-columns:1fr 1fr;padding-bottom:20px}.totals>div{gap:8px}.totals span{max-width:80px}.dayHeading>span{padding:0 4px}.dayNumber{width:32px;height:32px}}
-@media(pointer:coarse){.newSet,.toggle button{min-height:44px}}
+@media(max-width:700px){.body{grid-template-columns:1fr}.dateLeaf{border-right:0;padding:18px 20px 0}.date{font-size:128px}.activity{padding:20px}.totals{grid-template-columns:1fr 1fr;padding-bottom:20px}.totals>div{gap:8px}.totals span{max-width:80px}.dayHeading>span{padding:0 4px}.dayNumber{width:32px;height:32px}}
+@media(pointer:coarse){.toggle button{min-height:44px}}
+.srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

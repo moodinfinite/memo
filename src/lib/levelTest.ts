@@ -130,3 +130,13 @@ export function skillStats(history: LevelResult[]): { skill: StatSkill; level: n
   const [latest, before] = history
   return STAT_SKILLS.map(skill => ({ skill, level: latest?.skills?.[skill] ?? null, previous: before?.skills?.[skill] ?? null }))
 }
+
+/** What each HSK level means, for the level chart (vocabulary sizes from the six-level HSK) */
+export const HSK_LEVELS: { level: number; words: string; canDo: string }[] = [
+  { level: 1, words: '150', canDo: 'Greetings, numbers and very simple phrases' },
+  { level: 2, words: '300', canDo: 'Short exchanges about familiar, everyday things' },
+  { level: 3, words: '600', canDo: 'Daily life, study and work; get by when travelling' },
+  { level: 4, words: '1,200', canDo: 'Talk about a wide range of topics with native speakers' },
+  { level: 5, words: '2,500', canDo: 'Read news and magazines, follow films, give a short talk' },
+  { level: 6, words: '5,000+', canDo: 'Understand most of what you hear and read; express yourself fluently' },
+]

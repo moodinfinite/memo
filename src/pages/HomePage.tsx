@@ -13,7 +13,7 @@ import DailyCard from '@/components/home/DailyCard'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
-  const { user, profile } = useAuthStore()
+  const { user } = useAuthStore()
   const { sets, fetchSets, searchSets, togglePin, isLoading } = useSetsStore()
   const { folders } = useFoldersStore()
   const { studiedDays, fetchProgress, progressLastFetched } = useProgressStore()
@@ -42,7 +42,6 @@ export default function HomePage() {
     if (val.trim()) searchSets(val.trim()); else fetchSets()
   }
 
-  const firstName = profile?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there'
   const folderMap = useMemo(() => new Map(folders.map(f => [f.id, f])), [folders])
   const pinned = sets.filter((s) => s.pinned)
   const rest = sets.filter((s) => !s.pinned)
@@ -57,7 +56,7 @@ export default function HomePage() {
           <button onClick={() => setDataError(null)}>✕</button>
         </div>
       )}
-      <DailyAlmanac firstName={firstName} studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />
+      <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />
       {totalCards > 0 && <DailyCard />}
 
       <div className={styles.searchWrap}>

@@ -277,3 +277,18 @@
   .card { padding: 24px 18px; }
   .storyText { font-size: 18px; }
 }
+
+/* In Learn: Continue is the main action, side by side with regenerate */
+.continueBtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 22px; border-radius: var(--r-lg, 12px); border: none;
+  background: var(--primary); color: var(--on-primary);
+  font-size: var(--text-body); font-weight: 600; font-family: var(--font); cursor: pointer;
+  transition: background 0.15s;
+}
+.continueBtn:hover { background: var(--primary-hover); }
+.continueBtn:focus-visible, .regenBtn:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .actionRowLearn { display: grid; grid-template-columns: 1fr 1fr; width: 100%; align-self: stretch; }
+  .actionRowLearn .regenBtn, .actionRowLearn .continueBtn { justify-content: center; padding: 12px 10px; min-height: 44px; }
+}

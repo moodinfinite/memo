@@ -207,3 +207,11 @@
 @media(max-width:600px){.topBar{align-items:flex-start;gap:12px;flex-wrap:wrap}.topBarRight{gap:8px}}
 
 @media(max-width:600px){.topBarRight{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.exitBtn{width:100%}.startSideLabel{width:100%}.backBtn{max-width:100%}}
+/* Learn story interlude: one compact row, then a one-line note */
+.learnStoryTop{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.learnStoryTop .backBtn{min-width:0}
+.learnStoryTop .backBtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skipLink{flex-shrink:0;background:none;border:none;padding:8px 4px;color:var(--text-tertiary);font:500 var(--text-body)/1.4 var(--font);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.skipLink:hover{color:var(--text-primary)}
+.skipLink:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px;border-radius:4px}
+@media(pointer:coarse){.skipLink{min-height:44px}}

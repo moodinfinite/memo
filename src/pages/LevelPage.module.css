@@ -99,3 +99,34 @@
   .resultLevel { font-size: 44px; }
 }
 @media (pointer: coarse) { .option { min-height: 52px; } }
+
+/* ── Level chart: HSK 6 at the top, your level marked ── */
+.chart { display: flex; flex-direction: column; gap: 4px; }
+.chartRow {
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--r-lg); border: 1px solid transparent;
+  color: var(--text-tertiary);
+}
+.chartLevel {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 16px; color: var(--text-tertiary);
+  border: 1.5px dashed var(--border-default);
+}
+.chartText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.chartRank { font-size: var(--text-body); font-weight: 600; color: var(--text-secondary); }
+.chartWords { font-weight: 400; color: var(--text-tertiary); }
+.chartCanDo { font-size: var(--text-body); line-height: 1.4; }
+.chartPassed .chartLevel { border-style: solid; border-color: var(--accent-border); color: var(--accent-text); background: var(--accent-subtle); }
+.chartPassed .chartRank { color: var(--text-primary); }
+.chartHere { background: var(--accent-subtle); border-color: var(--accent-border); color: var(--text-secondary); }
+.chartHere .chartLevel { border: none; background: var(--primary); color: var(--on-primary); }
+.chartHere .chartRank { color: var(--text-primary); }
+.chartMarker {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--primary); white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .chartRow { grid-template-columns: 32px 1fr; padding: 10px 12px; }
+  .chartLevel { width: 32px; height: 32px; font-size: 14px; }
+  .chartMarker { grid-column: 2; }
+}

@@ -2,7 +2,7 @@ import { useSyncStatus } from '@/lib/sync'
 import SyncIndicator from './SyncIndicator'
 import ProfileStats from './ProfileStats'
 import { useEffect, useState, useCallback } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
 import { useFoldersStore } from '@/store/foldersStore'
@@ -49,7 +49,7 @@ export default function AppLayout() {
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
           {levelDue && <span className={styles.nudge} />}
         </button>
-        <div className={styles.mobileTitle}>Memo</div><SyncIndicator />
+        <Link to="/" className={styles.mobileTitle}>Memo</Link><SyncIndicator />
         <button className={styles.mobileThemeBtn} onClick={toggle}>
           {isDark
             ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/></svg>
@@ -63,7 +63,7 @@ export default function AppLayout() {
 
       <aside className={[styles.sidebar, mobileOpen ? styles.sidebarOpen : '', collapsed ? styles.sidebarCollapsed : ''].join(' ')}>
         <div className={styles.sidebarTop}>
-          <div><div className={styles.logo}>Memo</div><SyncIndicator compact={collapsed} /></div>
+          <div><Link to="/" className={styles.logo} title="Home">Memo</Link><SyncIndicator compact={collapsed} /></div>
           <button className={styles.closeBtn} onClick={closeSidebar} aria-label="Close menu">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l10 10M14 4L4 14"/></svg>
           </button>

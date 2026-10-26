@@ -283,16 +283,16 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
 
       {/* Regenerate / New batch / Continue */}
       {!loading && (
-        <div className={styles.actionRow}>
+        <div className={[styles.actionRow, onComplete ? styles.actionRowLearn : ''].join(' ')}>
           <button className={styles.regenBtn} onClick={generate} disabled={loading}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M1 7A6 6 0 0 1 12.5 4M13 1v3h-3"/>
               <path d="M13 7A6 6 0 0 1 1.5 10M1 13v-3h3"/>
             </svg>
-            New story, same words
+            {onComplete ? 'New story' : 'New story, same words'}
           </button>
           {onComplete ? (
-            <button className={styles.newBatchBtn} onClick={onComplete}>
+            <button className={styles.continueBtn} onClick={onComplete}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 7h8M7 3l4 4-4 4"/>
               </svg>

@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { chineseLang } from '@/lib/cjk'
 import {
-  LEVELS_KEY, MAX_STAGES, SKILLS, buildResult, estimateLevel, isLevelCheckDue, isParagraphTask, levelHistory,
+  HSK_LEVELS, LEVELS_KEY, MAX_STAGES, rankFor, SKILLS, buildResult, estimateLevel, isLevelCheckDue, isParagraphTask, levelHistory,
   nextStageLevel, startLevel, withResult, writingTask, type LevelItem, type LevelResult, type Stage,
 } from '@/lib/levelTest'
 import SpeakButton from '@/components/ui/SpeakButton'
@@ -12,6 +12,29 @@ import styles from './LevelPage.module.css'
 
 type Phase = 'intro' | 'loading' | 'question' | 'writing' | 'grading' | 'results' | 'error'
 const ITEMS_PER_STAGE = 5
+
+/** HSK 6 at the top down to 1, with the learner's level marked */
+function LevelChart({ current, label }: { current: number | null; label: string }) {
+  return (
+    <div className={styles.chart} role="list" aria-label="What each HSK level means">
+      {[...HSK_LEVELS].reverse().map(({ level, words, canDo }) => {
+        const rank = rankFor(level)
+        const here = level === current
+        return (
+          <div key={level} role="listitem" aria-current={here ? 'true' : undefined}
+            className={[styles.chartRow, here ? styles.chartHere : current !== null && level < current ? styles.chartPassed : ''].join(' ')}>
+            <span className={styles.chartLevel}>{level}</span>
+            <span className={styles.chartText}>
+              <span className={styles.chartRank}>{rank.en} <span lang="zh-Hant">{rank.zh}</span><span className={styles.chartWords}> · {words} words</span></span>
+              <span className={styles.chartCanDo}>{canDo}</span>
+            </span>
+            {here && <span className={styles.chartMarker}>{label}</span>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 async function callLevelAPI<T>(body: Record<string, unknown>, signal: AbortSignal): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession()
@@ -153,6 +176,8 @@ export default function LevelPage() {
           </div>
         )}
         <button className={styles.primaryBtn} onClick={begin}>{last ? (due ? 'Take this month’s check' : 'Check again') : 'Start the level check'}</button>
+        <div className={styles.sectionLabel}>What the levels mean</div>
+        <LevelChart current={last?.level ?? null} label="You" />
         {history.length > 1 && (
           <div className={styles.history}>
             <div className={styles.sectionLabel}>History</div>
@@ -271,6 +296,8 @@ export default function LevelPage() {
             )
           })}
         </div>
+        <div className={styles.sectionLabel}>Where that puts you</div>
+        <LevelChart current={result.level} label="You’re here" />
         {grade && (
           <div className={styles.gradeCard}>
             <div className={styles.sectionLabel}>Writing feedback</div>

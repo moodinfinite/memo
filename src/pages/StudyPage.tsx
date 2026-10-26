@@ -356,18 +356,16 @@ export default function StudyPage() {
     const storyCards = learnBatchSummary.length > 0 ? learnBatchSummary : learnBatch
     return (
       <div className={styles.page}>
-        <div className={styles.topBar}>
+        <div className={styles.learnStoryTop}>
           <button className={styles.backBtn} onClick={handleEnd}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
-            {currentSet.title}
+            <span>{currentSet.title}</span>
           </button>
-          <div className={styles.topBarRight}>
-            <button className={styles.exitBtn} onClick={completeLearnStory}>Skip</button>
-          </div>
+          <button className={styles.skipLink} onClick={completeLearnStory}>Skip story</button>
         </div>
         <div className={styles.learnStoryHint}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 1a6 6 0 1 1 0 12A6 6 0 0 1 7 1zm0 3v4l2.5 1.5"/></svg>
-          Nice work! See these words in a story, then tap <strong>Continue</strong> to move on.
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7.5l3 3 7-7"/></svg>
+          <span><strong>Batch learned.</strong> Read the words in a story, then tap Continue.</span>
         </div>
         <StoryCard
           terms={storyCards}
