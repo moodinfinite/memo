@@ -6,7 +6,7 @@ import { Outlet, Link, NavLink, useNavigate, useLocation } from 'react-router-do
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
 import { useFoldersStore } from '@/store/foldersStore'
-import { isLevelCheckDue, levelHistory } from '@/lib/levelTest'
+import { currentResults, isLevelCheckDue, levelHistory, levelName } from '@/lib/levelTest'
 import styles from './AppLayout.module.css'
 
 export default function AppLayout() {
@@ -20,6 +20,7 @@ export default function AppLayout() {
   const [statsOpen, setStatsOpen] = useState(false)
   const displayName = profile?.name ?? user?.email ?? ''
   const levels = levelHistory(user?.user_metadata)
+  const latestLevel = currentResults(levels)[0]
   const levelDue = isLevelCheckDue(levels)
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true')
 
@@ -78,13 +79,13 @@ export default function AppLayout() {
             <span>All sets</span>
           </NavLink>
           <NavLink to="/level" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}
-            title={levelDue ? 'Level check due' : levels[0] ? `HSK ${levels[0].level}` : 'Level check'}>
+            title={levelDue ? 'Level check due' : latestLevel ? `TOCFL ${levelName(latestLevel.level)}` : 'Level check'}>
             <span className={styles.navIcon}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 14h12M4 14V9M8 14V5M12 14V2"/></svg>
               {levelDue && <span className={styles.nudge} aria-label="Due" />}
             </span>
             <span>Level check</span>
-            {levels[0] && <span className={styles.levelBadge}>HSK {levels[0].level}</span>}
+            {latestLevel && <span className={styles.levelBadge}>{latestLevel.level === 0 ? 'Novice' : `L${latestLevel.level}`}</span>}
           </NavLink>
         </nav>
 

@@ -90,3 +90,5 @@ The historical security review still applies to the AI handlers: application-lev
 ## Credits
 
 Story word lookups use [CC-CEDICT](https://www.mdbg.net/chinese/dictionary?page=cc-cedict), published by MDBG under the [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license. `public/cedict.txt` is a derived version of that dictionary (tone-marked pinyin, trimmed senses) and is distributed under the same license. To refresh it, download `cedict_1_0_ts_utf-8_mdbg.txt` from MDBG and run `node scripts/build-cedict.mjs <path to that file>`.
+
+The level check samples words from Taiwan's [TOCFL 8,000-word list](https://tocfl.edu.tw) (2023 edition, published by the Steering Committee for the Test Of Proficiency–Huayu), using the CSV parse at [ivankra/tocfl](https://github.com/ivankra/tocfl). `public/tocfl.txt` holds each word's level, Traditional forms and pinyin, with meanings from `public/cedict.txt`. To refresh it, download `tocfl-202307.csv` from that repository and run `node scripts/build-tocfl.mjs <path to that file>`.

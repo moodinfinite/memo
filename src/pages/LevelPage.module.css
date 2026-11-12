@@ -100,7 +100,7 @@
 }
 @media (pointer: coarse) { .option { min-height: 52px; } }
 
-/* ── Level chart: HSK 6 at the top, your level marked ── */
+/* ── Level chart: Level 6 at the top, your level marked ── */
 .chart { display: flex; flex-direction: column; gap: 4px; }
 .chartRow {
   display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px;
@@ -130,3 +130,28 @@
   .chartLevel { width: 32px; height: 32px; font-size: 14px; }
   .chartMarker { grid-column: 2; }
 }
+
+/* ── TOCFL check ── */
+.note { font-size: var(--text-body); line-height: 1.6; color: var(--text-secondary); padding: 12px 14px; border-radius: var(--r-lg); background: var(--bg-surface); border: 1px solid var(--border-subtle); }
+.footnote { font-size: 0.8125rem; line-height: 1.5; color: var(--text-tertiary); }
+.historyLegacy { color: var(--text-tertiary); }
+.wordTerm { font-size: 48px; line-height: 1.2; font-weight: 500; letter-spacing: 0.04em; color: var(--text-primary); text-align: center; padding: 8px 0 4px; }
+.wordForm { display: flex; flex-direction: column; gap: 10px; }
+.meaningInput {
+  width: 100%; min-height: 44px; padding: 10px 14px; border-radius: var(--r-md); border: 1px solid var(--border-default);
+  background: var(--bg-base); color: var(--text-primary); font-family: var(--font); font-size: 1rem;
+}
+.meaningInput:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
+.wordReveal { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: var(--text-body); line-height: 1.5; color: var(--text-secondary); }
+.revealPinyin { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.feedbackPending { font-weight: 600; color: var(--text-tertiary); }
+.timer { height: 3px; border-radius: 2px; background: var(--border-subtle); overflow: hidden; }
+.timer > div { height: 100%; background: var(--text-tertiary); transition: width 1s linear; }
+.dontKnow { align-self: flex-start; background: none; border: none; padding: 6px 2px; font: inherit; font-size: var(--text-body); color: var(--text-tertiary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.dontKnow:hover { color: var(--text-primary); }
+.dontKnow:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.realWorld { display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: var(--r-xl); background: var(--bg-raised); border: 1px solid var(--border-subtle); }
+.realText { font-size: 20px; line-height: 1.8; letter-spacing: 0.02em; white-space: pre-line; color: var(--text-primary); }
+.resultMeta { font-size: var(--text-body); color: var(--text-secondary); }
+@media (max-width: 768px) { .wordTerm { font-size: 40px; } .realText { font-size: 18px; } }
+@media (pointer: coarse) { .dontKnow { min-height: 44px; } }

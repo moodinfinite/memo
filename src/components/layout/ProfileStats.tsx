@@ -5,12 +5,12 @@ import { useAuthStore } from '@/store/authStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useSRSStore } from '@/store/srsStore'
 import { getMasteryLevel } from '@/lib/mastery'
-import { MAX_LEVEL, isLevelCheckDue, levelHistory, rankFor, skillStats, type StatSkill } from '@/lib/levelTest'
+import { MAX_LEVEL, currentResults, isLevelCheckDue, levelHistory, levelName, rankFor, skillStats, type StatSkill } from '@/lib/levelTest'
 import styles from './ProfileStats.module.css'
 
-const ICONS: Record<StatSkill, string> = { vocabulary: '詞', grammar: '法', reading: '讀', writing: '寫' }
+const ICONS: Record<StatSkill, string> = { vocabulary: '詞', reading: '讀', writing: '寫' }
 
-/** RPG-style stat sheet: HSK rank, one segmented bar per skill, and lifetime counts */
+/** RPG-style stat sheet: TOCFL rank, one segmented bar per skill, and lifetime counts */
 export default function ProfileStats({ name, collapsed, onClose }: { name: string; collapsed: boolean; onClose: () => void }) {
   const user = useAuthStore(s => s.user)
   const dayStreak = useProgressStore(s => s.dayStreak)
@@ -27,7 +27,7 @@ export default function ProfileStats({ name, collapsed, onClose }: { name: strin
   }, [])
 
   const history = levelHistory(user?.user_metadata)
-  const latest = history[0]
+  const latest = currentResults(history)[0]
   const rank = latest ? rankFor(latest.level) : null
   const due = isLevelCheckDue(history)
   const srs = Object.values(cardSRS)
@@ -43,7 +43,7 @@ export default function ProfileStats({ name, collapsed, onClose }: { name: strin
           <div className={styles.who}>
             <div className={styles.name}>{name}</div>
             <div className={styles.rank}>
-              {latest && rank ? <>HSK {latest.level} · {rank.en} <span lang="zh-Hant">{rank.zh}</span></> : 'No level yet'}
+              {latest && rank ? <>TOCFL {levelName(latest.level)} · {rank.en} <span lang="zh-Hant">{rank.zh}</span></> : 'No level yet'}
             </div>
           </div>
           <button className={styles.close} onClick={onClose} aria-label="Close stats">
@@ -57,18 +57,18 @@ export default function ProfileStats({ name, collapsed, onClose }: { name: strin
               <span className={styles.icon} lang="zh-Hant" aria-hidden="true">{ICONS[skill]}</span>
               <span className={styles.skill}>{skill}</span>
               <span className={styles.bar} role="img"
-                aria-label={level ? `HSK ${level}${previous !== null && level > previous ? `, up from ${previous}` : ''}` : 'Not tested yet'}>
+                aria-label={level !== null ? `${levelName(level)}${previous !== null && level > previous ? `, up from ${levelName(previous)}` : ''}` : 'Not tested yet'}>
                 {Array.from({ length: MAX_LEVEL }, (_, i) => {
                   const filled = level !== null && i < level
                   const gained = filled && previous !== null && i >= previous
                   return <i key={i} className={gained ? styles.gained : filled ? styles.on : undefined} style={{ animationDelay: `${i * 50}ms` }} />
                 })}
               </span>
-              <span className={styles.value}>{level ?? '–'}</span>
+              <span className={styles.value}>{level === null ? '–' : level === 0 ? 'N' : level}</span>
             </div>
           ))}
         </div>
-        {history.length > 1 && <div className={styles.legend}><i className={styles.gained} /> gained since last check</div>}
+        {currentResults(history).length > 1 && <div className={styles.legend}><i className={styles.gained} /> gained since last check</div>}
 
         <div className={styles.counts}>
           <div><b>{srs.length}</b>words</div>
@@ -77,7 +77,7 @@ export default function ProfileStats({ name, collapsed, onClose }: { name: strin
         </div>
 
         <Link to="/level" className={due ? styles.cta : styles.ctaQuiet} onClick={onClose}>
-          {!latest ? 'Take your first level check' : due ? 'Monthly level check is due' : `Last checked ${new Date(latest.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · history`}
+          {!latest ? (history.length ? 'Take the new TOCFL level check' : 'Take your first level check') : due ? 'Monthly level check is due' : `Last checked ${new Date(latest.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · history`}
         </Link>
       </div>
     </>,
