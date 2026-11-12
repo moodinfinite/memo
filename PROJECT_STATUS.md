@@ -1,6 +1,6 @@
 # Memo — project handoff
 
-Updated: 12 November 2026. Start here when switching editors or coding assistants.
+Updated: 13 November 2026. Start here when switching editors or coding assistants.
 
 ## Current state
 
@@ -49,6 +49,10 @@ Decided 18 October and shipped in `97960d7`:
 - **Chinese size on flashcards: sized by length** (option C), applied only to text containing Chinese: 1–2 chars 96px (88px phones), 3–4 chars 72px (60px), longer 48px (40px). Uses `chineseLang()` / `termLength()` in `src/lib/cjk.ts`, same tagging as multiple-choice options.
 
 Still open: which calendar motifs (display numerals, rules, striped bands, pills, overprint) to carry into the rest of the app — listed in the palette plan.
+
+## To do — decided, not built
+
+- **Daily 10 Home card → option C, "Open strip"** (Jeffrey picked it 13 November; mockup in `docs/daily10-options.html`, original folder). Drop the card box: Daily 10 sits under the calendar as a section with a bottom hairline. Top row: "Daily 10" title + muted meta ("about 3 min" / "4 of 10 done"). Main visual is a full-width 10-segment bar (one segment per card; filled = `--accent`, missed = outlined in `--red-border`, empty = `--bg-overlay`) that doubles as the Continue progress. Foot row: one line of status text + a `--primary` Start → / Continue → link. Finished state keeps a small 完成 stamp, the day streak and "9 of 10 remembered", with "10 more" as a small underlined link. Phone: shorter meta ("3 min", "12 days"). Keep the existing Term first / Definition first toggle and per-device result keys.
 
 ## Next-generation learning — proposed, not implemented
 
