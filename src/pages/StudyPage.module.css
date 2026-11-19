@@ -110,10 +110,25 @@
 .masteryOptCount{font-weight:400}
 
 /* Resume prompt */
-.resumePrompt{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 0;text-align:center}
-.resumeTitle{font-size:var(--text-section);font-weight:600;color:var(--text-primary);letter-spacing:-0.02em}
-.resumeMeta{font-size:var(--text-body);color:var(--text-secondary)}
-.resumeActions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin-top:4px}
+.resumePrompt {
+  width: min(100%, 440px);
+  align-self: center;
+  display: grid;
+  gap: 10px;
+  margin-block: 16px;
+  padding: clamp(18px, 4vw, 28px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  background: var(--bg-raised);
+}
+.resumeTitle { font-size: var(--text-section); font-weight: 600; color: var(--text-primary); }
+.resumeMeta { font-size: var(--text-body); color: var(--text-secondary); }
+.resumeProgress { width: 100%; height: 6px; border: none; accent-color: var(--accent); border-radius: 4px; overflow: hidden; }
+.resumeProgress::-webkit-progress-bar { background: var(--bg-overlay); }
+.resumeProgress::-webkit-progress-value { background: var(--accent); }
+.resumeActions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(145px, 100%), 1fr)); gap: 8px; margin-top: 8px; }
+.resumeActions button { min-height: 44px; }
+
 
 /* Timer display */
 .timerDisplay{display:flex;align-items:center;justify-content:center;gap:6px;font-size:var(--text-body);color:var(--text-tertiary);font-variant-numeric:tabular-nums;transition:color 0.3s}

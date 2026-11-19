@@ -2,6 +2,12 @@
 
 Updated: 19 November 2026. Start here when switching editors or coding assistants.
 
+## November 19 release — daily alley practice and study updates
+
+The Lane offers a ten-minute daily practice on the 1,093 TOCFL Level 3 words. It mixes due reviews (including Familiar words) with up to three introductions. The planner allows eight minutes for cards, budgeting one minute per review and two per new word, with room to use a word in a phrase. These are initial estimates. Evaluate them against later recall and actual session duration before drawing conclusions about their effectiveness. Five sections beneath the scene show familiar-word progress. The 35 lights in the illustration still switch on at their original thresholds.
+
+The regular Daily 10 draws from personal sets. Master Deck now includes Learn, set study shows resumable progress, flashcard editing is centered, and keyboard answers use the button feedback. The sidebar resource library includes public resources and reads the tutor sheet from the signed-in account’s bookmark.
+
 ## Current state
 
 - App: personal flashcards and language-learning tool, built with React, TypeScript, Vite and Zustand; Supabase stores accounts and study data.

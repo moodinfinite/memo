@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { harness } from './helpers.mjs';
 
@@ -38,4 +39,50 @@ test('lights: words per light, warming from started words, and a fully lit lane'
  l=L.laneLights({total:1088,familiar:fam(1088),started:0},35);
  assert.deepEqual([l.lit,l.warmth,l.toNext],[35,0,0]);
  assert.deepEqual([...L.wordsForLight({total:9,familiar:fam(7),started:0},1,3).map(w=>w.form)],['3','4','5']);
+});
+
+test('all 1,093 path entries can be introduced, matched back to a card and progressed', () => {
+  const h = harness();
+  const L = h.load('src/lib/lane.ts');
+  const { parseWordList } = h.load('src/lib/levelTest.ts');
+  const list = parseWordList(readFileSync('public/tocfl.txt', 'utf8'));
+  const path = list.filter(word => word.level === L.LANE_LEVEL);
+  const setId = L.laneSetId('user-a');
+  const cards = path.map((word, position) => ({
+    id: L.laneCardId(setId, word.forms[0]), term: word.forms[0], definition: '', position,
+  }));
+  const records = Object.fromEntries(cards.map(card => [card.id, srs(card.id, 2, 3)]));
+  assert.equal(path.length, 1093);
+  assert.equal(L.laneProgress(list, cards, records).familiar.length, path.length);
+  assert.equal(L.planLaneLesson(list, cards, records, '2026-11-19').complete, true);
+  for (let from = 0; from < path.length; from += L.MAX_NEW_LANE_WORDS) {
+    const { picks } = L.planLaneLesson(path.slice(from), [], {}, '2026-11-19');
+    assert.ok(picks.every(pick => pick.meaning.trim()));
+    assert.deepEqual(Array.from(picks, pick => pick.word.forms[0]), Array.from(path.slice(from, from + L.MAX_NEW_LANE_WORDS), word => word.forms[0]));
+  }
+});
+
+test('due path words lead, personal history carries over, and tomorrow’s reviews wait', () => {
+  const L = lib();
+  const cards = [{id:'known', term:'經驗', definition:'experience'}, {id:'due', term:'裏面', definition:'inside'}, {id:'later', term:'機會', definition:'chance'}];
+  const records = { known:srs('known',2,3), due:{...srs('due',1,1),next_review:'2026-11-18'}, later:srs('later',1,1) };
+  const result = L.planLaneLesson(list, cards, records, '2026-11-19');
+  assert.deepEqual(Array.from(result.picks, pick => pick.word.forms[0]), ['裡面','討論','方便']);
+  assert.equal(result.picks[0].card.id, 'due');
+  assert.equal(L.laneSetId('user-a'), L.laneSetId('user-a'));
+  assert.notEqual(L.laneSetId('user-a'), L.laneSetId('user-b'));
+});
+
+test('alley admission fits the daily budget and includes due Familiar words for delayed recall', () => {
+  const L = lib();
+  const words = Array.from({length: 24}, (_, i) => W(3, [String.fromCodePoint(0x4e00 + i)]));
+  for (const [due, reviews, fresh] of [[0,0,3], [2,2,3], [4,4,2], [6,6,1], [7,7,0], [12,8,0]]) {
+    const cards = words.slice(0, due).map(word => ({id:word.forms[0], term:word.forms[0], definition:'meaning'}));
+    const records = Object.fromEntries(cards.map(card => [card.id, {...srs(card.id,3,10), next_review:'2026-11-18'}]));
+    const {picks} = L.planLaneLesson(words, cards, records, '2026-11-19');
+    assert.equal(picks.filter(pick => pick.card).length, reviews);
+    assert.equal(picks.filter(pick => !pick.card).length, fresh);
+    assert.ok(picks.slice(0, reviews).every(pick => pick.card));
+  }
+  assert.notEqual(L.lanePracticeId('me','2026-11-19'), L.lanePracticeId('me','2026-11-20'));
 });

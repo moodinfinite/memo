@@ -9,6 +9,7 @@ import { getSetMastery } from '@/lib/mastery'
 import type { FlashcardSet } from '@/lib/database.types'
 import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import DailyAlmanac from '@/components/home/DailyAlmanac'
+import { laneSetId } from '@/lib/lane'
 import DailyCard from '@/components/home/DailyCard'
 import styles from './HomePage.module.css'
 
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [query, setQuery] = useState('')
   const [dataError, setDataError] = useState<string | null>(null)
   const [homeView, setHomeView] = useState<HomeView>(() => {
+    if (new URLSearchParams(window.location.search).get('view') === 'lane') return 'lane'
     try { return localStorage.getItem(HOME_VIEW_KEY) === 'lane' ? 'lane' : 'calendar' } catch { return 'calendar' }
   })
   const chooseView = (view: HomeView) => {
@@ -54,6 +56,8 @@ export default function HomePage() {
   }
 
   const folderMap = useMemo(() => new Map(folders.map(f => [f.id, f])), [folders])
+  const pathSet = user ? laneSetId(user.id) : null
+  const hasPersonalCards = sets.some(set => set.id !== pathSet && (set.cardCount ?? 0) > 0)
   const pinned = sets.filter((s) => s.pinned)
   const rest = sets.filter((s) => !s.pinned)
   const totalCards = sets.reduce((a, s) => a + (s.cardCount ?? 0), 0)
@@ -76,7 +80,7 @@ export default function HomePage() {
           ? <Suspense fallback={<div className={styles.lanePlaceholder} />}><TheLane /></Suspense>
           : <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />}
       </div>
-      {totalCards > 0 && <DailyCard />}
+      {hasPersonalCards && <DailyCard />}
 
       <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>

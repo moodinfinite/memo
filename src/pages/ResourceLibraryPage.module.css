@@ -1,0 +1,9 @@
+.page { max-width: 720px; margin: 0 auto; }
+.page h1 { font-size: var(--text-page); letter-spacing: -.035em; }
+.page section { margin-top: 32px; }
+.page h2 { font-size: var(--text-section); margin-bottom: 8px; }
+.page ul { list-style: none; border-top: 1px solid var(--border-default); }
+.page li { border-bottom: 1px solid var(--border-subtle); }
+.page a { min-height: 46px; padding: 8px 4px; display: grid; align-items: center; grid-template-columns: minmax(0,1fr) auto 16px; gap: 12px; text-decoration: none; color: var(--text-primary); }
+.page a:hover, .page a:focus-visible { background: var(--bg-overlay); color: var(--accent-text); }
+.page small { font-size: var(--text-body); color: var(--text-secondary); }

@@ -6,6 +6,8 @@ import { useStudyStore, draftProgress } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
 import { useProgressStore } from '@/store/progressStore'
 import { localDayStr } from '@/lib/localDate'
+import { laneSetId } from '@/lib/lane'
+import { readAllRows } from '@/lib/readAllRows'
 import { DAILY_SCOPE, dailySessionId, dailyState, pickDailyCards, saveDailyResult } from '@/lib/daily'
 import type { Card } from '@/lib/database.types'
 import FlashCard from '@/components/cards/FlashCard'
@@ -27,7 +29,6 @@ export default function DailyPage() {
   const dayStreak = useProgressStore(s => s.dayStreak)
   const [phase, setPhase] = useState<Phase>('loading')
   const [allCards, setAllCards] = useState<Card[]>([])
-  const [flipKey, setFlipKey] = useState(0)
   const [startSide, setStartSide] = useState<'term' | 'definition'>(() => {
     try { return localStorage.getItem(sidePreferenceKey) === 'definition' ? 'definition' : 'term' } catch { return 'term' }
   })
@@ -53,13 +54,16 @@ export default function DailyPage() {
     if (!user) return
     setPhase('loading')
     const [{ data, error }] = await Promise.all([
-      supabase.from('cards').select('*').order('set_id'),
+      readAllRows<Card>((from, to, signal) => supabase.from('cards').select('*').eq('user_id', user.id)
+        .order('set_id').order('id').range(from, to).abortSignal(signal)),
       useSRSStore.getState().fetchAllSRS(),
       useProgressStore.getState().fetchProgress(),
     ])
     if (error) { setPhase('error'); return }
     const cards = (data ?? []) as Card[]
-    setAllCards(cards)
+    const pathSet = laneSetId(user.id)
+    const personalCards = cards.filter(card => card.set_id !== pathSet)
+    setAllCards(personalCards)
     const today = localDayStr(new Date())
     const draft = await loadProgress(DAILY_SCOPE)
     const state = dailyState(draft, draft ? draftProgress(draft) : null, useProgressStore.getState().sessionIds, user.id, today)
@@ -69,11 +73,11 @@ export default function DailyPage() {
     }
     if (draft) void clearProgress(DAILY_SCOPE)
     if (state.status === 'done') {
-      if (params.has('more')) startRound(cards)
+      if (params.has('more')) startRound(personalCards)
       else setPhase('done-already')
       return
     }
-    startRound(cards, dailySessionId(user.id, today))
+    startRound(personalCards, dailySessionId(user.id, today))
   }
 
   useEffect(() => {
@@ -81,20 +85,6 @@ export default function DailyPage() {
     return () => useStudyStore.getState().resetSession()
   }, [])
 
-  useEffect(() => { setFlipKey(0) }, [currentIndex])
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (useStudyStore.getState().editingCard) return
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      if (phase !== 'studying' || isComplete) return
-      if (e.code === 'Space') { e.preventDefault(); setFlipKey(k => k + 1) }
-      if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
-      if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [phase, isComplete])
 
   // The day's own round (not "10 more") feeds the score on Home's Daily 10 card
   useEffect(() => {
@@ -188,7 +178,7 @@ export default function DailyPage() {
       </div>
       <p className={dStyles.prompt}>{startSide === 'definition' ? 'Recall the Chinese' : 'Recall the meaning'}, then flip to check.</p>
       <FlashCard key={`${card.id}-${startSide}`} card={card} index={currentIndex} total={sessionCards.length}
-        onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} startSide={startSide} />
+        onKnow={markKnown} onDontKnow={markUnknown} startSide={startSide} />
       <div className={styles.kbdHint}>
         <span className={styles.kbd}><kbd>Space</kbd> flip</span>
         <span className={styles.kbd}><kbd>←</kbd> still learning</span>

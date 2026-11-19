@@ -1,15 +1,22 @@
 import type { CardSRS } from '@/store/srsStore'
 import type { ListWord } from './levelTest'
+import { stableId } from './stableId'
 import { getMasteryLevel } from './mastery'
 
 /**
  * The Lane (beta): a dusk street on Home whose lights come on as the learner's TOCFL Level 3
- * words become Familiar in their own sets. Words come from whatever they import; the official
- * list only decides which words count.
+ * words become Familiar through path lessons or matching personal cards.
  */
 export const LANE_LEVEL = 3
 /** Mastery level a word needs before it counts toward a light: right on two different days */
 export const LANE_COUNTS_AT = 2
+
+// Starting estimates for a ten-minute practice. Leave two minutes to check a difficult word
+// or use it in a phrase. The weights are product defaults, not measured study times.
+const CARD_MINUTES = 8
+const MINUTES_PER_REVIEW = 1
+const MINUTES_PER_NEW_WORD = 2
+export const MAX_NEW_LANE_WORDS = 3
 
 const han = /\p{Script=Han}/u
 export const hanOnly = (text: string) => [...text].filter(ch => han.test(ch)).join('')
@@ -38,26 +45,59 @@ function cardForms(card: CardLike): string[] {
   return out
 }
 
-export function laneProgress(list: ListWord[], cards: CardLike[], srs: Record<string, CardSRS>): LaneProgress {
-  const byForm = new Map<string, ListWord>()
+// A path set stores only words introduced by a lesson. Saved personal cards keep their own IDs and history.
+export const laneSetId = (userId: string) => stableId(`memo-lane:v1:level3:${userId}`)
+export const lanePracticeId = (userId: string, day: string) => stableId(`memo-lane-practice:${userId}:${day}`)
+export const laneCardId = (setId: string, form: string) => stableId(`memo-lane-word:${setId}:${form}`)
+
+function matchLaneWords<T extends CardLike>(list: ListWord[], cards: T[], srs: Record<string, CardSRS>, pathSet?: string) {
   const words = list.filter(w => w.level === LANE_LEVEL)
-  for (const w of words) for (const f of w.forms) if (!byForm.has(f)) byForm.set(f, w)
-
-  const best = new Map<ListWord, { level: number; seen: string }>()
-  for (const card of cards) {
-    const word = cardForms(card).map(f => byForm.get(f)).find(Boolean)
-    if (!word) continue
-    const record = srs[card.id]
-    const level = getMasteryLevel(record)
-    const prev = best.get(word)
-    if (!prev || level > prev.level) best.set(word, { level, seen: record?.last_seen_at ?? '' })
+  const byForm = new Map<string, ListWord>()
+  for (const word of words) {
+    for (const form of word.forms) if (!byForm.has(form)) byForm.set(form, word)
   }
+  // A correction to a generated card keeps its curriculum identity and accumulated history.
+  const byPathId = new Map(pathSet ? words.map(w => [laneCardId(pathSet, w.forms[0]), w] as const) : [])
+  const matched = new Map<ListWord, T>()
+  for (const card of cards) {
+    const word = byPathId.get(card.id) ?? cardForms(card).map(form => byForm.get(form)).find(Boolean)
+    if (!word) continue
+    const other = matched.get(word)
+    if (!other || getMasteryLevel(srs[card.id]) > getMasteryLevel(srs[other.id])) matched.set(word, card)
+  }
+  return words.map((word, position) => ({ word, position, card: matched.get(word) }))
+}
 
-  const familiar = [...best].filter(([, b]) => b.level >= LANE_COUNTS_AT)
-    .sort((a, b) => a[1].seen.localeCompare(b[1].seen))
-    .map(([w]) => ({ form: w.forms[0], pinyin: w.pinyin, meaning: w.meaning }))
-  const started = [...best.values()].filter(b => b.level >= 1 && b.level < LANE_COUNTS_AT).length
-  return { total: words.length, familiar, started }
+export function laneProgress(list: ListWord[], cards: CardLike[], srs: Record<string, CardSRS>, pathSet?: string): LaneProgress {
+  const entries = matchLaneWords(list, cards, srs, pathSet)
+  const seen = entries.flatMap(({ word, card }) => card && srs[card.id] ? [{ word, record: srs[card.id] }] : [])
+  const familiar = seen.filter(({ record }) => getMasteryLevel(record) >= LANE_COUNTS_AT)
+    .sort((a, b) => a.record.last_seen_at.localeCompare(b.record.last_seen_at))
+    .map(({ word }) => ({ form: word.forms[0], pinyin: word.pinyin, meaning: laneMeaning(word) }))
+  return { total: entries.length, familiar, started: seen.length - familiar.length }
+}
+
+// Common learner senses for missing glosses, dictionary cross-references and proper-name collisions.
+const glosses: Record<string, string> = {
+  白: 'white', 比如: 'for example', 成: 'to become; to succeed', 大方: 'generous',
+  複習: 'to review a lesson', 還要: 'also need; still want', 好了: 'all right; it is ready',
+  連絡: 'to contact; to get in touch', 平安: 'safe and sound', 清: 'clear; pure', 晒: 'to dry in the sun',
+  說起來: 'speaking of it', 土: 'soil; earth', 友誼: 'friendship', 雲: 'cloud',
+  直: 'straight', 資源: 'resources', 走走: 'to take a walk',
+}
+const laneMeaning = (word: ListWord) => glosses[word.forms[0]] ?? word.meaning
+
+export function planLaneLesson<T extends CardLike>(list: ListWord[], cards: T[], srs: Record<string, CardSRS>, today: string, pathSet?: string) {
+  const entries = matchLaneWords(list, cards, srs, pathSet)
+  const due = entries.filter(({ card }) => card && srs[card.id]?.next_review <= today)
+    .sort((a, b) => srs[a.card!.id].next_review.localeCompare(srs[b.card!.id].next_review))
+  const reviews = due.slice(0, Math.floor(CARD_MINUTES / MINUTES_PER_REVIEW))
+  const minutesLeft = CARD_MINUTES - reviews.length * MINUTES_PER_REVIEW
+  const newLimit = Math.min(MAX_NEW_LANE_WORDS, Math.floor(minutesLeft / MINUTES_PER_NEW_WORD))
+  const fresh = entries.filter(({ card }) => !card || !srs[card.id]).slice(0, newLimit)
+  const picks = [...reviews, ...fresh].map(entry => ({ ...entry, meaning: laneMeaning(entry.word) }))
+  const complete = entries.length > 0 && entries.every(({ card }) => card && getMasteryLevel(srs[card.id]) >= LANE_COUNTS_AT)
+  return { picks, complete }
 }
 
 /** Familiar words needed for light `index` (0-based); spread evenly so the last light needs every word */

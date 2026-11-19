@@ -13,7 +13,8 @@ import MultipleChoiceCard from '@/components/cards/MultipleChoiceCard'
 import TypedAnswerCard from '@/components/cards/TypedAnswerCard'
 import SentenceCard from '@/components/cards/SentenceCard'
 import SentenceSummary from '@/components/cards/SentenceSummary'
-import LearnCard from '@/components/cards/LearnCard'
+import LearnSession from '@/components/study/LearnSession'
+import ResumeSessionCard from '@/components/study/ResumeSessionCard'
 import StoryCard from '@/components/cards/StoryCard'
 import { StudyPageSkeleton } from '@/components/ui/Skeleton'
 import styles from './StudyPage.module.css'
@@ -33,11 +34,11 @@ export default function StudyPage() {
   const navigate = useNavigate()
   const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
-  const { doShuffle: shuffleOn, mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, persistAttempt, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, dismissPersistError, tickTimer, selectMCOption, toggleShuffle, loadProgress, clearProgress, learnActive, learnComplete, learnCards, learnGraduated, learnBatch, learnBatchSummary, learnSetId, learnStoryReady, startLearnSession, resetLearn, completeLearnStory } = useStudyStore()
+  const { doShuffle: shuffleOn, mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, persistAttempt, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, dismissPersistError, tickTimer, selectMCOption, toggleShuffle, loadProgress, learnActive, startLearnSession, resetLearn } = useStudyStore()
 
   const [selecting, setSelecting] = useState(true)
-  const [cachedDraft, setCachedDraft] = useState<SessionDraft | null>(null)
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
+  const [dismissedDraft, setDismissedDraft] = useState<string | null>(null)
   const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn' | 'story'>('flashcard')
   const [storyTerms, setStoryTerms] = useState<Card[]>([])
   const [storyBatchOffset, setStoryBatchOffset] = useState(0)
@@ -49,7 +50,6 @@ export default function StudyPage() {
   const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
   const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
   const [isStarting, setIsStarting] = useState(false)
-  const [flipKey, setFlipKey] = useState(0)
   const [burst, setBurst] = useState<{ msg: string; streak: number } | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const burstShownFor = useRef(0)
@@ -59,22 +59,25 @@ export default function StudyPage() {
     // All three fire in parallel — no waterfall
     fetchSet(id)
     fetchSRS(id)
-    loadProgress(id).then(draft => { setCachedDraft(draft) })
+
     return () => { if (timerRef.current) clearInterval(timerRef.current); useStudyStore.getState().resetSession() }
   }, [id])
+
+  useEffect(() => {
+    let active = true
+    setResumePrompt(null)
+    setDismissedDraft(null)
+    if (selecting && id) void loadProgress(id).then(draft => {
+      if (active && draft && draftProgress(draft).hasProgress) setResumePrompt(draft)
+    })
+    return () => { active = false }
+  }, [id, selecting, loadProgress])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (useStudyStore.getState().editingCard) return
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (selecting || isComplete || useStudyStore.getState().learnActive || storyTerms.length || selectedMode === 'story') return
-      if (mode === 'flashcard') {
-        if (e.code === 'Space') { e.preventDefault(); setFlipKey((k) => k + 1) }
-        // markKnown/markUnknown have an isAdvancing guard in the store,
-        // so rapid presses are automatically blocked at the source
-        if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
-        if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
-      }
       if (mode === 'multiple_choice') {
         if (e.code === 'Digit1') { e.preventDefault(); selectMCOption(0) }
         if (e.code === 'Digit2') { e.preventDefault(); selectMCOption(1) }
@@ -95,8 +98,6 @@ export default function StudyPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timerOn, selecting, isComplete])
 
-  // Reset flip key on card change
-  useEffect(() => { setFlipKey(0) }, [currentIndex])
 
   // Streak burst — one system for both modes, fires at answer time.
   const BURST_MSGS = ['On a roll!', 'Unstoppable!', 'On fire!', 'Legendary!']
@@ -167,7 +168,7 @@ export default function StudyPage() {
       if (selectedMode !== 'story') {
         const draft = await loadProgress(id)
         // A session left before any answer has nothing to resume; starting overwrites it
-        if (draft && draftProgress(draft).hasProgress && draft.card_order.some(cid => currentSet.cards!.some(c => c.id === cid))) {
+        if (draft && dismissedDraft !== draft.updated_at && draftProgress(draft).hasProgress && draft.card_order.some(cid => currentSet.cards!.some(c => c.id === cid))) {
           setResumePrompt(draft)
           return
         }
@@ -192,21 +193,7 @@ export default function StudyPage() {
     await fetchSRS(id, { force: true })
     setSelectedMode(draft.mode)
     resumeSession(draft, currentSet.cards)
-    setResumePrompt(null); setCachedDraft(null)
-    setSelecting(false)
-    setIsStarting(false)
-  }
-
-  const handleStartFresh = async () => {
-    if (!id || isStarting) return
-    setIsStarting(true)
-    await clearProgress(id)
-    await fetchSRS(id, { force: true })
-    setResumePrompt(null); setCachedDraft(null)
-    const cards = filteredCards(currentSet!.cards!)
-    if (!cards.length) { setIsStarting(false); return }
-    if (selectedMode === 'learn') startLearnSession(cards, id)
-    else startSession(cards, selectedMode as StudyMode, id, { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+    setResumePrompt(null)
     setSelecting(false)
     setIsStarting(false)
   }
@@ -253,23 +240,9 @@ export default function StudyPage() {
           {currentSet.title}
         </button>
       </div>
-      {resumePrompt ? (
-        <div className={styles.resumePrompt}>
-          <div className={styles.resumeTitle}>Resume where you left off?</div>
-          <div className={styles.resumeMeta}>
-            {(() => {
-              const { done, started, total } = draftProgress(resumePrompt)
-              return resumePrompt.mode === 'learn'
-                ? `${done} of ${total} cards practised${started > done ? ` · ${started} started` : ''}`
-                : `${done} of ${total} cards done`
-            })()}
-            {' · '}{MODES.find(m => m.id === resumePrompt.mode)?.label}
-          </div>
-          <div className={styles.resumeActions}>
-            <button className={styles.startBtn} onClick={() => handleResume(resumePrompt)} disabled={isStarting}>{isStarting ? 'Loading…' : 'Resume session'}</button>
-            <button className={styles.changeModeBtn} onClick={handleStartFresh} disabled={isStarting}>{isStarting ? 'Loading…' : 'Start fresh'}</button>
-          </div>
-        </div>
+      {resumePrompt && resumePrompt.updated_at !== dismissedDraft && resumePrompt.card_order.some(cardId => currentSet.cards?.some(card => card.id === cardId)) ? (
+        <ResumeSessionCard draft={resumePrompt} busy={isStarting} onResume={() => handleResume(resumePrompt)}
+          onChoose={() => setDismissedDraft(resumePrompt.updated_at)} />
       ) : (
       <div className={styles.modeSelector}>
         <div className={styles.modeSelectorTitle}>Choose a study mode</div>
@@ -349,86 +322,8 @@ export default function StudyPage() {
     </div>
   )
 
-  // ── Learn story interlude (after batch graduates, before advancing) ──
-  if (learnActive && learnStoryReady && !learnComplete) {
-    // Use the just-graduated batch cards (learnBatchSummary) for the story.
-    // Fall back to learnBatch if summary is empty for some reason.
-    const storyCards = learnBatchSummary.length > 0 ? learnBatchSummary : learnBatch
-    return (
-      <div className={styles.page}>
-        <div className={styles.learnStoryTop}>
-          <button className={styles.backBtn} onClick={handleEnd}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
-            <span>{currentSet.title}</span>
-          </button>
-          <button className={styles.skipLink} onClick={completeLearnStory}>Skip story</button>
-        </div>
-        <div className={styles.learnStoryHint}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7.5l3 3 7-7"/></svg>
-          <span><strong>Batch learned.</strong> Read the words in a story, then tap Continue.</span>
-        </div>
-        <StoryCard
-          terms={storyCards}
-          setId={learnSetId}
-          setTitle={currentSet.title}
-          onNewBatch={completeLearnStory}
-          onComplete={completeLearnStory}
-        />
-      </div>
-    )
-  }
-  // ─────────────────────────────────────────────────────────────
-
-  // ── Learn session active ──────────────────────────────────────
-  if (learnActive && !learnComplete) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.topBar}>
-          <button className={styles.backBtn} onClick={handleEnd}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
-            {currentSet.title}
-          </button>
-          <div className={styles.topBarRight}>
-            <button className={styles.exitBtn} onClick={handleEnd}>End session</button>
-          </div>
-        </div>
-        <LearnCard />
-      </div>
-    )
-  }
-
-  // ── Learn session complete ────────────────────────────────────
-  if (learnActive && learnComplete) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.summaryWrap}>
-          <div className={styles.summary}>
-            <div className={styles.countScore}>🎉</div>
-            <div className={styles.summaryTitle}>Practice complete!</div>
-            <MasteryChange cards={currentSet.cards ?? []} />
-            <div className={styles.summaryMeta}>{learnGraduated.length} of {learnCards.length} cards practised this session</div>
-            {learnGraduated.length > 0 && (
-              <div className={styles.checkpointChips}>
-                {learnCards.filter(c => learnGraduated.includes(c.id)).map((c, i) => (
-                  <div key={c.id} className={styles.checkpointChip} style={{ animationDelay: `${i * 40}ms` }}>{c.term}</div>
-                ))}
-              </div>
-            )}
-            <div className={styles.checkpointSaved}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 7l3 3 6-6"/></svg>
-              Review these cards when due to keep building mastery
-            </div>
-            <div className={styles.summaryActions}>
-              <button className={styles.retryBtn} onClick={() => startLearnSession(learnCards, id!)}>Study again</button>
-              <button className={styles.changeModeBtn} onClick={() => { resetLearn(); setSelecting(true) }}>Change mode</button>
-              <Link to={`/sets/${id}`} className={styles.doneBtn}>Back to set</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  // ─────────────────────────────────────────────────────────────
+  if (learnActive) return <LearnSession title={currentSet.title} cards={currentSet.cards ?? []}
+    handleEnd={handleEnd} backTo={`/sets/${id}`} backLabel="Back to set" />
 
   // ── Story summary checkpoint ─────────────────────────────────
   if (storySummary) {
@@ -569,7 +464,7 @@ export default function StudyPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onAnswerStart={handleFlashAnswerStart} onUndo={undoLast} canUndo={!!lastAction} flipKey={flipKey} startSide={startSide} />}
+      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} onAnswerStart={handleFlashAnswerStart} onUndo={undoLast} canUndo={!!lastAction} startSide={startSide} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {mode === 'sentence' && <SentenceCard />}

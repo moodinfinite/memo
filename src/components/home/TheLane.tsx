@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { readAllRows } from '@/lib/readAllRows'
 import { loadWordList, type ListWord } from '@/lib/levelTest'
-import { laneLights, laneProgress, laneThreshold, wordsForLight, LANE_LEVEL } from '@/lib/lane'
+import { laneLights, laneProgress, laneSetId, laneThreshold, wordsForLight, LANE_LEVEL, MAX_NEW_LANE_WORDS } from '@/lib/lane'
 import { useSRSStore } from '@/store/srsStore'
 import { useAuthStore } from '@/store/authStore'
 import { LANE_ITEMS, LANE_CAT, LANE_TRAIN, C, laneBack, laneLabels } from './laneScene'
@@ -15,6 +15,7 @@ let cardCache: { user: string; cards: CardLike[] } | null = null
 const BACK = laneBack()
 const LABELS = laneLabels()
 const N = LANE_ITEMS.length
+const PROGRESS_SECTIONS = 5
 const more = (n: number) => `${n} more word${n === 1 ? '' : 's'}`
 const reducedMotion = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false } }
 
@@ -42,7 +43,7 @@ export default function TheLane() {
   }
   useEffect(load, [userId])
 
-  const progress = useMemo(() => list && cards ? laneProgress(list, cards, cardSRS) : null, [list, cards, cardSRS])
+  const progress = useMemo(() => list && cards ? laneProgress(list, cards, cardSRS, userId ? laneSetId(userId) : undefined) : null, [list, cards, cardSRS, userId])
   const lights = progress ? laneLights(progress, N) : null
   const target = lights?.lit ?? 0
 
@@ -64,7 +65,7 @@ export default function TheLane() {
   let line: React.ReactNode
   if (failed) line = <>The lane didn’t load. <button type="button" className={styles.inline} onClick={load}>Try again</button></>
   else if (!progress || !lights) line = '天黑了… opening up the lane.'
-  else if (!progress.familiar.length && !progress.started) line = `天黑了… Level ${LANE_LEVEL} words you learn in your sets switch the lights on here.`
+  else if (!progress.familiar.length && !progress.started) line = `天黑了… Level ${LANE_LEVEL} words you practise on the Taiwan path light up this alley.`
   else if (!next) line = '整條巷子都亮了！The whole lane is lit.'
   else line = <>歡迎回來！{more(lights.toNext)} and {next.name} comes on.</>
 
@@ -105,17 +106,23 @@ export default function TheLane() {
       </div>}
     </div>
     <div className={styles.strip}>
-      <div className={styles.bulbs} role="img" aria-label={lights ? `${lights.lit} of ${N} lights on` : 'Loading lights'}>
-        {LANE_ITEMS.map((_, i) => <i key={i} className={i < shown ? styles.bulbOn : ''} style={i === shown && warmth ? { opacity: 0.35 + warmth * 0.5 } : undefined} />)}
+      <div className={styles.milestones} role="progressbar" aria-label="Familiar Level 3 words"
+        aria-valuemin={0} aria-valuemax={progress?.total || undefined} aria-valuenow={progress?.familiar.length}
+        aria-valuetext={progress ? `${progress.familiar.length} of ${progress.total} words familiar` : 'Loading words'}>
+        {Array.from({ length: PROGRESS_SECTIONS }, (_, i) => {
+          const fraction = progress?.total ? progress.familiar.length / progress.total : 0
+          const fill = Math.max(0, Math.min(1, fraction * PROGRESS_SECTIONS - i))
+          return <span key={i} aria-hidden="true"><i style={{ width: `${fill * 100}%` }} /></span>
+        })}
       </div>
       <div className={styles.stripRow}>
-        <span className={styles.count}>{lights && progress ? <><strong>{lights.lit}</strong> of {N} lights · {progress.familiar.length} of {progress.total} Level {LANE_LEVEL} words</> : 'Counting your words…'}</span>
+        <span className={styles.count}>{lights && progress ? <><strong>{progress.familiar.length.toLocaleString()}</strong> / {progress.total.toLocaleString()} words familiar</> : 'Counting your words…'}</span>
         <span className={styles.actions}>
           <button type="button" className={styles.inline} onClick={() => setExplain(e => !e)} aria-expanded={explain}>How it lights</button>
-          <Link to="/daily" className={styles.go}>Daily 10 →</Link>
+          <Link to="/lane/lesson" className={styles.go}>Open daily practice →</Link>
         </span>
       </div>
-      {explain && lights && <p className={styles.explain}>Words from the official TOCFL Level {LANE_LEVEL} list that are in your sets count once they’re <b>Familiar</b> (right on two different days). About every {lights.per} switch on another light, in order from Auntie’s stall to the far blocks. Words you’ve started but not yet got Familiar warm the next light. Beta: the street and its pace may change.</p>}
+      {explain && lights && <p className={styles.explain}>Your ten-minute practice starts with due reviews. On lighter days, it introduces up to {MAX_NEW_LANE_WORDS} new words from the TOCFL Level {LANE_LEVEL} list. Matching cards in your sets already count. A word lights the alley once it’s <b>Familiar</b> (right on two different days). About every {lights.per} switch on another light, in order from Auntie’s stall to the far blocks. Words you’ve started but not yet got Familiar warm the next light. Beta: the street and its pace may change.</p>}
     </div>
   </section>
 }

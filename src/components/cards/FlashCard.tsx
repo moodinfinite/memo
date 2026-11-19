@@ -1,3 +1,4 @@
+import { useStudyStore } from '@/store/studyStore'
 import QuickEditCard from '@/components/study/QuickEditCard'
 import { useState, useEffect, useRef } from 'react'
 import type { Card } from '@/lib/database.types'
@@ -14,13 +15,12 @@ interface Props {
   onAnswerStart?: (correct: boolean) => void   // fires instantly on tap, before the flash delay
   onUndo?: () => void
   canUndo?: boolean
-  flipKey?: number
   startSide?: 'term' | 'definition' | 'random'
 }
 
 const writeKey = 'memo-flash-write'
 
-export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAnswerStart, onUndo, canUndo, flipKey, startSide = 'term' }: Props) {
+export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAnswerStart, onUndo, canUndo, startSide = 'term' }: Props) {
   // Decide once on mount which content goes on which face.
   // Always start flipped=false so the front face (neutral styling) is shown first.
   // When definition-first, we put definition content on the front face and term on the back.
@@ -51,36 +51,40 @@ export default function FlashCard({ card, index, total, onKnow, onDontKnow, onAn
 
   const answerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (answerTimer.current) clearTimeout(answerTimer.current) }, [card.id])
-  const mounted = useRef(false)
   const answering = flash !== null
 
   const handleFlip = () => { if (!answering) setFlipped((f) => !f) }
 
-  useEffect(() => {
-    if (!mounted.current) { mounted.current = true; return }
-    if ((flipKey ?? 0) > 0) setFlipped((f) => !f)
-  }, [flipKey])
-
-  // Safety net: if the component somehow doesn't unmount after a flash, clear it
-  useEffect(() => {
-    if (!flash) return
-    const t = setTimeout(() => setFlash(null), 1100)
-    return () => clearTimeout(t)
-  }, [flash])
-
-  const handleKnow = () => {
-    if (answering) return
-    setFlash('correct')
-    onAnswerStart?.(true)
-    answerTimer.current = setTimeout(onKnow, 1000)   // matches MC's 1s answer-feedback rhythm
+  const answer = (correct: boolean) => {
+    if (answerTimer.current !== null || useStudyStore.getState().editingCard) return
+    setFlash(correct ? 'correct' : 'incorrect')
+    onAnswerStart?.(correct)
+    answerTimer.current = setTimeout(() => {
+      answerTimer.current = null
+      if (correct) onKnow()
+      else onDontKnow()
+      setFlash(null)
+    }, 1000)
   }
+  const handleKnow = () => answer(true)
+  const handleDontKnow = () => answer(false)
 
-  const handleDontKnow = () => {
-    if (answering) return
-    setFlash('incorrect')
-    onAnswerStart?.(false)
-    answerTimer.current = setTimeout(onDontKnow, 1000)
-  }
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+          useStudyStore.getState().editingCard || event.isComposing) return
+      const target = event.target
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input,textarea,select,dialog'))) return
+      if (!['Space', 'ArrowLeft', 'ArrowRight'].includes(event.code)) return
+      if (event.code === 'Space' && target instanceof HTMLElement && target.closest('button,a')) return
+      event.preventDefault()
+      if (event.repeat || answerTimer.current !== null) return
+      if (event.code === 'Space') handleFlip()
+      else answer(event.code === 'ArrowRight')
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  })
 
   // First Enter checks and flips; a second Enter accepts the suggested answer
   const submitWriting = (e: React.FormEvent) => {

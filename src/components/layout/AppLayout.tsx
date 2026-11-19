@@ -87,6 +87,13 @@ export default function AppLayout() {
             <span>Level check</span>
             {latestLevel && <span className={styles.levelBadge}>{latestLevel.level === 0 ? 'Novice' : `L${latestLevel.level}`}</span>}
           </NavLink>
+          <NavLink to="/resources" title="Resource library" aria-label="Resource library"
+            className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="M3 2.5h8a1 1 0 0 1 1 1V14l-4.5-3L3 14z"/>
+            </svg>
+            <span>Resource library</span>
+          </NavLink>
         </nav>
 
         {folders.length > 0 && (

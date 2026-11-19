@@ -1,8 +1,11 @@
 import StudyControls from '@/components/study/StudyControls'
 import MasteryChange from '@/components/study/MasteryChange'
 import { useState, useEffect, useRef } from 'react'
+import LearnSession from '@/components/study/LearnSession'
+import ResumeSessionCard from '@/components/study/ResumeSessionCard'
+import { readAllRows } from '@/lib/readAllRows'
 import { supabase } from '@/lib/supabase'
-import { useStudyStore } from '@/store/studyStore'
+import { useStudyStore, draftProgress } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
 import { getMasteryLevel } from '@/lib/mastery'
 import type { MasteryLevel } from '@/lib/mastery'
@@ -16,6 +19,7 @@ import styles from './StudyPage.module.css'
 import mStyles from './MasterDeckPage.module.css'
 
 const MODES: { id: StudyMode; label: string; desc: string }[] = [
+  { id: 'learn', label: 'Learn', desc: 'Guided batches of five words, with quizzes and recall' },
   { id: 'flashcard', label: 'Flashcards', desc: 'Flip and self-assess' },
   { id: 'multiple_choice', label: 'Multiple choice', desc: 'Pick the right answer' },
   { id: 'typed', label: 'Typed answer', desc: 'Write the definition' },
@@ -26,7 +30,7 @@ export default function MasterDeckPage() {
   const {
     doShuffle: shuffleOn, mode, sessionCards, currentIndex, known, unknown, isComplete,
     timerSecsLeft, timerOn, mcStreak,
-    startSession, resumeSession, loadProgress, clearProgress, markKnown, markUnknown, resetSession, persistSession,
+    learnActive, startLearnSession, startSession, resumeSession, loadProgress, markKnown, markUnknown, resetSession, persistSession,
     tickTimer, selectMCOption, toggleShuffle,
   } = useStudyStore()
 
@@ -35,6 +39,7 @@ export default function MasterDeckPage() {
   const [allCards, setAllCards] = useState<Card[]>([])
   const [setCount, setSetCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [selecting, setSelecting] = useState(true)
   const { cardSRS } = useSRSStore()
   const [selectedMode, setSelectedMode] = useState<StudyMode>('flashcard')
@@ -43,7 +48,6 @@ export default function MasterDeckPage() {
   const [timerDur, setTimerDur] = useState(5)
   const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
   const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
-  const [flipKey, setFlipKey] = useState(0)
   const [burstMsg, setBurstMsg] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -54,7 +58,12 @@ export default function MasterDeckPage() {
 
   const fetchAll = async () => {
     setLoading(true)
-    const { data } = await supabase.from('cards').select('*').order('set_id')
+    setLoadError(false)
+    const [{ data, error }] = await Promise.all([
+      readAllRows<Card>((from, to, signal) => supabase.from('cards').select('*').order('set_id').order('id').range(from, to).abortSignal(signal)),
+      useSRSStore.getState().fetchAllSRS(),
+    ])
+    if (error) setLoadError(true)
     if (data) {
       setAllCards(data)
       setSetCount(new Set(data.map((c: Card) => c.set_id)).size)
@@ -76,11 +85,6 @@ export default function MasterDeckPage() {
       if (useStudyStore.getState().editingCard) return
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (selecting || isComplete) return
-      if (mode === 'flashcard') {
-        if (e.code === 'Space') { e.preventDefault(); setFlipKey((k) => k + 1) }
-        if (e.code === 'ArrowLeft') { e.preventDefault(); markUnknown() }
-        if (e.code === 'ArrowRight') { e.preventDefault(); markKnown() }
-      }
       if (mode === 'multiple_choice') {
         if (e.code === 'Digit1') { e.preventDefault(); selectMCOption(0) }
         if (e.code === 'Digit2') { e.preventDefault(); selectMCOption(1) }
@@ -92,7 +96,6 @@ export default function MasterDeckPage() {
     return () => window.removeEventListener('keydown', handler)
   }, [selecting, isComplete, mode])
 
-  useEffect(() => { setFlipKey(0) }, [currentIndex])
 
   const BURST_MSGS = ['On a roll!', 'Unstoppable!', 'On fire!', 'Legendary!']
   useEffect(() => {
@@ -110,21 +113,33 @@ export default function MasterDeckPage() {
     if (filter === 1) return level === 0
     return true
   }
-  const filteredCards = masteryFilter === null ? allCards
-    : (allCards.filter(c => filterCard(c.id, masteryFilter)).length > 0
-        ? allCards.filter(c => filterCard(c.id, masteryFilter))
-        : allCards)
+  const filteredCards = allCards.filter(c => filterCard(c.id, masteryFilter))
   const filterCount = (filter: MasteryLevel | null) =>
     filter === null ? allCards.length : allCards.filter(c => filterCard(c.id, filter)).length
 
+  const [dismissedDraft, setDismissedDraft] = useState<string | null>(null)
+  useEffect(() => {
+    let active = true
+    setResumeDraft(null)
+    setDismissedDraft(null)
+    if (selecting) void loadProgress('__master__').then(draft => {
+      if (active && draft && draftProgress(draft).hasProgress) setResumeDraft(draft)
+    })
+    return () => { active = false }
+  }, [selecting, loadProgress])
+
   const handleStart = async () => {
-    if (isStarting || !allCards.length) return
+    if (isStarting || !filteredCards.length) return
     setIsStarting(true)
     try {
-      await useSRSStore.getState().fetchAllSRS()
       const draft = await loadProgress('__master__')
-      if (draft) { setResumeDraft(draft); return }
-      startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
+      if (draft && draft.updated_at !== dismissedDraft && draftProgress(draft).hasProgress &&
+          draft.card_order.some(id => allCards.some(card => card.id === id))) {
+        setResumeDraft(draft)
+        return
+      }
+      if (selectedMode === 'learn') startLearnSession(filteredCards, '__master__')
+      else startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 })
       setSelecting(false)
     } finally { setIsStarting(false) }
   }
@@ -141,9 +156,11 @@ export default function MasterDeckPage() {
     setSelecting(true)
   }
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60 < 10 ? '0' : '')}${s % 60}`
-  const canMC = allCards.length >= 4
+  const canMC = filteredCards.length >= 4
 
   if (loading) return <StudyPageSkeleton />
+  if (loadError) return <div className={styles.page}><p>Couldn’t load the Master Deck.</p>
+    <button className={styles.retryBtn} onClick={fetchAll}>Try again</button></div>
 
   if (selecting) return (
     <div className={styles.page}>
@@ -160,11 +177,10 @@ export default function MasterDeckPage() {
         </div>
       </div>
 
-      {resumeDraft && <div className={styles.resumePrompt}>
-        <p>Resume your previous Master Deck session?</p>
-        <button onClick={() => { resumeSession(resumeDraft, allCards); setResumeDraft(null); setSelecting(false) }}>Resume session</button>
-        <button onClick={() => { void clearProgress('__master__'); setResumeDraft(null); startSession(filteredCards, selectedMode, '__master__', { shuffle: doShuffle, timerDurMin: timerEnabled ? timerDur : 0 }); setSelecting(false) }}>Start fresh</button>
-      </div>}
+      {resumeDraft && resumeDraft.updated_at !== dismissedDraft && resumeDraft.card_order.some(id => allCards.some(card => card.id === id)) ? (
+        <ResumeSessionCard draft={resumeDraft} busy={isStarting} onChoose={() => setDismissedDraft(resumeDraft.updated_at)}
+          onResume={() => { resumeSession(resumeDraft, allCards); setSelectedMode(resumeDraft.mode); setSelecting(false) }} />
+      ) : (
       <div className={styles.modeSelector}>
         <div className={styles.modeSelectorTitle}>Choose a study mode</div>
         <div className={styles.modeOptions}>
@@ -200,7 +216,7 @@ export default function MasterDeckPage() {
             )
           })}
         </div>
-        <div className={styles.sessionOpts}>
+        {selectedMode !== 'learn' && <div className={styles.sessionOpts}>
           <button className={[styles.sessionOpt, doShuffle ? styles.sessionOptActive : ''].join(' ')} onClick={() => setDoShuffle(v => !v)}>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4h9m0 0l-2-2m2 2l-2 2M14 11H5m0 0l2-2m-2 2l2 2"/></svg>
             <div><div className={styles.sessionOptLabel}>Shuffle</div><div className={styles.sessionOptDesc}>Random order</div></div>
@@ -209,8 +225,8 @@ export default function MasterDeckPage() {
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7.5" cy="8" r="5"/><path d="M7.5 5.5V8l2 1.5M5.5 1.5h4"/></svg>
             <div><div className={styles.sessionOptLabel}>Timer</div><div className={styles.sessionOptDesc}>{timerEnabled ? `${timerDur} min` : 'Off'}</div></div>
           </button>
-        </div>
-        {timerEnabled && (
+        </div>}
+        {selectedMode !== 'learn' && timerEnabled && (
           <div className={styles.timerPicker}>
             {TIMER_OPTS.map((t) => (
               <button key={t.mins} className={[styles.timerOpt, timerDur === t.mins ? styles.timerOptSelected : ''].join(' ')} onClick={() => setTimerDur(t.mins)}>{t.label}</button>
@@ -232,10 +248,13 @@ export default function MasterDeckPage() {
             })}
           </div>
         </div>
-        <button className={styles.startBtn} onClick={handleStart} disabled={isStarting}>Start studying</button>
-      </div>
+        <button className={styles.startBtn} onClick={handleStart} disabled={isStarting || !filteredCards.length || (selectedMode === 'multiple_choice' && !canMC)}>Start studying</button>
+      </div>)}
     </div>
   )
+
+  if (learnActive) return <LearnSession title="Master Deck" cards={allCards} masteryLabel="Overall mastery"
+    handleEnd={handleEnd} backTo="/" backLabel="Back to Home" />
 
   if (isComplete) {
     const total = known.length + unknown.length, k = known.length, u = unknown.length
@@ -277,7 +296,7 @@ export default function MasterDeckPage() {
         <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(currentIndex / sessionCards.length) * 100}%` }} /></div>
         <span className={styles.progressLabel}>{currentIndex + 1} / {sessionCards.length}</span>
       </div>
-      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} flipKey={flipKey} startSide={startSide} />}
+      {mode === 'flashcard' && <FlashCard key={`${currentIndex}-${startSide}`} card={sessionCards[currentIndex]} index={currentIndex} total={sessionCards.length} onKnow={markKnown} onDontKnow={markUnknown} startSide={startSide} />}
       {mode === 'multiple_choice' && <MultipleChoiceCard />}
       {mode === 'typed' && <TypedAnswerCard />}
       {timerOn && (
