@@ -18,24 +18,46 @@ interface Question { question: string; options: string[]; answer: number; explan
 interface Passage { level: number; passage: string; questions: Question[]; realWorld: { kind: string; text: string; gist: string } }
 interface ReadingItem { level: number; score: number }
 
-/** Level 6 at the top down to Novice, with the learner's level marked */
-function LevelChart({ current, label }: { current: number | null; label: string }) {
+/**
+ * The levels as stations on an MRT line: red track up to the learner's level, cyan ahead.
+ * Tapping a station shows what that level means underneath.
+ */
+function LevelLine({ current, label, range }: { current: number | null; label: string; range?: [number, number] }) {
+  const [selected, setSelected] = useState(current ?? 1)
+  useEffect(() => { setSelected(current ?? 1) }, [current])
+  const info = levelInfo(selected)
+  const rank = rankFor(selected)
+  const high = range && range[1] > (current ?? 0) ? range[1] : null
+  const tag = selected === current ? label : current !== null && selected === current + 1 ? 'Next stop' : null
   return (
-    <div className={styles.chart} role="list" aria-label="What each TOCFL level means">
-      {[...TOCFL_LEVELS].reverse().map(({ level, name, zh, cefr, words, canDo }) => {
-        const here = level === current
-        return (
-          <div key={level} role="listitem" aria-current={here ? 'true' : undefined}
-            className={[styles.chartRow, here ? styles.chartHere : current !== null && level < current ? styles.chartPassed : ''].join(' ')}>
-            <span className={styles.chartLevel}>{level === 0 ? 'N' : level}</span>
-            <span className={styles.chartText}>
-              <span className={styles.chartRank}>{name} <span lang="zh-Hant">{zh}</span><span className={styles.chartWords}> · {cefr} · {words} words</span></span>
-              <span className={styles.chartCanDo}>{canDo}</span>
-            </span>
-            {here && <span className={styles.chartMarker}>{label}</span>}
-          </div>
-        )
-      })}
+    <div className={styles.levelLine}>
+      <div className={styles.line} role="group" aria-label="TOCFL levels, Novice to Level 6"
+        style={{ '--fill': current === null ? 0 : current / MAX_LEVEL } as React.CSSProperties}>
+        <span className={styles.track} aria-hidden="true"><span className={styles.trackFill} /></span>
+        {TOCFL_LEVELS.map(({ level, name, zh }) => {
+          const here = level === current
+          const state = current === null ? styles.stopAhead : level <= current ? styles.stopPassed : high !== null && level <= high ? styles.stopMaybe : styles.stopAhead
+          return (
+            <button key={level} type="button" aria-pressed={selected === level}
+              aria-label={`${name}, ${zh}${here ? `, ${label}` : ''}`}
+              className={[styles.station, state, here ? styles.stopHere : '', selected === level ? styles.stopSelected : ''].join(' ')}
+              onClick={() => setSelected(level)}>
+              <span className={styles.youAre} aria-hidden="true">{here ? label : ''}</span>
+              <span className={styles.stopRow}><span className={styles.stop}>{level === 0 ? 'N' : level}</span></span>
+              <span className={styles.stopZh} lang="zh-Hant">{zh}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div className={styles.stopCard} aria-live="polite">
+        <div className={styles.stopHead}>
+          <span className={styles.stopName}>{info.name}</span>
+          <span className={styles.stopNameZh} lang="zh-Hant">{info.zh}</span>
+          {tag && <span className={styles.stopTag}>{tag}</span>}
+        </div>
+        <div className={styles.stopMeta}>{info.cefr} · about {info.words} words · {rank.en} <span lang="zh-Hant">{rank.zh}</span></div>
+        <p className={styles.stopCanDo}>{info.canDo}</p>
+      </div>
     </div>
   )
 }
@@ -326,6 +348,7 @@ export default function LevelPage() {
       <div className={styles.page}>
         <div className={styles.eyebrow}>Level check</div>
         <h1 className={styles.title}>Where are you on the TOCFL scale?</h1>
+        <LevelLine current={latest?.level ?? null} label="You are here" />
         <p className={styles.lede}>
           About 10 minutes, on Taiwan’s own scale for Traditional Chinese. First you type what 20–30 words mean. They come from
           the official TOCFL word list and get harder or easier as you go. Then you read two short passages against a loose
@@ -333,7 +356,6 @@ export default function LevelPage() {
         </p>
         {latest && (
           <div className={styles.lastResult}>
-            <span className={styles.levelBadge}>{levelName(latest.level)}</span>
             <span>Last checked {formatDate(latest.date)}</span>
           </div>
         )}
@@ -344,8 +366,6 @@ export default function LevelPage() {
           </p>
         )}
         <button className={styles.primaryBtn} onClick={begin}>{latest ? (due ? 'Take this month’s check' : 'Check again') : 'Start the level check'}</button>
-        <div className={styles.sectionLabel}>What the levels mean</div>
-        <LevelChart current={latest?.level ?? null} label="You" />
         <p className={styles.footnote}>
           Word counts are the size of the official TOCFL list up to each level. Reading descriptions follow the CEFR level each
           band is aligned to, in our own words.
@@ -518,10 +538,8 @@ export default function LevelPage() {
     return (
       <div className={styles.page}>
         <div className={styles.eyebrow}>Your level</div>
-        <div className={styles.resultLevel}>{info.name}</div>
-        <div className={styles.resultMeta}>
-          <span lang="zh-Hant">{info.zh}</span> · {info.cefr} · {rank.en} <span lang="zh-Hant">{rank.zh}</span>
-        </div>
+        <h1 className={styles.title}>{info.name} <span lang="zh-Hant">{info.zh}</span></h1>
+        <LevelLine current={result.level} label="You’re here" range={[low, high]} />
         {(high > low || result.capped || result.level >= 5) && (
           <p className={styles.lede}>
             {result.capped
@@ -544,8 +562,6 @@ export default function LevelPage() {
             )
           })}
         </div>
-        <div className={styles.sectionLabel}>Where that puts you</div>
-        <LevelChart current={result.level} label="You’re here" />
         {grade && (
           <div className={styles.gradeCard}>
             <div className={styles.sectionLabel}>Writing feedback</div>

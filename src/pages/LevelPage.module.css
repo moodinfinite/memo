@@ -23,11 +23,6 @@
 .primaryBtn:focus-visible, .ghostBtn:focus-visible, .option:focus-visible, .linkBtn:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .linkBtn { background: none; border: none; padding: 0; font: inherit; color: var(--accent-text); text-decoration: underline; cursor: pointer; }
 
-.levelBadge {
-  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
-  background: var(--accent-subtle); border: 1px solid var(--accent-border); color: var(--accent-text);
-  font-size: var(--text-body); font-weight: 600;
-}
 .lastResult { display: flex; align-items: center; gap: 10px; font-size: var(--text-body); color: var(--text-secondary); }
 .history { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .historyRow { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: var(--r-md); background: var(--bg-raised); border: 1px solid var(--border-subtle); font-size: var(--text-body); color: var(--text-secondary); }
@@ -79,7 +74,6 @@
 .textarea:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
 
 /* ── Results ── */
-.resultLevel { font-family: var(--font-display); font-size: 56px; line-height: 1; color: var(--primary); letter-spacing: -0.02em; }
 .skillList { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: var(--bg-raised); border: 1px solid var(--border-subtle); border-radius: var(--r-xl); }
 .skillRow { display: grid; grid-template-columns: 96px 1fr 56px; align-items: center; gap: 12px; font-size: var(--text-body); }
 .skillName { text-transform: capitalize; color: var(--text-secondary); }
@@ -96,40 +90,44 @@
   .questionCard { padding: 18px; }
   .passage { font-size: 18px; }
   .skillRow { grid-template-columns: 80px 1fr 52px; gap: 10px; }
-  .resultLevel { font-size: 44px; }
 }
 @media (pointer: coarse) { .option { min-height: 52px; } }
 
-/* ── Level chart: Level 6 at the top, your level marked ── */
-.chart { display: flex; flex-direction: column; gap: 4px; }
-.chartRow {
-  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px;
-  padding: 10px 14px; border-radius: var(--r-lg); border: 1px solid transparent;
-  color: var(--text-tertiary);
+/* ── Level line: the levels as MRT stations, red track up to you, cyan ahead ── */
+.levelLine { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 4px; }
+.line { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); --stop: 56px; --here: 76px; --marker: 24px; }
+.track, .trackFill { position: absolute; height: 8px; border-radius: 4px; }
+.track { left: calc(100% / 14); right: calc(100% / 14); top: calc(var(--marker) + var(--here) / 2 - 4px); background: var(--ink-cyan-border); }
+.trackFill { left: 0; top: 0; width: calc(var(--fill) * 100%); background: var(--ink-red); transform-origin: left; animation: fillLine 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) both 0.15s; }
+@keyframes fillLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.station { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; padding: 0 0 4px; font: inherit; cursor: pointer; color: var(--text-secondary); min-width: 0; }
+.youAre { height: var(--marker); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-red-strong); white-space: nowrap; }
+.stopRow { height: var(--here); display: flex; align-items: center; justify-content: center; }
+.stop { width: var(--stop); height: var(--stop); border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-size: 24px; line-height: 1; background: var(--bg-base); border: 4px solid var(--ink-cyan-strong); color: var(--ink-cyan-strong); transition: transform 0.15s; }
+.stopZh { font-size: var(--text-body); font-weight: 600; white-space: nowrap; }
+.stopPassed .stop { border-color: var(--ink-red); color: var(--ink-red-strong); }
+.stopMaybe .stop { border-color: var(--ink-red); border-style: dashed; color: var(--ink-red-strong); }
+.stopHere .stop { width: var(--here); height: var(--here); font-size: 34px; background: var(--ink-red); border-color: var(--ink-red); color: var(--on-primary); }
+.stopHere .stopZh { color: var(--text-primary); }
+.stopSelected:not(.stopHere) .stop { transform: scale(1.12); box-shadow: 0 0 0 3px var(--bg-base), 0 0 0 5px var(--ink-cyan); }
+.stopSelected .stopZh { color: var(--text-primary); text-decoration: underline; text-decoration-color: var(--ink-cyan); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.station:focus-visible { outline: none; }
+.station:focus-visible .stop { box-shadow: 0 0 0 3px var(--bg-base), 0 0 0 5px var(--ink-cyan-strong); }
+.stopCard { padding: 14px 16px; background: var(--bg-raised); border: 1px solid var(--ink-cyan-border); border-top: 3px solid var(--ink-red); border-radius: 0; }
+.stopHead { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.stopName { font-family: var(--font-display); font-size: var(--text-section); color: var(--text-primary); }
+.stopNameZh { font-size: var(--text-section); font-weight: 600; letter-spacing: 2px; color: var(--ink-red-strong); }
+.stopTag { margin-left: auto; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-cyan-strong); border: 1px solid var(--ink-cyan-border); padding: 1px 6px; }
+.stopMeta { margin-top: 2px; font-size: var(--text-body); color: var(--text-tertiary); }
+.stopCanDo { margin-top: 8px; font-size: 1rem; line-height: 1.55; color: var(--text-primary); }
+@media (max-width: 560px) {
+  .line { --stop: 36px; --here: 48px; --marker: 18px; }
+  .stop { font-size: 15px; border-width: 3px; }
+  .stopHere .stop { font-size: 22px; }
+  .stopZh { font-size: 0.75rem; }
+  .youAre { font-size: 0.5625rem; letter-spacing: 0.03em; }
 }
-.chartLevel {
-  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
-  font-family: var(--font-display); font-size: 16px; color: var(--text-tertiary);
-  border: 1.5px dashed var(--border-default);
-}
-.chartText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.chartRank { font-size: var(--text-body); font-weight: 600; color: var(--text-secondary); }
-.chartWords { font-weight: 400; color: var(--text-tertiary); }
-.chartCanDo { font-size: var(--text-body); line-height: 1.4; }
-.chartPassed .chartLevel { border-style: solid; border-color: var(--accent-border); color: var(--accent-text); background: var(--accent-subtle); }
-.chartPassed .chartRank { color: var(--text-primary); }
-.chartHere { background: var(--accent-subtle); border-color: var(--accent-border); color: var(--text-secondary); }
-.chartHere .chartLevel { border: none; background: var(--primary); color: var(--on-primary); }
-.chartHere .chartRank { color: var(--text-primary); }
-.chartMarker {
-  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--primary); white-space: nowrap;
-}
-@media (max-width: 480px) {
-  .chartRow { grid-template-columns: 32px 1fr; padding: 10px 12px; }
-  .chartLevel { width: 32px; height: 32px; font-size: 14px; }
-  .chartMarker { grid-column: 2; }
-}
+@media (prefers-reduced-motion: reduce) { .trackFill { animation: none; } .stop { transition: none; } }
 
 /* ── TOCFL check ── */
 .note { font-size: var(--text-body); line-height: 1.6; color: var(--text-secondary); padding: 12px 14px; border-radius: var(--r-lg); background: var(--bg-surface); border: 1px solid var(--border-subtle); }
@@ -152,6 +150,5 @@
 .dontKnow:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .realWorld { display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: var(--r-xl); background: var(--bg-raised); border: 1px solid var(--border-subtle); }
 .realText { font-size: 20px; line-height: 1.8; letter-spacing: 0.02em; white-space: pre-line; color: var(--text-primary); }
-.resultMeta { font-size: var(--text-body); color: var(--text-secondary); }
 @media (max-width: 768px) { .wordTerm { font-size: 40px; } .realText { font-size: 18px; } }
 @media (pointer: coarse) { .dontKnow { min-height: 44px; } }
