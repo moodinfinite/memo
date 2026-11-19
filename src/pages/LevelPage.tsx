@@ -433,13 +433,16 @@ export default function LevelPage() {
             <div className={styles.wordReveal}>
               <span className={styles.revealPinyin}>{current.pinyin}</span>
               <span>{current.meaning}</span>
-              <span className={revealed.score === 1 ? styles.feedbackRight : revealed.score === 0 ? styles.feedbackWrong : styles.feedbackPending}>
-                {revealed.score === 1 ? 'Yes.' : revealed.score === 0 ? (revealed.typed ? 'Not quite.' : 'Noted.') : 'Claude will check your answer.'}
-              </span>
+              {revealed.score !== null && (
+                <span className={revealed.score === 1 ? styles.feedbackRight : styles.feedbackWrong}>
+                  {revealed.score === 1 ? 'Yes.' : revealed.typed ? 'Not quite.' : 'Noted.'}
+                </span>
+              )}
             </div>
           )}
         </div>
         {revealed && <button className={styles.primaryBtn} onClick={nextWord} autoFocus>Next</button>}
+        {done === 0 && !revealed && <p className={styles.footnote}>Some answers are checked at the end, so not every word shows a result straight away.</p>}
       </div>
     )
   }
