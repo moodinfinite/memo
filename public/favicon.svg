@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Temporary Memo mark: two riso inks overlapping, slightly off-register -->
+  <defs><clipPath id="red"><circle cx="25" cy="27" r="16"/></clipPath></defs>
+  <rect width="64" height="64" rx="14" fill="#fff8f0"/>
+  <circle cx="25" cy="27" r="16" fill="#ee432d"/>
+  <circle cx="39" cy="37" r="16" fill="#36bed7"/>
+  <circle cx="39" cy="37" r="16" fill="#323226" clip-path="url(#red)"/>
+</svg>
