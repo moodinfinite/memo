@@ -1,5 +1,5 @@
 import type { ListWord } from './levelTest'
-import { cardForms } from './lane'
+import { cardForms, laneThreshold } from './lane'
 
 /**
  * The learning path: the official TOCFL words for a level, in 6-word units ordered by usefulness and
@@ -136,3 +136,24 @@ export function pathCard(word: ListWord, tag?: PathTag) {
 
 /** SRS start for a word the learner says they know: first review in two weeks, Familiar once they get it right then */
 export const KNOWN_INTERVAL = 14
+
+// ── The alley on Home: finished units switch its lights on ──
+
+/** How far through the current unit a learner is, as part of a unit: sorted a third, learned two thirds */
+export const STAGE_PART: Record<UnitStage | 'skip', number> = { sweep: 0, learn: 1 / 3, check: 2 / 3, skip: 0 }
+
+export interface PathLights { lit: number; warmth: number; toNext: number; per: number }
+
+/** Lights for a level: spread evenly over its units so the last light needs every unit */
+export function pathLights(units: number, doneCount: number, stagePart: number, lights: number): PathLights {
+  const per = Math.max(1, Math.round(units / lights))
+  let lit = 0
+  while (lit < lights && units > 0 && doneCount >= laneThreshold(units, lights, lit)) lit++
+  if (lit >= lights || units === 0) return { per, lit, warmth: 0, toNext: 0 }
+  const from = laneThreshold(units, lights, lit - 1), to = laneThreshold(units, lights, lit)
+  return { per, lit, warmth: Math.min(0.9, (doneCount - from + stagePart) / (to - from)), toNext: to - doneCount }
+}
+
+/** The units that switched on light `index` */
+export const unitsForLight = <T,>(units: T[], index: number, lights: number) =>
+  units.slice(laneThreshold(units.length, lights, index - 1), laneThreshold(units.length, lights, index))

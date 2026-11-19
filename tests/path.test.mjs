@@ -40,3 +40,13 @@ test('progress is read defensively and cards keep the "pinyin — meaning" shape
  assert.deepEqual({...P.pathCard(W(2,'路口','crossing; intersection (of roads)'))},{term:'路口',definition:'p — crossing; intersection'});
  assert.equal(P.pathSetTitle(3),'Path · Level 3');
 });
+
+test('alley lights follow finished units, with the current unit warming the next light',()=>{
+ const P=lib();
+ let l=P.pathLights(89,0,0,35); assert.deepEqual([l.lit,l.toNext,l.warmth],[0,3,0]);
+ l=P.pathLights(89,3,0,35); assert.equal(l.lit,1);
+ l=P.pathLights(89,4,P.STAGE_PART.check,35); assert.equal(l.lit,1); assert.ok(l.warmth>0.5&&l.warmth<0.9);
+ l=P.pathLights(89,88,0,35); assert.equal(l.lit,34,'the last light needs every unit');
+ l=P.pathLights(89,89,0,35); assert.deepEqual([l.lit,l.toNext],[35,0]);
+ assert.equal(P.unitsForLight([...Array(89).keys()],0,35).length,3);
+});

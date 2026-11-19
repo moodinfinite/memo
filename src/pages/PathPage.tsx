@@ -1,25 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { readAllRows } from '@/lib/readAllRows'
 import { useAuthStore } from '@/store/authStore'
 import { useSRSStore } from '@/store/srsStore'
 import { useSetsStore } from '@/store/setsStore'
-import { currentResults, levelHistory, levelInfo, levelName, loadWordList, matchMeaning, type ListWord } from '@/lib/levelTest'
+import { levelInfo, levelName, matchMeaning, type ListWord } from '@/lib/levelTest'
 import {
-  buildUnits, indexCards, parsePathTags, pathCard, pathSetTitle, readProgress, tagFor, taggedLevels, unitStage, wordState,
-  KNOWN_INTERVAL, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathTag, type PathUnit, type UnitStage, type WordState,
+  pathCard, pathSetTitle, tagFor, taggedLevels, wordState,
+  KNOWN_INTERVAL, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type UnitStage, type WordState,
 } from '@/lib/path'
+import { usePath } from '@/lib/usePath'
 import styles from './PathPage.module.css'
-
-let tagsPending: Promise<Map<string, PathTag>> | null = null
-const loadTags = () => {
-  if (!tagsPending) {
-    tagsPending = fetch('/path-tags.txt').then(r => { if (!r.ok) throw new Error(`Path data unavailable (${r.status})`); return r.text() }).then(parsePathTags)
-    tagsPending.catch(() => { tagsPending = null })
-  }
-  return tagsPending
-}
 
 const shortMeaning = (m: string) => m.replace(/\s*\([^)]*\)/g, '').split(/[;/]/).map(s => s.trim()).filter(Boolean).slice(0, 3).join('; ')
 const theme = (t: string) => THEMES[t] ?? THEMES.general
@@ -32,13 +23,8 @@ type Phase = { kind: 'path' } | { kind: 'sweep'; unit: PathUnit } | { kind: 'che
 
 export default function PathPage() {
   const navigate = useNavigate()
-  const user = useAuthStore(s => s.user)
-  const cardSRS = useSRSStore(s => s.cardSRS)
-  const [list, setList] = useState<ListWord[] | null>(null)
-  const [tags, setTags] = useState<Map<string, PathTag> | null>(null)
-  const [cards, setCards] = useState<CardRef[] | null>(null)
-  const [pathSets, setPathSets] = useState<{ id: string; title: string }[] | null>(null)
-  const [failed, setFailed] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const { user, list, tags, cards, pathSets, index, failed, reload: load, setCards, setPathSets, setFailed, progress, latest, start, levels, onLevel, seen } = usePath()
   const [phase, setPhase] = useState<Phase>({ kind: 'path' })
   const [choices, setChoices] = useState<Record<string, 'know' | 'learn'>>({})
   const [busy, setBusy] = useState(false)
@@ -46,43 +32,7 @@ export default function PathPage() {
   const [viewLevel, setViewLevel] = useState<number | null>(null)
   const [showDone, setShowDone] = useState(false)
 
-  const load = () => {
-    if (!user) return
-    setFailed(null)
-    void useSRSStore.getState().fetchAllSRS()
-    Promise.all([
-      loadWordList(), loadTags(),
-      readAllRows<CardRef>((from, to, signal) => supabase.from('cards').select('id, set_id, term, definition').eq('user_id', user.id).order('id').range(from, to).abortSignal(signal)),
-      supabase.from('sets').select('id, title').eq('user_id', user.id),
-    ]).then(([words, t, cardRows, setRows]) => {
-      if (cardRows.error || setRows.error) throw new Error('Could not load your sets')
-      setList(words); setTags(t); setCards(cardRows.data ?? [])
-      setPathSets((setRows.data ?? []).filter((s: { title: string }) => s.title.startsWith('Path · ')))
-    }).catch(err => setFailed(err?.message ?? 'Something went wrong'))
-  }
-  useEffect(load, [user?.id])
-
-  const meta = user?.user_metadata
-  const progress = readProgress(meta)
-  const latest = currentResults(levelHistory(meta))[0]
-  const start = progress.start ?? latest?.level ?? null
-
-  const index = useMemo(() => cards && pathSets ? indexCards(cards, new Set(pathSets.map(s => s.id))) : null, [cards, pathSets])
-  const seen = (id: string) => !!cardSRS[id]
-
-  const levels = useMemo(() => {
-    if (!list || !tags || start === null || !index) return []
-    return taggedLevels(tags).filter(l => l >= start).map(level => {
-      const units = buildUnits(list, tags, level)
-      const states = units.map(u => u.words.map(w => wordState(w, index, seen).state))
-      const stages = states.map(unitStage)
-      const done = progress.done[level] ?? 0
-      let current = units.findIndex((_, i) => i >= done && stages[i] !== 'skip')
-      return { level, units, states, stages, current, complete: current < 0, words: units.reduce((n, u) => n + u.words.length, 0), covered: states.flat().filter(s => s !== 'new').length }
-    })
-  }, [list, tags, start, index, cardSRS, progress.done])
-
-  const active = levels.find(l => l.level === viewLevel) ?? levels.find(l => !l.complete) ?? levels[levels.length - 1]
+  const active = levels.find(l => l.level === viewLevel) ?? onLevel
 
   const saveProgress = async (next: typeof progress) => {
     const { data, error } = await supabase.auth.updateUser({ data: { [PATH_KEY]: next } })
@@ -142,6 +92,17 @@ export default function PathPage() {
       if (setId) navigate(`/sets/${setId}/study?mode=learn&filter=new&from=path`)
     } else startCheck(unit)
   }
+
+  // Opened from Home's "continue" button: go straight to the current unit's next step
+  const jumped = useRef(false)
+  useEffect(() => {
+    if (jumped.current || params.get('go') !== '1' || !onLevel || !pathSets) return
+    jumped.current = true
+    setParams({}, { replace: true })
+    const unit = onLevel.units[onLevel.current]
+    const stage = onLevel.stages[onLevel.current]
+    if (unit && stage !== 'skip') go(unit, stage)
+  }, [onLevel, pathSets])
 
   const finishCheck = async (unit: PathUnit, items: CheckItem[]) => {
     setBusy(true)
