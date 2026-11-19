@@ -6,8 +6,8 @@ import { useSRSStore } from '@/store/srsStore'
 import { useSetsStore } from '@/store/setsStore'
 import { levelInfo, levelName, matchMeaning, type ListWord } from '@/lib/levelTest'
 import {
-  pathCard, pathSetTitle, tagFor, taggedLevels, wordState,
-  KNOWN_INTERVAL, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type UnitStage, type WordState,
+  pathCard, pathSetTitle, tagFor, taggedLevels, testOutPassed, testOutSample, testOutTarget, wordState,
+  KNOWN_INTERVAL, TEST_OUT, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type TestOutScope, type UnitStage, type WordState,
 } from '@/lib/path'
 import { usePath } from '@/lib/usePath'
 import styles from './PathPage.module.css'
@@ -17,9 +17,11 @@ const theme = (t: string) => THEMES[t] ?? THEMES.general
 /** Locked units shown after the current one */
 const AHEAD = 8
 
-interface CheckItem { word: ListWord; card: CardRef; score: number | null; typed: string }
-type Phase = { kind: 'path' } | { kind: 'sweep'; unit: PathUnit } | { kind: 'check'; unit: PathUnit; items: CheckItem[]; at: number; revealed: boolean }
-  | { kind: 'done'; unit: PathUnit; items: CheckItem[] }
+interface CheckItem { word: ListWord; card?: CardRef; score: number | null; typed: string }
+/** A test-out run: passing marks units up to `target` done */
+interface TestOut { scope: TestOutScope; target: number; skipped: number }
+type Phase = { kind: 'path' } | { kind: 'sweep'; unit: PathUnit } | { kind: 'check'; unit: PathUnit; items: CheckItem[]; at: number; revealed: boolean; test?: TestOut }
+  | { kind: 'done'; unit: PathUnit; items: CheckItem[]; test?: TestOut & { passed: boolean } }
 
 export default function PathPage() {
   const navigate = useNavigate()
@@ -104,10 +106,30 @@ export default function PathPage() {
     if (unit && stage !== 'skip') go(unit, stage)
   }, [onLevel, pathSets])
 
+  const startTestOut = (unit: PathUnit, scope: TestOutScope) => {
+    if (!active) return
+    const target = testOutTarget(active.units, unit.index, scope)
+    const words = testOutSample(active.units, active.states, unit.index, target, TEST_OUT[scope])
+    if (!words.length) return
+    setTyped('')
+    setPhase({ kind: 'check', unit, items: words.map(word => ({ word, score: null, typed: '' })), at: 0, revealed: false, test: { scope, target, skipped: target - unit.index } })
+  }
+
+  const finishTestOut = async (unit: PathUnit, items: CheckItem[], test: TestOut) => {
+    const passed = testOutPassed(items.filter(i => i.score === 1).length, items.length)
+    setBusy(true)
+    try {
+      if (passed) await saveProgress({ ...progress, done: { ...progress.done, [unit.level]: Math.max(progress.done[unit.level] ?? 0, test.target) } })
+      setPhase({ kind: 'done', unit, items, test: { ...test, passed } })
+    } catch (err: any) {
+      setFailed(err?.message ?? 'Something went wrong')
+    } finally { setBusy(false) }
+  }
+
   const finishCheck = async (unit: PathUnit, items: CheckItem[]) => {
     setBusy(true)
     try {
-      for (const it of items) void useSRSStore.getState().updateSRS(it.card.id, it.card.set_id, it.score === 1)
+      for (const it of items) if (it.card) void useSRSStore.getState().updateSRS(it.card.id, it.card.set_id, it.score === 1)
       await saveProgress({ ...progress, done: { ...progress.done, [unit.level]: Math.max(progress.done[unit.level] ?? 0, unit.index + 1) } })
       setPhase({ kind: 'done', unit, items })
     } catch (err: any) {
@@ -191,13 +213,14 @@ export default function PathPage() {
     const settle = (score: number) => setPhase({ ...phase, items: items.map((x, i) => i === at ? { ...x, score } : x) })
     const nextItem = () => {
       if (at + 1 < items.length) { setTyped(''); setPhase({ ...phase, at: at + 1, revealed: false }) }
+      else if (phase.test) void finishTestOut(unit, items, phase.test)
       else void finishCheck(unit, items)
     }
     const tag = tagFor(tags, it.word)
     return (
       <div className={styles.page}>
         <div className={styles.progressRow}>
-          <span className={styles.eyebrow}>Unit {unit.index + 1} check</span>
+          <span className={styles.eyebrow}>{phase.test ? `Test out · ${phase.test.scope === 'level' ? `rest of ${levelName(unit.level)}` : SECTIONS[unit.section]}` : `Unit ${unit.index + 1} check`}</span>
           <span className={styles.count}>{at + 1} of {items.length}</span>
         </div>
         <div className={styles.card}>
@@ -229,20 +252,24 @@ export default function PathPage() {
             </div>
           )}
         </div>
-        {revealed && it.score !== null && <button className={styles.primaryBtn} onClick={nextItem} disabled={busy} autoFocus>{at + 1 < items.length ? 'Next' : busy ? 'Saving…' : 'Finish unit'}</button>}
+        {revealed && it.score !== null && <button className={styles.primaryBtn} onClick={nextItem} disabled={busy} autoFocus>{at + 1 < items.length ? 'Next' : busy ? 'Saving…' : phase.test ? 'See result' : 'Finish unit'}</button>}
       </div>
     )
   }
 
   if (phase.kind === 'done') {
-    const { unit, items } = phase
+    const { unit, items, test } = phase
     const missed = items.filter(i => i.score !== 1)
+    const need = Math.ceil(items.length * TEST_OUT.pass)
     return (
       <div className={styles.page}>
-        <div className={styles.eyebrow}>Unit {unit.index + 1} done</div>
+        <div className={styles.eyebrow}>{test ? (test.passed ? 'Tested out' : 'Test out') : `Unit ${unit.index + 1} done`}</div>
         <h1 className={styles.title}>{items.length - missed.length} of {items.length} right</h1>
+        {test && <p className={styles.lede}>{test.passed
+          ? `You skipped ${test.skipped} unit${test.skipped === 1 ? '' : 's'}${test.scope === 'level' ? ` and finished ${levelName(unit.level)}` : ''}. Skipped words aren’t added to your sets.`
+          : `Skipping needs ${need} of ${items.length}. Keep going unit by unit: the sort step lets you mark words you know in a tap.`}</p>}
         {missed.length ? <>
-          <p className={styles.lede}>These come back in your reviews tomorrow.</p>
+          <p className={styles.lede}>{test ? 'Words you missed:' : 'These come back in your reviews tomorrow.'}</p>
           <div className={styles.missedList}>
             {missed.map(({ word }) => {
               const tag = tagFor(tags, word)
@@ -252,7 +279,7 @@ export default function PathPage() {
               </div>
             })}
           </div>
-        </> : <p className={styles.lede}>All of them. Words you said you knew come back in a review in two weeks to make sure they stick.</p>}
+        </> : test ? null : <p className={styles.lede}>All of them. Words you said you knew come back in a review in two weeks to make sure they stick.</p>}
         <div className={styles.row}><button className={styles.primaryBtn} onClick={() => setPhase({ kind: 'path' })} autoFocus>Back to the path</button></div>
       </div>
     )
@@ -320,6 +347,16 @@ export default function PathPage() {
                       <span className={styles.stepHint}>{stage === 'sweep' ? 'Step 1 of 3 · sort the words' : stage === 'learn' ? 'Step 2 of 3 · Learn mode' : 'Step 3 of 3 · type each meaning'}</span>
                     </div>
                   )}
+                  {state === 'current' && stage !== 'skip' && (() => {
+                    const sectionEnd = testOutTarget(units, i, 'section')
+                    return (
+                      <div className={styles.testOut}>
+                        Already know this?{' '}
+                        {sectionEnd < units.length && <><button className={styles.linkBtn} onClick={() => startTestOut(unit, 'section')}>Test out of {SECTIONS[unit.section].toLowerCase()}</button> ({sectionEnd - i} units) · </>}
+                        <button className={styles.linkBtn} onClick={() => startTestOut(unit, 'level')}>Test out of {levelName(level)}</button> ({units.length - i} units)
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
             </li>

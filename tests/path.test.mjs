@@ -50,3 +50,18 @@ test('alley lights follow finished units, with the current unit warming the next
  l=P.pathLights(89,89,0,35); assert.deepEqual([l.lit,l.toNext],[35,0]);
  assert.equal(P.unitsForLight([...Array(89).keys()],0,35).length,3);
 });
+
+test('test out: section and level targets, samples only new words, 80% to pass',()=>{
+ const P=lib();
+ const u=(index,section,n)=>({index,level:2,section,theme:'food',words:Array.from({length:n},(_,k)=>W(2,`字${index}-${k}`))});
+ const units=[u(0,0,6),u(1,0,6),u(2,1,6),u(3,2,6)];
+ assert.equal(P.testOutTarget(units,1,'section'),2);
+ assert.equal(P.testOutTarget(units,2,'section'),3);
+ assert.equal(P.testOutTarget(units,0,'level'),4);
+ const states=units.map(x=>x.words.map((_,k)=>k===0?'own':'new'));
+ const sample=P.testOutSample(units,states,1,4,100,()=>0.5);
+ assert.equal(sample.length,15,'5 new words in each of units 1-3');
+ assert.ok(sample.every(w=>!w.forms[0].endsWith('-0')),'words already in your sets are left out');
+ assert.equal(P.testOutSample(units,states,0,4,10).length,10);
+ assert.ok(P.testOutPassed(8,10)); assert.ok(!P.testOutPassed(7,10)); assert.ok(P.testOutPassed(12,15)); assert.ok(!P.testOutPassed(0,0));
+});

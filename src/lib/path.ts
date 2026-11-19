@@ -157,3 +157,26 @@ export function pathLights(units: number, doneCount: number, stagePart: number, 
 /** The units that switched on light `index` */
 export const unitsForLight = <T,>(units: T[], index: number, lights: number) =>
   units.slice(laneThreshold(units.length, lights, index - 1), laneThreshold(units.length, lights, index))
+
+// ── Testing out: skip ahead by showing you already know a sample of what you'd skip ──
+
+export type TestOutScope = 'section' | 'level'
+/** Words sampled for each scope, and the share that must be right to skip */
+export const TEST_OUT = { section: 10, level: 15, pass: 0.8 }
+
+/** Units done after passing: the end of the current unit's section, or the whole level */
+export function testOutTarget(units: PathUnit[], current: number, scope: TestOutScope): number {
+  if (scope === 'level') return units.length
+  let i = current
+  while (i < units.length && units[i].section === units[current].section) i++
+  return i
+}
+
+/** A random sample of the words that would be skipped (only ones not already in the learner's sets) */
+export function testOutSample(units: PathUnit[], states: WordState[][], current: number, target: number, size: number, rand = Math.random): ListWord[] {
+  const pool = units.slice(current, target).flatMap(u => u.words.filter((_, j) => states[u.index][j] === 'new'))
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
+  return pool.slice(0, size)
+}
+
+export const testOutPassed = (right: number, total: number) => total > 0 && right / total >= TEST_OUT.pass
