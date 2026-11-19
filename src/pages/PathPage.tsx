@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -7,10 +7,12 @@ import { useSetsStore } from '@/store/setsStore'
 import { levelInfo, levelName, matchMeaning, type ListWord } from '@/lib/levelTest'
 import {
   pathCard, pathSetTitle, tagFor, taggedLevels, testOutPassed, testOutSample, testOutTarget, wordState,
-  KNOWN_INTERVAL, TEST_OUT, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type TestOutScope, type UnitStage, type WordState,
+  KNOWN_INTERVAL, STAGE_PART, TEST_OUT, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type TestOutScope, type UnitStage, type WordState,
 } from '@/lib/path'
 import { usePath } from '@/lib/usePath'
 import styles from './PathPage.module.css'
+
+const LaneReveal = lazy(() => import('@/components/home/LaneReveal'))
 
 const shortMeaning = (m: string) => m.replace(/\s*\([^)]*\)/g, '').split(/[;/]/).map(s => s.trim()).filter(Boolean).slice(0, 3).join('; ')
 const theme = (t: string) => THEMES[t] ?? THEMES.general
@@ -21,7 +23,7 @@ interface CheckItem { word: ListWord; card?: CardRef; score: number | null; type
 /** A test-out run: passing marks units up to `target` done */
 interface TestOut { scope: TestOutScope; target: number; skipped: number }
 type Phase = { kind: 'path' } | { kind: 'sweep'; unit: PathUnit } | { kind: 'check'; unit: PathUnit; items: CheckItem[]; at: number; revealed: boolean; test?: TestOut }
-  | { kind: 'done'; unit: PathUnit; items: CheckItem[]; test?: TestOut & { passed: boolean } }
+  | { kind: 'done'; unit: PathUnit; items: CheckItem[]; test?: TestOut & { passed: boolean }; before?: { done: number; part: number } }
 
 export default function PathPage() {
   const navigate = useNavigate()
@@ -40,6 +42,12 @@ export default function PathPage() {
     const { data, error } = await supabase.auth.updateUser({ data: { [PATH_KEY]: next } })
     if (error || !data.user) throw new Error('Could not save your progress')
     useAuthStore.setState({ user: data.user })
+  }
+
+  /** Where a level stands now, so the done screen can play the alley from here to after the save */
+  const standing = (level: number) => {
+    const l = levels.find(x => x.level === level)
+    return l ? { done: l.doneCount, part: l.complete ? 0 : STAGE_PART[l.stages[l.current]] } : undefined
   }
 
   const chooseStart = (level: number) => { void saveProgress({ ...progress, start: level }).catch(err => setFailed(err.message)) }
@@ -117,21 +125,23 @@ export default function PathPage() {
 
   const finishTestOut = async (unit: PathUnit, items: CheckItem[], test: TestOut) => {
     const passed = testOutPassed(items.filter(i => i.score === 1).length, items.length)
+    const before = standing(unit.level)
     setBusy(true)
     try {
       if (passed) await saveProgress({ ...progress, done: { ...progress.done, [unit.level]: Math.max(progress.done[unit.level] ?? 0, test.target) } })
-      setPhase({ kind: 'done', unit, items, test: { ...test, passed } })
+      setPhase({ kind: 'done', unit, items, test: { ...test, passed }, before })
     } catch (err: any) {
       setFailed(err?.message ?? 'Something went wrong')
     } finally { setBusy(false) }
   }
 
   const finishCheck = async (unit: PathUnit, items: CheckItem[]) => {
+    const before = standing(unit.level)
     setBusy(true)
     try {
       for (const it of items) if (it.card) void useSRSStore.getState().updateSRS(it.card.id, it.card.set_id, it.score === 1)
       await saveProgress({ ...progress, done: { ...progress.done, [unit.level]: Math.max(progress.done[unit.level] ?? 0, unit.index + 1) } })
-      setPhase({ kind: 'done', unit, items })
+      setPhase({ kind: 'done', unit, items, before })
     } catch (err: any) {
       setFailed(err?.message ?? 'Something went wrong')
     } finally { setBusy(false) }
@@ -258,11 +268,15 @@ export default function PathPage() {
   }
 
   if (phase.kind === 'done') {
-    const { unit, items, test } = phase
+    const { unit, items, test, before } = phase
     const missed = items.filter(i => i.score !== 1)
     const need = Math.ceil(items.length * TEST_OUT.pass)
+    const level = levels.find(l => l.level === unit.level)
+    const nextUnit = onLevel && !onLevel.complete ? onLevel.units[onLevel.current] : null
+    const nextStage = nextUnit && onLevel ? onLevel.stages[onLevel.current] : null
     return (
       <div className={styles.page}>
+        {level && before && <Suspense fallback={<div className={styles.lanePlaceholder} />}><LaneReveal level={level} before={before} /></Suspense>}
         <div className={styles.eyebrow}>{test ? (test.passed ? 'Tested out' : 'Test out') : `Unit ${unit.index + 1} done`}</div>
         <h1 className={styles.title}>{items.length - missed.length} of {items.length} right</h1>
         {test && <p className={styles.lede}>{test.passed
@@ -280,7 +294,13 @@ export default function PathPage() {
             })}
           </div>
         </> : test ? null : <p className={styles.lede}>All of them. Words you said you knew come back in a review in two weeks to make sure they stick.</p>}
-        <div className={styles.row}><button className={styles.primaryBtn} onClick={() => setPhase({ kind: 'path' })} autoFocus>Back to the path</button></div>
+        <div className={styles.row}>
+          {nextUnit && nextStage && nextStage !== 'skip'
+            ? <button className={styles.primaryBtn} onClick={() => go(nextUnit, nextStage)} autoFocus>Next unit · {theme(nextUnit.theme).en} →</button>
+            : <button className={styles.primaryBtn} onClick={() => setPhase({ kind: 'path' })} autoFocus>Back to the path</button>}
+          <Link to="/" className={styles.ghostBtn}>Home</Link>
+          {nextUnit && <button className={styles.linkBtn} onClick={() => setPhase({ kind: 'path' })}>See the path</button>}
+        </div>
       </div>
     )
   }

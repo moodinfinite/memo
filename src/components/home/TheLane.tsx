@@ -1,28 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { levelName } from '@/lib/levelTest'
 import { laneThreshold } from '@/lib/lane'
 import { pathLights, unitsForLight, STAGE_PART, THEMES } from '@/lib/path'
 import { usePath } from '@/lib/usePath'
-import { LANE_ITEMS, LANE_CAT, LANE_TRAIN, C, laneBack, laneLabels } from './laneScene'
+import { readSeen, writeSeen } from '@/lib/laneSeen'
+import { LANE_ITEMS } from './laneScene'
+import AlleyScene, { LANE_N as N } from './AlleyScene'
+import { useLightReveal } from './useLightReveal'
 import styles from './TheLane.module.css'
 
-const BACK = laneBack()
-const LABELS = laneLabels()
-const N = LANE_ITEMS.length
 const PROGRESS_SECTIONS = 5
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const units = (n: number) => `${n} more unit${n === 1 ? '' : 's'}`
 const shortMeaning = (m: string) => m.replace(/\s*\([^)]*\)/g, '').split(/[;/]/).map(s => s.trim()).filter(Boolean).slice(0, 2).join('; ')
 const theme = (t: string) => (THEMES[t] ?? THEMES.general).en
-const reducedMotion = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false } }
 
 /**
  * The Lane (beta): a dusk alley on Home whose lights come on as the learner finishes units on their
  * learning path. It follows the level they are on; the last light needs every unit of that level.
  */
 export default function TheLane() {
-  const { failed, reload, start, levels, onLevel } = usePath()
-  const [shown, setShown] = useState(0)
+  const { user, failed, reload, start, levels, onLevel } = usePath()
   const [open, setOpen] = useState<number | null>(null)
   const [explain, setExplain] = useState(false)
 
@@ -30,18 +29,18 @@ export default function TheLane() {
   const lights = onLevel ? pathLights(onLevel.units.length, onLevel.doneCount, STAGE_PART[stage], N) : null
   const target = lights?.lit ?? 0
 
-  // Every visit the street comes alive: lights switch on one by one up to your progress
-  useEffect(() => {
-    if (!lights) return
-    if (reducedMotion()) { setShown(target); return }
-    setShown(s => Math.min(s, target))
-    const step = Math.max(60, Math.min(140, 2600 / Math.max(1, target)))
-    let timer: ReturnType<typeof setInterval> | undefined
-    const begin = setTimeout(() => { timer = setInterval(() => setShown(s => (s >= target ? s : s + 1)), step) }, 350)
-    return () => { clearTimeout(begin); clearInterval(timer) }
-  }, [target, !!lights])
+  // Lights you've already watched come on, read once per level: new ones (earned by a test-out, or
+  // while the path's "unit done" moment was skipped) are saved for last, one at a time
+  const seenAt = useRef<{ key: string; n: number } | null>(null)
+  const seenKey = user && onLevel ? `${user.id}:${onLevel.level}` : null
+  if (seenKey && lights && seenAt.current?.key !== seenKey) seenAt.current = { key: seenKey, n: readSeen(user!.id, onLevel!.level) ?? target }
+  const seenLights = seenKey && seenAt.current?.key === seenKey ? seenAt.current.n : null
 
-  const ready = !!lights && shown >= target
+  // Every visit the street comes alive: lights switch on one by one up to your progress
+  const { visible: shown, ready: revealed, fresh, newLights } = useLightReveal(lights ? target : null, seenLights)
+  const ready = !!lights && revealed
+  useEffect(() => { if (ready && user && onLevel) writeSeen(user.id, onLevel.level, target) }, [ready, target, user?.id, onLevel?.level])
+
   const warmth = ready && lights ? lights.warmth : 0
   const next = lights && lights.lit < N ? LANE_ITEMS[lights.lit] : null
   const unit = onLevel && !onLevel.complete ? onLevel.units[onLevel.current] : null
@@ -53,6 +52,7 @@ export default function TheLane() {
   else if (!onLevel) line = '天黑了… opening up the lane.'
   else if (onLevel.complete) line = <>整條巷子都亮了！{levelName(onLevel.level)} is done.{nextLevel ? ` ${levelName(nextLevel.level)} is next on your path.` : ''}</>
   else if (onLevel.doneCount === 0 && stage === 'sweep') line = '天黑了… Each unit you finish on your path switches on a light.'
+  else if (ready && newLights > 0 && target > 0) line = <><b>{cap(LANE_ITEMS[target - 1].name)}</b> just came on!{newLights > 1 ? ` That’s ${newLights} new lights.` : ''}{next && lights ? ` ${units(lights.toNext)} and ${next.name} comes on.` : ''}</>
   else if (next && lights) line = <>歡迎回來！{units(lights.toNext)} and {next.name} comes on.</>
 
   const item = open != null ? LANE_ITEMS[open] : null
@@ -62,28 +62,7 @@ export default function TheLane() {
   return <section className={styles.lane} aria-label="The Lane (beta)">
     <h1 className={styles.srOnly}>Home</h1>
     <div className={styles.stage}>
-      <svg viewBox="0 0 1600 900" className={styles.svg} role="img" aria-label={lights ? `A street at dusk with ${lights.lit} of ${N} lights on` : 'A street at dusk'}>
-        <g dangerouslySetInnerHTML={{ __html: BACK }} />
-        <g className={styles.cat} style={{ opacity: shown >= N / 2 ? 1 : 0 }} fill="#f2efe8" stroke={C.ink} strokeWidth="2" dangerouslySetInnerHTML={{ __html: LANE_CAT }} />
-        <g>{LANE_ITEMS.map((it, i) => {
-          if (!it.pool) return null
-          const [cx, cy, rx, ry] = it.pool
-          const o = i < shown ? 1 : i === shown ? warmth * 0.35 : 0
-          return <ellipse key={i} className={styles.pool} cx={cx} cy={cy} rx={rx} ry={ry} fill={`url(#${it.kind === 'cool' ? 'lanePoolCool' : 'lanePoolWarm'})`} style={{ opacity: o }} />
-        })}</g>
-        <g>{LANE_ITEMS.map((it, i) => {
-          if (it.kind === 'train') return null
-          const on = i < shown
-          return <g key={i} className={`${styles.item} ${on ? styles.on : ''} ${it.kind === 'cool' ? styles.cool : ''}`} onClick={() => setOpen(i)}>
-            <g fill={it.dim} stroke={C.ink} strokeWidth="2" dangerouslySetInnerHTML={{ __html: it.geo }} />
-            <g className={styles.lit} fill={it.lit} stroke={C.ink} strokeWidth="2" style={on ? undefined : { opacity: i === shown ? warmth * 0.35 : 0 }} dangerouslySetInnerHTML={{ __html: it.geo }} />
-          </g>
-        })}</g>
-        <g clipPath="url(#laneGap)"><g className={styles.trainWrap} style={{ opacity: LANE_ITEMS.findIndex(it => it.kind === 'train') < shown ? 1 : 0 }}>
-          <g className={styles.train} dangerouslySetInnerHTML={{ __html: LANE_TRAIN }} />
-        </g></g>
-        <g style={{ pointerEvents: 'none' }} dangerouslySetInnerHTML={{ __html: LABELS }} />
-      </svg>
+      <AlleyScene shown={shown} warmth={warmth} fresh={fresh} onItem={setOpen} label={lights ? `A street at dusk with ${lights.lit} of ${N} lights on` : 'A street at dusk'} />
       <p className={styles.auntie} aria-live="polite"><b>Auntie</b> · {line}</p>
       {item && <div className={styles.popover} role="dialog" aria-label={item.name}>
         <div className={styles.popHead}><strong>{item.name}</strong><button type="button" onClick={() => setOpen(null)} aria-label="Close">✕</button></div>

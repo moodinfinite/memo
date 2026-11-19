@@ -7,6 +7,18 @@
 .on .lit{opacity:1}
 .cool.on .lit{animation:flick .7s steps(1) 1}
 @keyframes flick{0%{opacity:.9}15%{opacity:.1}30%{opacity:.8}45%{opacity:.2}60%{opacity:1}}
+.still{cursor:default}
+.zoom{transition:transform 1.4s cubic-bezier(.3,.1,.2,1)}
+/* A light that just came on: a stuttering switch-on, then a soft glow that stays */
+.on.fresh .lit{animation:switchOn 1s steps(1) 1}
+@keyframes switchOn{0%{opacity:0}12%{opacity:.85}22%{opacity:.1}38%{opacity:.95}50%{opacity:.25}64%{opacity:1}}
+.fresh{animation:glowWarm 1.6s ease-out forwards}
+.cool.fresh{animation-name:glowCool}
+@keyframes glowWarm{0%{filter:none}60%{filter:drop-shadow(0 0 22px #ffd27a)}100%{filter:drop-shadow(0 0 12px #ffd27a)}}
+@keyframes glowCool{0%{filter:none}60%{filter:drop-shadow(0 0 22px #9fe8f5)}100%{filter:drop-shadow(0 0 12px #9fe8f5)}}
+.ring{fill:none;stroke:#ffd27a;stroke-width:5;pointer-events:none;transform-box:fill-box;transform-origin:center;animation:ring 1.5s ease-out 2 both}
+.ringCool{stroke:#9fe8f5}
+@keyframes ring{0%{opacity:0;transform:scale(.7)}25%{opacity:.95}100%{opacity:0;transform:scale(1.35)}}
 .pool{transition:opacity 1.2s ease;pointer-events:none}
 .cat{transition:opacity 1s}
 .trainWrap{transition:opacity 1s}
@@ -34,4 +46,4 @@
 .explain{margin:10px 0 0;font-size:var(--text-body);line-height:1.5;color:var(--text-secondary)}
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(max-width:700px){.auntie{position:static;max-width:none;border-width:1px 0 0;line-height:1.45}.popover{left:2%;right:2%;width:auto}.milestones{gap:4px}}
-@media(prefers-reduced-motion:reduce){.lit,.pool,.cat,.trainWrap{transition:none}.cool.on .lit,.train{animation:none}}
+@media(prefers-reduced-motion:reduce){.lit,.pool,.cat,.trainWrap,.zoom{transition:none}.cool.on .lit,.train,.on.fresh .lit,.ring{animation:none}.ring{opacity:0}.fresh{animation:none;filter:drop-shadow(0 0 12px #ffd27a)}}
