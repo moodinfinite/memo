@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useSetsStore } from '@/store/setsStore'
@@ -12,6 +12,10 @@ import DailyAlmanac from '@/components/home/DailyAlmanac'
 import DailyCard from '@/components/home/DailyCard'
 import styles from './HomePage.module.css'
 
+const TheLane = lazy(() => import('@/components/home/TheLane'))
+const HOME_VIEW_KEY = 'memo-home-view'
+type HomeView = 'calendar' | 'lane'
+
 export default function HomePage() {
   const { user } = useAuthStore()
   const { sets, fetchSets, searchSets, togglePin, isLoading } = useSetsStore()
@@ -21,6 +25,13 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [dataError, setDataError] = useState<string | null>(null)
+  const [homeView, setHomeView] = useState<HomeView>(() => {
+    try { return localStorage.getItem(HOME_VIEW_KEY) === 'lane' ? 'lane' : 'calendar' } catch { return 'calendar' }
+  })
+  const chooseView = (view: HomeView) => {
+    setHomeView(view)
+    try { localStorage.setItem(HOME_VIEW_KEY, view) } catch { /* The choice still works for this visit. */ }
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -56,7 +67,15 @@ export default function HomePage() {
           <button onClick={() => setDataError(null)}>✕</button>
         </div>
       )}
-      <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />
+      <div className={styles.homeViews}>
+        <div className={styles.viewToggle} role="group" aria-label="Top of Home">
+          <button type="button" aria-pressed={homeView === 'calendar'} onClick={() => chooseView('calendar')}>Calendar</button>
+          <button type="button" aria-pressed={homeView === 'lane'} onClick={() => chooseView('lane')}>The Lane <span className={styles.beta}>beta</span></button>
+        </div>
+        {homeView === 'lane'
+          ? <Suspense fallback={<div className={styles.lanePlaceholder} />}><TheLane /></Suspense>
+          : <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />}
+      </div>
       {totalCards > 0 && <DailyCard />}
 
       <div className={styles.searchWrap}>

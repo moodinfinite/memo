@@ -108,3 +108,13 @@
   .grid{grid-template-columns:1fr;gap:10px}
   .setCard{padding:14px 16px}
 }
+
+/* Calendar / The Lane (beta) switch at the top of Home; per device in memo-home-view */
+.homeViews{display:flex;flex-direction:column;gap:8px}
+.viewToggle{display:flex;gap:2px;padding:2px;border:1px solid var(--ink-cyan-border);align-self:flex-end}
+.viewToggle button{border:0;background:none;color:var(--ink-cyan-strong);padding:5px 10px;font-size:var(--text-body);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.viewToggle button[aria-pressed="true"]{background:var(--ink-cyan-strong);color:var(--on-accent)}
+.viewToggle button:focus-visible{outline:2px solid var(--ink-cyan-strong);outline-offset:3px}
+.beta{font-size:0.6875rem;text-transform:uppercase;letter-spacing:.06em;border:1px solid currentColor;padding:0 4px;line-height:1.4}
+.lanePlaceholder{aspect-ratio:16/9;border:1px solid var(--ink-cyan-border);background:var(--bg-raised)}
+@media(pointer:coarse){.viewToggle button{min-height:44px}}
