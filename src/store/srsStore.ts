@@ -31,6 +31,8 @@ interface SRSState {
   fetchAllSRS: () => Promise<void>
   updateSRS: (cardId: string, setId: string, known: boolean) => Promise<void>
   revertSRS: (cardId: string, setId: string, prevState: CardSRS | null) => void
+  /** Schedules a card the learner already knows: one correct answer, first review in `days` */
+  seedKnown: (cardId: string, setId: string, days: number) => void
   getDueCards: (setId: string, allCards: { id: string }[]) => string[]
 }
 
@@ -168,6 +170,14 @@ export const useSRSStore = create<SRSState>((set, get) => ({
     // NOTE: conflict target must match the DB's unique(user_id, card_id)
     // constraint — 'card_id' alone makes Postgres reject the whole upsert.
     queueWrite({ userId: user.id, key: `srs:${cardId}`, table: 'card_srs', operation: 'upsert', data: upsertData, conflict: 'user_id,card_id' })
+  },
+
+  seedKnown: (cardId, setId, days) => {
+    const user = useAuthStore.getState().user
+    if (!user) return
+    const row = { card_id: cardId, set_id: setId, user_id: user.id, easiness: 2.5, interval: days, repetitions: 1, next_review: daysFromNow(days), last_seen_at: new Date().toISOString() }
+    set(state => ({ cardSRS: { ...state.cardSRS, [cardId]: row }, lastLocalUpdate: { ...state.lastLocalUpdate, [setId]: Date.now() } }))
+    queueWrite({ userId: user.id, key: `srs:${cardId}`, table: 'card_srs', operation: 'upsert', data: row, conflict: 'user_id,card_id' })
   },
 
   revertSRS: (cardId, setId, prevState) => {

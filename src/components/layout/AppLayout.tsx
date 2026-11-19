@@ -78,6 +78,10 @@ export default function AppLayout() {
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
             <span>All sets</span>
           </NavLink>
+          <NavLink to="/path" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="4" cy="12" r="1.8"/><circle cx="12" cy="4" r="1.8"/><path d="M5.5 11C8 10 6 6 10.5 5"/></svg>
+            <span>Path</span>
+          </NavLink>
           <NavLink to="/level" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}
             title={levelDue ? 'Level check due' : latestLevel ? `TOCFL ${levelName(latestLevel.level)}` : 'Level check'}>
             <span className={styles.navIcon}>

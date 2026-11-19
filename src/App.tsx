@@ -22,6 +22,7 @@ const DailyPage      = lazy(() => import('@/pages/DailyPage'))
 const LaneLessonPage = lazy(() => import('@/pages/LaneLessonPage'))
 const ResourceLibraryPage = lazy(() => import('@/pages/ResourceLibraryPage'))
 const LevelPage      = lazy(() => import('@/pages/LevelPage'))
+const PathPage       = lazy(() => import('@/pages/PathPage'))
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, initialised } = useAuthStore()
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/lane/lesson" element={<Suspense fallback={<FullPageSkeleton />}><LaneLessonPage /></Suspense>} />
           <Route path="/resources" element={<Suspense fallback={<FullPageSkeleton />}><ResourceLibraryPage /></Suspense>} />
           <Route path="/level" element={<Suspense fallback={<FullPageSkeleton />}><LevelPage /></Suspense>} />
+          <Route path="/path" element={<Suspense fallback={<FullPageSkeleton />}><PathPage /></Suspense>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

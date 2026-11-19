@@ -1,7 +1,7 @@
 import StudyControls from '@/components/study/StudyControls'
 import MasteryChange from '@/components/study/MasteryChange'
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useSetsStore } from '@/store/setsStore'
 import { useStudyStore, draftProgress } from '@/store/studyStore'
 import { useSRSStore } from '@/store/srsStore'
@@ -32,6 +32,10 @@ const TIMER_OPTS = [{ label: '1 min', mins: 1 }, { label: '3 min', mins: 3 }, { 
 export default function StudyPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  /** Opened from the learning path: Learn mode on new cards only, and the way back leads to the path */
+  const fromPath = params.get('from') === 'path'
+  const backTo = fromPath ? '/path' : `/sets/${id}`
   const { currentSet, fetchSet, error } = useSetsStore()
   const { fetchSRS, cardSRS } = useSRSStore()
   const { doShuffle: shuffleOn, mode, sessionCards, currentIndex, known, unknown, isComplete, timerSecsLeft, timerOn, mcStreak, flashStreak, lastAction, persistError, persistAttempt, isPersisting, persistSaved, sentenceEntries, startSession, resumeSession, markKnown, markUnknown, undoLast, resetSession, persistSession, retryPersist, dismissPersistError, tickTimer, selectMCOption, toggleShuffle, loadProgress, learnActive, startLearnSession, resetLearn } = useStudyStore()
@@ -39,7 +43,7 @@ export default function StudyPage() {
   const [selecting, setSelecting] = useState(true)
   const [resumePrompt, setResumePrompt] = useState<SessionDraft | null>(null)
   const [dismissedDraft, setDismissedDraft] = useState<string | null>(null)
-  const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn' | 'story'>('flashcard')
+  const [selectedMode, setSelectedMode] = useState<StudyMode | 'learn' | 'story'>(params.get('mode') === 'learn' ? 'learn' : 'flashcard')
   const [storyTerms, setStoryTerms] = useState<Card[]>([])
   const [storyBatchOffset, setStoryBatchOffset] = useState(0)
   const [storySummary, setStorySummary] = useState<Card[] | null>(null)
@@ -47,7 +51,7 @@ export default function StudyPage() {
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerDur, setTimerDur] = useState(5)
   // mastery filter: null = all cards, otherwise max level to include
-  const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(null)
+  const [masteryFilter, setMasteryFilter] = useState<MasteryLevel | null>(params.get('filter') === 'new' ? 1 : null)
   const [startSide, setStartSide] = useState<'term' | 'definition' | 'random'>('term')
   const [isStarting, setIsStarting] = useState(false)
   const [burst, setBurst] = useState<{ msg: string; streak: number } | null>(null)
@@ -235,9 +239,9 @@ export default function StudyPage() {
   if (selecting) return (
     <div className={styles.page}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate(`/sets/${id}`)}>
+        <button className={styles.backBtn} onClick={() => navigate(backTo)}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8l5 5"/></svg>
-          {currentSet.title}
+          {fromPath ? 'Your path' : currentSet.title}
         </button>
       </div>
       {resumePrompt && resumePrompt.updated_at !== dismissedDraft && resumePrompt.card_order.some(cardId => currentSet.cards?.some(card => card.id === cardId)) ? (
@@ -323,7 +327,7 @@ export default function StudyPage() {
   )
 
   if (learnActive) return <LearnSession title={currentSet.title} cards={currentSet.cards ?? []}
-    handleEnd={handleEnd} backTo={`/sets/${id}`} backLabel="Back to set" />
+    handleEnd={handleEnd} backTo={backTo} backLabel={fromPath ? 'Back to your path' : 'Back to set'} />
 
   // ── Story summary checkpoint ─────────────────────────────────
   if (storySummary) {

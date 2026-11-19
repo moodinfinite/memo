@@ -1,0 +1,1572 @@
+# Learning path tags: level, form, theme, usefulness 1-5, example sentence, English. Written once by Claude (19 Nov 2026), reviewable.
+2	出生	personal	4	我在台北出生，在台中長大。	I was born in Taipei and grew up in Taichung.
+2	不同	general	5	我們兩個人的看法不同。	The two of us see it differently.
+2	住址	personal	3	請在這裡寫你的住址。	Please write your address here.
+2	母語	education	3	我的母語是英文，不是中文。	My native language is English, not Chinese.
+2	表	daily	3	請先填好這張表。	Please fill out this form first.
+2	鐘	daily	3	現在已經十點鐘了。	It's already ten o'clock.
+2	傳真	work	2	請把資料傳真給我。	Please fax me the documents.
+2	白天	daily	4	他白天上班，晚上上課。	He works during the day and takes classes at night.
+2	半夜	daily	4	我昨天半夜才睡覺。	I didn't go to bed until midnight last night.
+2	夜晚	daily	2	台北的夜晚很熱鬧。	Taipei is lively at night.
+2	日子	daily	4	最近的日子過得很忙。	Life has been busy lately.
+2	夜	daily	3	昨天夜裡下了大雨。	It rained heavily last night.
+2	春季	home	2	台灣春季常常下雨。	It often rains in spring in Taiwan.
+2	時	daily	4	吃飯時不要看手機。	Don't look at your phone while you eat.
+2	不久	general	3	他不久就要回國了。	He's going back to his home country soon.
+2	剛才	general	5	你剛才說什麼？	What did you just say?
+2	早點	general	4	今天早點睡吧。	Go to bed a bit earlier tonight.
+2	正好	general	4	你來得正好，我們要吃飯了。	You came at just the right time; we're about to eat.
+2	年紀	personal	4	你奶奶年紀多大了？	How old is your grandma?
+2	男人	personal	4	那個男人是我的老師。	That man is my teacher.
+2	女人	personal	4	那個女人是誰？	Who is that woman?
+2	父親	people	3	我父親是醫生。	My father is a doctor.
+2	母親	people	3	我母親很會做菜。	My mother is a great cook.
+2	父母	people	4	我父母都住在台南。	My parents both live in Tainan.
+2	外公	people	4	外公今年八十歲了。	My grandpa (Mom's dad) is eighty this year.
+2	外婆	people	4	我小時候是外婆帶大的。	My grandma (Mom's mom) raised me when I was little.
+2	伯伯	people	3	王伯伯是我們的鄰居。	Uncle Wang is our neighbor.
+2	伯父	people	3	我伯父在美國工作。	My uncle works in the US.
+2	伯母	people	3	伯母，謝謝您的晚餐。	Thank you for dinner, Auntie.
+2	叔叔	people	4	叔叔送我一本書。	My uncle gave me a book.
+2	姑姑	people	3	我姑姑住在高雄。	My aunt lives in Kaohsiung.
+2	孫女	people	3	奶奶很愛她的小孫女。	Grandma adores her little granddaughter.
+2	孫子	people	3	他的孫子今年上小學了。	His grandson started elementary school this year.
+2	關係	people	5	我跟他的關係很好。	I have a good relationship with him.
+2	害怕	feelings	4	小孩子都害怕打針。	Kids are all afraid of getting shots.
+2	開心	feelings	5	今天玩得很開心。	We had a great time today.
+2	擔心	feelings	5	別擔心，我沒事。	Don't worry, I'm fine.
+2	傷心	feelings	4	她聽到這個消息很傷心。	She was heartbroken to hear the news.
+2	美麗	general	3	花蓮的風景很美麗。	Hualien's scenery is beautiful.
+2	帥	personal	4	你哥哥長得好帥！	Your brother is so handsome!
+2	笨	personal	3	我真笨，又忘了帶鑰匙。	I'm so dumb, I forgot my keys again.
+2	認真	personal	4	他上課很認真。	He's very attentive in class.
+2	敢	general	4	她不敢一個人回家。	She doesn't dare go home alone.
+2	急	feelings	4	別急，慢慢說。	Don't rush, take your time.
+2	禮貌	people	4	這個孩子很有禮貌。	This child is very polite.
+2	害羞	personal	3	她很害羞，不太說話。	She's shy and doesn't talk much.
+2	關心	people	4	謝謝你這麼關心我。	Thanks for caring about me so much.
+2	心情	feelings	5	今天天氣好，心情也好。	The weather's nice today, and so is my mood.
+2	幸福	feelings	3	他們一家人過得很幸福。	Their family lives a happy life.
+2	差	general	4	我的中文還很差。	My Chinese is still pretty poor.
+2	兄弟	people	4	我有兩個兄弟。	I have two brothers.
+2	阿姨	people	5	阿姨，我要一碗牛肉麵。	Auntie, I'd like a bowl of beef noodles.
+2	身邊	general	3	我的手機不在身邊。	I don't have my phone on me.
+2	身高	personal	3	你的身高多少？	How tall are you?
+2	長大	personal	4	你長大以後想做什麼？	What do you want to be when you grow up?
+2	經理	work	4	經理今天不在公司。	The manager isn't in the office today.
+2	教書	work	3	我媽媽在國中教書。	My mom teaches at a junior high school.
+2	開會	work	4	我下午兩點要開會。	I have a meeting at two this afternoon.
+2	加班	work	4	他今天又要加班了。	He has to work overtime again today.
+2	危險	general	4	晚上一個人爬山很危險。	Hiking alone at night is dangerous.
+2	安全	general	4	騎車要注意安全。	Be careful when you're riding.
+2	成功	work	3	他的生意很成功。	His business is very successful.
+2	報告	education	4	我明天要交一份報告。	I have to hand in a report tomorrow.
+2	資料	work	4	請把開會的資料準備好。	Please get the meeting materials ready.
+2	管理	work	3	他在公司管理十個人。	He manages ten people at the company.
+2	做法	general	3	這個做法比較簡單。	This way of doing it is simpler.
+2	看法	feelings	4	你對這件事有什麼看法？	What's your view on this?
+2	辦	daily	4	我明天要去銀行辦事。	I need to take care of some things at the bank tomorrow.
+2	打工	work	4	他暑假在咖啡店打工。	He works part-time at a café over the summer.
+2	選	general	4	這兩個你選哪一個？	Which of these two do you pick?
+2	嚴重	general	3	他的病很嚴重。	His illness is serious.
+2	正式	general	3	開會要穿得正式一點。	Dress a bit more formally for the meeting.
+2	查	general	4	我上網查一下。	I'll look it up online.
+2	考	education	5	我明天要考數學。	I have a math test tomorrow.
+2	例如	general	3	我喜歡水果，例如蘋果和香蕉。	I like fruit, such as apples and bananas.
+2	例子	education	3	老師給我們舉了一個例子。	The teacher gave us an example.
+2	題目	education	4	這個題目太難了。	This question is too hard.
+2	題	education	4	考試一共有二十題。	The test has twenty questions in total.
+2	答案	education	4	你知道答案嗎？	Do you know the answer?
+2	念書	education	5	他每天晚上在圖書館念書。	He studies in the library every night.
+2	歷史	education	3	台灣的歷史很有意思。	Taiwan's history is really interesting.
+2	數學	education	3	我的數學不太好。	I'm not very good at math.
+2	書法	leisure	2	爺爺每天練習書法。	Grandpa practices calligraphy every day.
+2	英語	education	3	他的英語說得很好。	He speaks English very well.
+2	作文	education	3	老師要我們寫一篇作文。	The teacher wants us to write an essay.
+2	漢字	education	3	漢字很難寫，可是很漂亮。	Chinese characters are hard to write, but they're beautiful.
+2	詞	education	3	這個詞是什麼意思？	What does this word mean?
+2	文法	education	3	中文的文法不太難。	Chinese grammar isn't too hard.
+2	加上	general	3	今天下雨，加上塞車，我遲到了。	It rained today, and with the traffic on top of that, I was late.
+2	減	general	3	十減三是七。	Ten minus three is seven.
+2	乘	general	2	三乘四等於十二。	Three times four equals twelve.
+2	除	general	3	除了小明，大家都到了。	Everyone's here except Xiaoming.
+2	國小	education	4	我妹妹還在念國小。	My little sister is still in elementary school.
+2	中學	education	2	他中學的時候住在美國。	He lived in the US during middle school.
+2	學院	education	2	他在文學院教書。	He teaches at the College of Liberal Arts.
+2	大學生	education	4	我哥哥是大學生。	My older brother is a college student.
+2	教授	education	3	王教授的課很有意思。	Professor Wang's class is really interesting.
+2	放假	leisure	4	明天放假，不用上班。	Tomorrow's a day off, so no work.
+2	春假	education	3	春假你要去哪裡玩？	Where are you going for spring break?
+2	暑假	education	4	暑假我要去日本旅行。	I'm traveling to Japan over summer vacation.
+2	寒假	education	4	寒假只有三個星期。	Winter break is only three weeks long.
+2	假	leisure	3	我們下個月放五天假。	We get five days off next month.
+2	畢業	education	4	我姊姊去年大學畢業。	My older sister graduated from college last year.
+2	學期	education	4	新學期下星期開始。	The new semester starts next week.
+2	服務	work	4	這家餐廳的服務很好。	This restaurant's service is great.
+2	室友	home	3	我的室友是日本人。	My roommate is Japanese.
+2	操場	education	3	學生在操場上跑步。	The students are running on the sports field.
+2	校園	education	3	這個大學的校園很大。	This university's campus is huge.
+2	位子	daily	4	這個位子有人坐嗎？	Is this seat taken?
+2	書桌	home	3	我的書桌上有很多書。	There are lots of books on my desk.
+2	書包	education	3	小明的書包很重。	Xiaoming's schoolbag is heavy.
+2	書架	home	3	書架上放滿了書。	The bookshelf is full of books.
+2	本子	education	3	請把答案寫在本子上。	Please write your answers in your notebook.
+2	尺	education	2	你有尺嗎？我想畫一條線。	Do you have a ruler? I want to draw a line.
+2	討論	people	4	我們下課後再討論吧。	Let's talk it over after class.
+2	同意	feelings	4	我同意你的看法。	I agree with you.
+2	了解	general	4	我了解你的意思。	I understand what you mean.
+2	無聊	feelings	4	這部電影好無聊。	This movie is so boring.
+2	有趣	feelings	4	這本書很有趣。	This book is really interesting.
+2	有意思	feelings	4	他說的話很有意思。	What he said is really interesting.
+2	原因	general	4	你知道他遲到的原因嗎？	Do you know why he was late?
+2	遍	general	4	請再說一遍。	Please say that again.
+2	改	general	4	我想改一下時間。	I'd like to change the time.
+2	忘記	daily	5	我忘記他的名字了。	I forgot his name.
+2	程度	education	3	他的中文程度很高。	His Chinese is at a high level.
+2	趕快	general	4	要下雨了，趕快回家吧。	It's about to rain, hurry home.
+2	以上	general	3	十八歲以上才能喝酒。	You have to be eighteen or older to drink.
+2	以下	general	3	六歲以下的小孩不用買票。	Kids six and under don't need a ticket.
+2	意見	feelings	4	你有什麼意見嗎？	Do you have any thoughts on it?
+2	用功	education	3	他念書很用功。	He studies very hard.
+2	研究	education	3	他在大學研究歷史。	He does history research at a university.
+2	教育	education	3	教育孩子不容易。	Raising children isn't easy.
+2	選擇	general	4	你可以自己選擇。	You can choose for yourself.
+2	建議	people	4	我建議你早點去。	I suggest you go early.
+2	知識	education	3	看書可以學到很多知識。	You can gain a lot of knowledge from reading.
+2	座	general	3	那座山很高。	That mountain is very tall.
+2	臥室	home	3	我的臥室很小。	My bedroom is small.
+2	臥房	home	2	這間房子有兩個臥房。	This house has two bedrooms.
+2	浴室	home	4	浴室在臥室旁邊。	The bathroom is next to the bedroom.
+2	院子	home	3	小狗在院子裡玩。	The puppy is playing in the yard.
+2	書房	home	3	爸爸在書房看書。	Dad is reading in the study.
+2	洗衣機	home	3	洗衣機壞了，我得用手洗。	The washing machine is broken, so I have to wash by hand.
+2	餐桌	home	3	晚飯已經放在餐桌上了。	Dinner is already on the table.
+2	打開	daily	5	請打開窗戶。	Please open the window.
+2	箱	general	3	他買了一箱水。	He bought a case of water.
+2	層	general	3	這棟大樓有二十層。	This building has twenty floors.
+2	櫃子	home	3	衣服都在櫃子裡。	The clothes are all in the cabinet.
+2	大門	home	3	出門前記得鎖大門。	Remember to lock the front door before you go out.
+2	鄰居	home	4	我們跟鄰居很熟。	We know our neighbors well.
+2	熱鬧	general	4	夜市晚上很熱鬧。	The night market is lively in the evening.
+2	吵	general	4	外面太吵了，我睡不著。	It's too noisy outside; I can't sleep.
+2	亂	general	4	你的房間怎麼這麼亂？	Why is your room so messy?
+2	房東	home	3	我每個月給房東一萬塊。	I pay the landlord ten thousand a month.
+2	房屋	home	2	這一區的房屋很貴。	Houses in this area are expensive.
+2	搬家	home	4	我們下個月要搬家。	We're moving next month.
+2	開水	food	4	請給我一杯開水。	Could I have a glass of water, please?
+2	鄉下	home	3	我外婆住在鄉下。	My grandma lives in the countryside.
+2	傘	daily	4	外面下雨了，記得帶傘。	It's raining outside, so remember your umbrella.
+2	朵	general	3	他送我一朵花。	He gave me a flower.
+2	蚊子	home	3	夏天蚊子很多。	There are lots of mosquitoes in summer.
+2	自然	general	3	她說中文說得很自然。	Her Chinese sounds very natural.
+2	月亮	home	3	今天晚上的月亮好圓。	The moon is so round tonight.
+2	星星	home	3	鄉下可以看到很多星星。	You can see lots of stars in the countryside.
+2	環境	home	4	這裡的環境很安靜。	It's very quiet around here.
+2	晴天	home	3	明天會是晴天。	Tomorrow will be sunny.
+2	暖和	home	3	今天天氣很暖和。	It's nice and warm today.
+2	涼快	home	3	晚上比較涼快。	It's cooler in the evening.
+2	涼	home	4	天氣涼了，多穿一點。	It's getting cool, so wear an extra layer.
+2	乾	daily	3	衣服已經乾了。	The clothes are dry now.
+2	濕	daily	3	下雨了，我的鞋子都濕了。	It rained, and my shoes got soaked.
+2	度	home	4	今天三十五度，好熱！	It's thirty-five degrees today, so hot!
+2	颱風	home	4	颱風來了，今天不用上班。	A typhoon is coming, so there's no work today.
+2	季節	home	3	你最喜歡哪個季節？	Which season do you like best?
+2	環保	home	4	用自己的杯子比較環保。	Using your own cup is more eco-friendly.
+2	垃圾	home	5	垃圾車來了，快去倒垃圾！	The garbage truck is here, hurry and take out the trash!
+2	汙染	home	3	這條河被汙染了。	This river has been polluted.
+2	底	general	3	這個月底我要出國。	I'm going abroad at the end of this month.
+2	底下	general	3	你的鞋子在床底下。	Your shoes are under the bed.
+2	內	general	3	請在一個星期內交報告。	Please hand in the report within a week.
+2	深	general	3	這條河很深。	This river is deep.
+2	淺	general	3	我喜歡淺藍色。	I like light blue.
+2	發生	general	5	發生什麼事了？	What happened?
+2	照顧	people	4	我在家照顧生病的媽媽。	I'm at home taking care of my sick mom.
+2	生活	daily	5	我很喜歡在台灣的生活。	I really like life in Taiwan.
+2	日記	daily	2	我每天晚上寫日記。	I write in my diary every night.
+2	流	general	3	我感冒了，一直流鼻水。	I have a cold and my nose keeps running.
+2	流汗	health	3	天氣太熱，我一直流汗。	It's so hot that I can't stop sweating.
+2	夢	daily	3	我昨天晚上做了一個夢。	I had a dream last night.
+2	枕頭	home	3	這個枕頭太高了。	This pillow is too high.
+2	鬧鐘	daily	4	我的鬧鐘每天七點響。	My alarm goes off at seven every day.
+2	拖鞋	daily	4	進門要換拖鞋。	Change into slippers when you come in.
+2	毛巾	daily	3	浴室裡有乾淨的毛巾。	There are clean towels in the bathroom.
+2	刷	daily	4	我每天刷兩次牙。	I brush my teeth twice a day.
+2	肥皂	daily	3	洗手要用肥皂。	Use soap when you wash your hands.
+2	牙膏	daily	3	牙膏用完了，要買新的。	We're out of toothpaste and need to buy more.
+2	衛生紙	daily	4	廁所沒有衛生紙了。	There's no toilet paper in the bathroom.
+2	籃子	daily	2	籃子裡有很多水果。	There's a lot of fruit in the basket.
+2	假日	leisure	4	假日公園裡人很多。	The park is crowded on days off.
+2	結束	general	4	電影幾點結束？	What time does the movie end?
+2	完	general	5	我吃完飯就去。	I'll go as soon as I finish eating.
+2	散步	leisure	4	我們吃完飯去散步吧。	Let's go for a walk after dinner.
+2	慢跑	leisure	3	他每天早上去公園慢跑。	He jogs in the park every morning.
+2	野餐	leisure	3	週末我們去河邊野餐吧。	Let's have a picnic by the river this weekend.
+2	爬	leisure	4	我們週末去爬山吧。	Let's go hiking this weekend.
+2	拍	leisure	4	我幫你拍照吧。	Let me take a picture for you.
+2	抓	general	3	警察抓到小偷了。	The police caught the thief.
+2	座位	travel	3	這班火車還有座位嗎？	Are there any seats left on this train?
+2	新聞	society	4	我每天早上看新聞。	I watch the news every morning.
+2	體育	leisure	3	他很喜歡看體育新聞。	He loves watching sports news.
+2	經常	general	3	他經常加班。	He often works overtime.
+2	雜誌	leisure	3	我在便利商店買了一本雜誌。	I bought a magazine at the convenience store.
+2	美術	education	2	我妹妹喜歡上美術課。	My little sister likes art class.
+2	畫家	leisure	2	他是一位有名的畫家。	He's a famous painter.
+2	興趣	leisure	4	你有什麼興趣？	What are your hobbies?
+2	收	general	4	這家店只收現金。	This shop only takes cash.
+2	談	people	4	我想跟你談一談。	I'd like to have a talk with you.
+2	聊	people	4	我們邊吃邊聊吧。	Let's chat while we eat.
+2	遲到	daily	4	對不起，我遲到了。	Sorry I'm late.
+2	樂器	leisure	3	你會彈什麼樂器？	What instrument can you play?
+2	吉他	leisure	3	他每天晚上練吉他。	He practices guitar every night.
+2	可怕	feelings	3	這部電影很可怕。	This movie is scary.
+2	輕鬆	general	4	這個工作很輕鬆。	This job is easy.
+2	情形	general	3	現在的情形怎麼樣？	What's the situation now?
+2	消息	people	4	我有一個好消息要告訴你。	I have some good news to tell you.
+2	看起來	general	5	你今天看起來很累。	You look tired today.
+2	舞	leisure	3	她跳舞跳得很好。	She dances really well.
+2	游	leisure	3	我今天游了一個小時。	I swam for an hour today.
+2	游泳池	leisure	3	學校有一個游泳池。	The school has a swimming pool.
+2	遊戲	leisure	4	弟弟每天玩手機遊戲。	My little brother plays mobile games every day.
+2	茶館	food	2	我們去茶館喝茶吧。	Let's go have tea at a teahouse.
+2	門票	leisure	3	動物園的門票多少錢？	How much is admission to the zoo?
+2	陪	people	4	我陪你去看醫生。	I'll go with you to see the doctor.
+2	利用	general	3	我利用週末學中文。	I use my weekends to study Chinese.
+2	好處	general	3	運動有很多好處。	Exercise has lots of benefits.
+2	壞處	general	3	喝太多酒有很多壞處。	Drinking too much has a lot of downsides.
+2	目的	general	3	你來台灣的目的是什麼？	What's the purpose of your visit to Taiwan?
+2	要求	work	3	老闆的要求很高。	The boss has high standards.
+2	合作	work	3	我們合作得很愉快。	It's been a pleasure working together.
+2	主人	people	3	這隻狗的主人是誰？	Who owns this dog?
+2	請客	people	4	今天我請客，大家別客氣。	It's my treat today, so don't hold back.
+2	約	people	4	我跟朋友約了週末見面。	I've arranged to meet a friend this weekend.
+2	約會	people	4	他今天晚上有約會。	He has a date tonight.
+2	派對	leisure	3	我們週六要開生日派對。	We're having a birthday party on Saturday.
+2	祝	people	4	祝你生日快樂！	Happy birthday!
+2	留	daily	4	他不在，你要不要留話？	He's not in. Would you like to leave a message?
+2	封	general	3	我昨天寫了一封信給媽媽。	Yesterday I wrote a letter to my mom.
+2	信箱	daily	3	我每天都會看電子信箱。	I check my email inbox every day.
+2	郵票	daily	2	寄信要記得貼郵票。	Remember to put a stamp on the letter.
+2	回信	people	3	收到信以後請快點回信。	Please write back soon after you get the letter.
+2	郵件	work	4	我剛剛寄了一封郵件給老師。	I just sent an email to the teacher.
+2	弄	general	4	別把衣服弄髒了。	Don't get your clothes dirty.
+2	放心	feelings	4	我會照顧好自己，你放心。	I'll take good care of myself, don't worry.
+2	偷	daily	3	我的腳踏車昨天被偷了。	My bike was stolen yesterday.
+2	滿	general	4	這家餐廳的位子都滿了。	All the seats in this restaurant are taken.
+2	丟	daily	4	請不要亂丟垃圾。	Please don't litter.
+2	換	daily	5	回家以後我想先換衣服。	When I get home I want to change clothes first.
+2	一塊	general	3	我們一塊去吃飯吧。	Let's go eat together.
+2	同時	general	3	他可以同時做兩件事。	He can do two things at the same time.
+2	保護	general	3	我們要保護環境。	We need to protect the environment.
+2	出門	daily	5	我每天早上八點出門。	I leave home at eight every morning.
+2	現代	society	3	現代人都離不開手機。	People today can't live without their phones.
+2	傳統	leisure	3	吃粽子是端午節的傳統。	Eating rice dumplings is a Dragon Boat Festival tradition.
+2	除夕	leisure	3	除夕晚上全家一起吃年夜飯。	On Lunar New Year's Eve the whole family has dinner together.
+2	春節	leisure	3	春節的時候很多人回家過年。	At Lunar New Year many people go home to celebrate.
+2	節日	leisure	3	你最喜歡哪個節日？	What's your favourite holiday?
+2	帶來	general	3	他帶來了一個好消息。	He brought good news.
+2	當中	general	2	我們班當中，他最高。	He's the tallest in our class.
+2	法律	society	2	他在大學念法律。	He studies law at university.
+2	方面	general	3	在工作方面，他很認真。	When it comes to work, he's very conscientious.
+2	開玩笑	people	4	別生氣，我只是開玩笑。	Don't be mad, I was only joking.
+2	可惜	feelings	4	你不能來，真可惜。	It's a pity you can't come.
+2	老太太	people	3	公車上有位老太太，我讓座給她。	There was an elderly lady on the bus, so I gave her my seat.
+2	有名	general	4	這家店的牛肉麵很有名。	This shop's beef noodles are famous.
+2	自由	general	3	放假的時候我覺得很自由。	I feel really free when I'm on holiday.
+2	社會	society	3	台灣社會越來越老了。	Taiwanese society is getting older and older.
+2	時差	travel	3	我剛回來，還在調時差。	I just got back and I'm still getting over jet lag.
+2	市區	travel	3	從機場到市區要一個小時。	It takes an hour from the airport to downtown.
+2	溫泉	leisure	3	冬天去泡溫泉很舒服。	Soaking in a hot spring is lovely in winter.
+2	公路	travel	2	這條公路晚上車很少。	There's very little traffic on this road at night.
+2	速度	general	3	他打字的速度很快。	He types really fast.
+2	到處	general	4	我到處都找不到我的鑰匙。	I can't find my keys anywhere.
+2	地點	travel	3	見面的地點在捷運站門口。	The meeting place is the MRT station entrance.
+2	巴士	travel	2	我們坐機場巴士到市區。	We take the airport bus into the city.
+2	加油	general	5	明天考試，加油！	Exam tomorrow. Good luck!
+2	摩托車	travel	4	在台灣很多人騎機車上班。	In Taiwan many people ride scooters to work.
+2	船	travel	3	我們要坐船去小島玩。	We're taking a boat out to an island.
+2	地鐵	travel	2	東京的地鐵很方便。	The Tokyo subway is very convenient.
+2	捷運	travel	5	我每天坐捷運上班。	I take the MRT to work every day.
+2	停車場	travel	4	這附近有停車場嗎？	Is there a parking lot near here?
+2	月台	travel	3	火車快到了，我們去月台等吧。	The train's almost here, let's wait on the platform.
+2	搭	travel	5	我搭捷運去學校。	I take the MRT to school.
+2	飛	travel	3	這班飛機要飛三個小時。	This flight takes three hours.
+2	這些	general	5	這些書都是我的。	These books are all mine.
+2	那些	general	5	那些人是誰？	Who are those people?
+2	東方	general	2	太陽從東方出來。	The sun rises in the east.
+2	非洲	travel	2	我從來沒去過非洲。	I've never been to Africa.
+2	美洲	travel	2	他想去南美洲旅行。	He wants to travel around South America.
+2	歐洲	travel	3	我們暑假要去歐洲玩。	We're going to Europe this summer.
+2	亞洲	travel	3	日本和台灣都在亞洲。	Japan and Taiwan are both in Asia.
+2	大陸	travel	4	他下個月要去大陸工作。	He's going to work in mainland China next month.
+2	動	general	4	別動！我幫你拍照。	Don't move! I'll take your picture.
+2	起	general	4	從明天起，我每天早上跑步。	Starting tomorrow, I'll go running every morning.
+2	停	daily	4	雨停了，我們走吧。	The rain has stopped. Let's go.
+2	中心	general	3	我家在市中心，很方便。	I live in the city centre, which is very convenient.
+2	簽證	travel	3	去美國要辦簽證嗎？	Do you need a visa to go to the US?
+2	行李	travel	4	你的行李太重了。	Your luggage is too heavy.
+2	背包	daily	3	他背著一個大背包去旅行。	He went travelling with a big backpack.
+2	鎖	home	3	出門前記得鎖門。	Remember to lock the door before you go out.
+2	入口	travel	3	捷運站的入口在哪裡？	Where's the entrance to the MRT station?
+2	出口	travel	4	請從二號出口出去。	Please leave through Exit 2.
+2	油	food	3	這道菜油太多了。	This dish is too oily.
+2	鑰匙	home	4	我忘了帶鑰匙。	I forgot my keys.
+2	方向	travel	3	去車站是這個方向嗎？	Is the station this way?
+2	交通	travel	4	台北的交通很方便。	Getting around Taipei is very convenient.
+2	標準	general	3	他的中文發音很標準。	His Chinese pronunciation is very standard.
+2	拍照	leisure	5	這裡可以拍照嗎？	Can I take photos here?
+2	腿	health	3	走了一天，我的腿好痠。	After walking all day, my legs are really sore.
+2	背	health	3	我的背有點痛。	My back hurts a bit.
+2	脖子	health	3	昨天沒睡好，脖子好痛。	I slept badly last night and my neck really hurts.
+2	汗	health	3	天氣太熱，我流了很多汗。	It was so hot that I sweated a lot.
+2	臉色	health	3	你的臉色不太好，生病了嗎？	You don't look well. Are you sick?
+2	救護車	health	3	快叫救護車！	Call an ambulance, quick!
+2	咳嗽	health	4	我感冒了，一直咳嗽。	I've got a cold and can't stop coughing.
+2	發燒	health	4	孩子發燒了，要去看醫生。	The child has a fever and needs to see a doctor.
+2	頭痛	health	4	我今天有點頭痛。	I have a bit of a headache today.
+2	疼	health	3	我的腳還有點疼。	My foot still hurts a little.
+2	保險	health	3	我們都有健康保險。	We all have health insurance.
+2	掛號	health	4	看醫生要先掛號。	You have to register before you see the doctor.
+2	牙刷	daily	3	我忘了帶牙刷。	I forgot to bring my toothbrush.
+2	藥房	health	3	前面有一家藥房。	There's a pharmacy up ahead.
+2	救命	health	2	救命啊！有人掉進水裡了！	Help! Someone fell into the water!
+2	影響	general	4	天氣會影響我的心情。	The weather affects my mood.
+2	感覺	feelings	5	今天你感覺好一點了嗎？	Are you feeling a bit better today?
+2	精神	health	4	睡了一覺，他現在很有精神。	After a nap, he's full of energy now.
+2	正常	general	3	這樣很正常，別擔心。	That's perfectly normal, don't worry.
+2	有錢	personal	3	他很有錢，可是不快樂。	He's rich, but he isn't happy.
+2	生意	work	4	這家店的生意很好。	This shop does very good business.
+2	商人	work	2	他爸爸是一個商人。	His dad is a businessman.
+2	老闆娘	work	4	老闆娘，我要一碗麵。	Ma'am, one bowl of noodles, please.
+2	店員	shopping	3	我問店員有沒有大一點的。	I asked the clerk if they had a bigger one.
+2	訂	daily	4	我已經訂了明天的火車票。	I've already booked tomorrow's train ticket.
+2	訂位	food	4	這家餐廳要先訂位。	You need to book a table at this restaurant.
+2	得到	general	3	他得到了第一名。	He came first.
+2	困難	general	3	有困難就告訴我。	If you run into any difficulty, just tell me.
+2	百貨公司	shopping	4	我們去百貨公司買衣服吧。	Let's go to the department store to buy clothes.
+2	夜市	food	4	晚上我們去夜市吃東西。	Let's go eat at the night market tonight.
+2	逛	shopping	4	週末我喜歡去逛書店。	On weekends I like browsing in bookstores.
+2	逛街	shopping	4	我跟朋友去逛街了。	I went shopping with friends.
+2	排隊	daily	4	這家店每天都要排隊。	There's a queue at this shop every day.
+2	客滿	travel	2	對不起，今天晚上已經客滿了。	Sorry, we're fully booked tonight.
+2	刷卡	shopping	4	請問可以刷卡嗎？	Can I pay by card?
+2	提	daily	3	我幫你提行李。	Let me carry your bags for you.
+2	流行	leisure	3	今年很流行這種顏色。	This colour is really in fashion this year.
+2	藍色	daily	4	我最喜歡藍色。	Blue is my favourite colour.
+2	綠色	daily	3	他穿著一件綠色的衣服。	He's wearing a green top.
+2	紅色	daily	4	過年的時候大家喜歡穿紅色。	At Lunar New Year people like to wear red.
+2	黑色	daily	4	我想買一雙黑色的鞋子。	I want to buy a pair of black shoes.
+2	毛衣	shopping	3	天氣冷了，穿上毛衣吧。	It's getting cold. Put on a sweater.
+2	雨衣	shopping	3	下雨了，騎機車要穿雨衣。	It's raining, so wear a raincoat on the scooter.
+2	內衣	shopping	2	我去買幾件內衣。	I'm going to buy some underwear.
+2	上衣	shopping	3	這件白色上衣多少錢？	How much is this white top?
+2	皮鞋	shopping	3	上班要穿皮鞋。	You have to wear leather shoes to work.
+2	手套	shopping	2	冬天騎車要戴手套。	Wear gloves when you ride in winter.
+2	口袋	daily	3	我的手機在口袋裡。	My phone is in my pocket.
+2	小費	food	2	在台灣吃飯不用給小費。	You don't need to tip when eating out in Taiwan.
+2	打折	shopping	4	這件衣服打八折。	This item of clothing is 20% off.
+2	零錢	shopping	4	坐公車要準備零錢。	Have some change ready when you take the bus.
+2	零用錢	daily	2	媽媽每個星期給我零用錢。	Mom gives me pocket money every week.
+2	存	daily	3	我每個月存一點錢。	I save a little money every month.
+2	毛	shopping	2	我身上一毛錢都沒有。	I don't have a single cent on me.
+2	高級	general	3	這是一家很高級的餐廳。	This is a very upscale restaurant.
+2	一般	general	4	我一般七點起床。	I usually get up at seven.
+2	合適	general	3	這件衣服你穿很合適。	This outfit suits you well.
+2	適合	general	4	這個工作很適合你。	This job really suits you.
+2	圓	general	2	今天的月亮很圓。	The moon is very round tonight.
+2	光	general	3	我的錢都花光了。	I've spent all my money.
+2	死	general	4	今天工作好多，累死了。	So much work today, I'm dead tired.
+2	髒	daily	3	你的衣服髒了，快去換。	Your clothes are dirty. Go and change.
+2	破	daily	3	我的褲子破了一個洞。	My trousers have a hole in them.
+2	袋	general	3	我買了一袋蘋果。	I bought a bag of apples.
+2	套	general	3	這套書一共有五本。	This set of books has five volumes.
+2	沙拉	food	3	我午餐只吃一份沙拉。	I only had a salad for lunch.
+2	牛排	food	3	你的牛排要幾分熟？	How would you like your steak done?
+2	海鮮	food	3	這家店的海鮮很新鮮。	The seafood at this place is very fresh.
+2	火腿	food	2	我早餐吃火腿蛋餅。	I had a ham and egg crepe for breakfast.
+2	熱狗	food	2	便利商店有賣熱狗。	Convenience stores sell hot dogs.
+2	饅頭	food	3	早上我常吃一個饅頭。	I often have a steamed bun in the morning.
+2	米	food	3	家裡的米快吃完了。	We're almost out of rice at home.
+2	豆腐	food	3	你吃過臭豆腐嗎？	Have you ever tried stinky tofu?
+2	橘子	food	3	過年的時候家裡有很多橘子。	At Lunar New Year there are lots of mandarins at home.
+2	葡萄	food	3	這些葡萄很甜。	These grapes are very sweet.
+2	芒果	food	3	夏天我最愛吃芒果冰。	In summer I love mango shaved ice.
+2	烏龍茶	food	3	我要一杯冰的烏龍茶。	I'd like an iced oolong tea.
+2	豆漿	food	4	早餐我喜歡喝豆漿。	I like to drink soy milk for breakfast.
+2	可樂	food	3	我要一杯可樂，不要冰塊。	A cola, please, no ice.
+2	奶茶	food	4	我要一杯珍珠奶茶，半糖。	A bubble tea, please, half sugar.
+2	汽水	food	2	小孩不要喝太多汽水。	Kids shouldn't drink too much soda.
+2	冰塊	food	3	我的飲料不要加冰塊。	No ice in my drink, please.
+2	甜點	food	3	吃完飯要不要點個甜點？	Shall we order dessert after the meal?
+2	餅乾	food	3	我買了一包餅乾。	I bought a pack of cookies.
+2	鹽	food	3	湯裡再加一點鹽。	Add a little more salt to the soup.
+2	味	food	3	這是什麼味？好香啊。	What's that smell? It smells great.
+2	聞	daily	3	你聞聞看，這是什麼味道？	Have a sniff. What's that smell?
+2	臭	daily	3	垃圾放太久，好臭。	The rubbish has been sitting too long. It stinks.
+2	口	general	3	我家有四口人。	There are four people in my family.
+2	罐	general	3	我買了兩罐啤酒。	I bought two cans of beer.
+2	顆	general	4	我每天吃一顆蘋果。	I eat an apple every day.
+2	任何	general	3	有任何問題都可以問我。	Feel free to ask me any questions.
+2	許多	general	3	公園裡有許多人在運動。	Lots of people are exercising in the park.
+2	新鮮	food	4	這些水果很新鮮。	This fruit is very fresh.
+2	熟	food	3	這塊肉還沒熟。	This meat isn't cooked through yet.
+2	炒	food	3	媽媽在廚房炒菜。	Mom is stir-frying in the kitchen.
+2	炸	food	3	我喜歡吃炸雞。	I like fried chicken.
+2	嚐	food	4	你嚐嚐看，這個很好吃。	Have a taste. This is delicious.
+2	裝	general	3	我把衣服裝進行李箱了。	I packed the clothes into the suitcase.
+2	不用	general	5	你不用來接我。	You don't need to come and pick me up.
+2	不但	general	4	他不但會說中文，而且會說日文。	He not only speaks Chinese, but also Japanese.
+2	不必	general	3	你不必這麼客氣。	You don't need to be so polite.
+2	不得了	general	3	他高興得不得了。	He was extremely happy.
+2	不管	general	3	不管多忙，他都會運動。	No matter how busy he is, he always exercises.
+2	只好	general	4	公車沒來，我只好坐計程車。	The bus didn't come, so I had to take a taxi.
+2	或	general	3	你可以坐公車或捷運去。	You can go by bus or MRT.
+2	而且	general	5	這家店便宜，而且很好吃。	This place is cheap, and the food is good too.
+2	原來	general	4	原來你也住在這裡！	So you live here too!
+2	也許	general	4	也許明天會下雨。	Maybe it'll rain tomorrow.
+2	必須	general	4	你必須在五點以前到。	You must get here before five.
+2	多麼	general	2	這裡的風景多麼美啊！	How beautiful the scenery is here!
+2	這樣	general	5	這樣做比較快。	It's faster to do it this way.
+2	那樣	general	4	別那樣說，他會不高興。	Don't say it like that, he'll be upset.
+2	別的	general	4	你還要別的嗎？	Do you want anything else?
+2	除了	general	4	除了他以外，大家都來了。	Everyone came except him.
+2	從來	general	3	我從來沒去過日本。	I've never been to Japan.
+2	大概	general	5	他大概十點會到。	He'll probably get here around ten.
+2	還好	general	4	還好我們沒遲到。	Luckily we weren't late.
+2	極	general	2	這部電影好看極了。	This movie is extremely good.
+2	接著	general	3	我先洗澡，接著就去睡覺。	I'll take a shower first, then go to bed.
+2	結果	general	4	我等了他一個小時，結果他沒來。	I waited an hour for him, and in the end he didn't come.
+2	立刻	general	3	我聽到消息就立刻回家了。	I went home right away when I heard the news.
+2	沒想到	general	4	沒想到你也會來！	I didn't expect you to come too!
+2	其實	general	5	其實我不太喜歡吃辣。	Actually, I don't really like spicy food.
+2	其中	general	3	我有三個姐姐，其中一個住在台中。	I have three older sisters, and one of them lives in Taichung.
+2	完全	general	4	我完全聽不懂他在說什麼。	I have no idea at all what he's saying.
+2	相當	general	3	這裡的房租相當貴。	The rent here is quite expensive.
+2	一切	general	3	祝你一切順利！	I wish you all the best!
+2	已	general	2	他已在台灣住了十年。	He has already lived in Taiwan for ten years.
+2	尤其	general	3	我喜歡水果，尤其是芒果。	I like fruit, especially mangoes.
+2	越	general	4	雨越下越大。	The rain is getting heavier and heavier.
+2	整	general	3	他整天都在玩手機。	He's on his phone all day long.
+2	正	general	3	我正要出門，你就來了。	I was just about to go out when you arrived.
+2	只要	general	4	只要你喜歡，就買吧。	As long as you like it, buy it.
+2	最好	general	4	你最好早一點出門。	You'd better leave a bit earlier.
+2	同樣	general	3	我們買了同樣的手機。	We bought the same phone.
+2	空	general	3	冰箱是空的。	The fridge is empty.
+2	連	general	3	他忙得連飯都沒時間吃。	He's so busy he doesn't even have time to eat.
+2	倍	general	2	這裡的房租是我家的兩倍。	The rent here is twice what I pay at home.
+2	包括	general	3	房租包括水電嗎？	Does the rent include water and electricity?
+2	步	general	3	從我家走幾步就到捷運站了。	The MRT station is just a few steps from my home.
+2	當時	general	3	當時我還是學生。	I was still a student at the time.
+2	等到	general	3	等到下課再說吧。	Let's talk about it after class.
+2	煩	feelings	3	他一直問，我覺得很煩。	He keeps asking, and it's really annoying.
+2	剛好	general	4	這雙鞋我穿剛好。	These shoes fit me just right.
+2	或者	general	4	我們可以看電影，或者去逛街。	We could see a movie or go shopping.
+2	哇	general	3	哇，這裡好漂亮！	Wow, it's so beautiful here!
+2	需	general	2	台灣人去日本不需簽證。	Taiwanese people don't need a visa to visit Japan.
+2	須	general	2	進來前須先換鞋。	You must change your shoes before coming in.
+2	直接	general	4	你直接來我家就好。	Just come straight to my place.
+2	總	general	3	我總覺得他有點不高興。	I can't help feeling he's a bit upset.
+2	泡	food	3	我幫你泡一杯茶。	Let me make you a cup of tea.
+2	且	general	2	這家店的菜便宜且好吃。	This place's food is cheap and tasty.
+2	比方	general	2	打個比方，學中文就像爬山。	To use an analogy, learning Chinese is like climbing a mountain.
+2	比方說	general	3	我喜歡運動，比方說游泳和跑步。	I like sports, for example swimming and running.
+2	傳	general	4	我等一下把照片傳給你。	I'll send you the photos in a bit.
+2	另	general	2	這件事我們另找時間談。	Let's find another time to talk about this.
+2	另外	general	4	另外，明天的會改到三點。	Also, tomorrow's meeting has moved to three.
+2	左右	general	4	我大概七點左右到。	I'll get there around seven.
+2	當	general	4	當我到家的時候，天已經黑了。	When I got home, it was already dark.
+2	類	general	2	我喜歡看這類的電影。	I like this kind of movie.
+2	樣	general	4	這兩樣東西我都要。	I'll take both of these items.
+3	哎	general	3	哎，你的手機掉了！	Hey, you dropped your phone!
+3	唉	general	3	唉，今天又要加班了。	Sigh, I have to work overtime again today.
+3	愛情	people	4	這部電影在講一個愛情故事。	This movie tells a love story.
+3	愛惜	general	2	你要好好愛惜自己的身體。	You should take good care of your body.
+3	愛心	people	3	她很有愛心，常常去幫助老人。	She's very caring and often helps the elderly.
+3	按	daily	4	請按一下電梯的按鈕。	Please press the elevator button.
+3	安定	general	2	他想過安定的生活。	He wants to live a settled life.
+3	安靜	general	4	圖書館裡請保持安靜。	Please keep quiet in the library.
+3	安排	general	5	這次旅行都是他安排的。	He arranged this whole trip.
+3	安心	feelings	3	你到家以後打個電話，我比較安心。	Call me when you get home so I won't worry.
+3	按照	general	4	請按照順序排隊。	Please line up in order.
+3	白	general	5	她今天穿了一件白衣服。	She's wearing white today.
+3	白菜	food	3	媽媽買了一顆大白菜。	Mom bought a head of napa cabbage.
+3	擺	home	3	請把杯子擺在桌子上。	Please put the cups on the table.
+3	榜樣	people	2	哥哥是我學習的榜樣。	My older brother is my role model.
+3	班機	travel	3	我們的班機晚了一個小時。	Our flight was delayed by an hour.
+3	辦理	general	3	我要去銀行辦理開戶。	I'm going to the bank to open an account.
+3	半天	daily	4	我等了半天，公車還沒來。	I've waited ages and the bus still hasn't come.
+3	包含	general	3	這個價錢包含早餐嗎？	Does this price include breakfast?
+3	寶貝	people	4	寶貝，該睡覺了。	Sweetie, it's time for bed.
+3	寶貴	general	3	謝謝你寶貴的意見。	Thank you for your valuable feedback.
+3	保守	personal	3	他的想法很保守。	His thinking is very conservative.
+3	保養	daily	3	我的機車每半年保養一次。	My scooter gets serviced every six months.
+3	保證	general	4	我保證下次不會遲到了。	I promise I won't be late next time.
+3	抱	people	4	媽媽抱著小孩走進來。	Mom walked in holding the child.
+3	抱怨	feelings	3	他常常抱怨工作太累。	He often complains that his job is too tiring.
+3	報名	education	4	我報名了週末的游泳課。	I signed up for a weekend swimming class.
+3	把握	general	3	我沒有把握能通過考試。	I'm not confident I can pass the exam.
+3	北方	travel	2	北方的冬天很冷。	Winters in the north are very cold.
+3	被動	personal	2	他個性比較被動，很少主動說話。	He's rather passive and rarely starts a conversation.
+3	背後	general	3	不要在背後說別人壞話。	Don't speak ill of people behind their backs.
+3	背景	general	3	這張照片的背景是101大樓。	The background of this photo is Taipei 101.
+3	輩子	general	3	我這輩子沒去過國外。	I've never been abroad in my whole life.
+3	本人	personal	3	他本人比照片好看。	He looks better in person than in photos.
+3	逼	people	3	父母逼他學鋼琴。	His parents forced him to learn piano.
+3	鞭炮	leisure	2	過年的時候到處都在放鞭炮。	During Lunar New Year people set off firecrackers everywhere.
+3	變成	general	5	綠燈變成紅燈了。	The light turned from green to red.
+3	變更	general	2	會議時間變更到下午三點。	The meeting has been moved to 3 p.m.
+3	變化	general	4	這幾年台北的變化很大。	Taipei has changed a lot in recent years.
+3	便條	daily	2	我在桌上留了一張便條給你。	I left a note for you on the table.
+3	表達	people	3	他不太會表達自己的感情。	He's not good at expressing his feelings.
+3	表面	general	3	他表面上很開心，其實很難過。	He looks happy on the surface, but he's actually sad.
+3	表示	general	4	他點頭表示同意。	He nodded to show he agreed.
+3	表現	general	4	他這次考試表現得很好。	He did really well on this exam.
+3	表演	leisure	4	晚上廣場有街頭表演。	There's a street performance in the square tonight.
+3	畢竟	general	3	別怪他，他畢竟還是個孩子。	Don't blame him; he's only a child after all.
+3	避免	general	4	為了避免塞車，我們早點出門吧。	Let's leave early to avoid traffic.
+3	餅	food	3	中秋節大家都會吃月餅。	Everyone eats mooncakes at the Mid-Autumn Festival.
+3	比如	general	4	我喜歡水果，比如蘋果和香蕉。	I like fruit, for example apples and bananas.
+3	必要	general	3	你沒有必要這麼緊張。	There's no need for you to be so nervous.
+3	播	leisure	3	這部電影晚上八點會在電視上播。	This movie will air on TV at eight tonight.
+3	博士	education	3	她在美國讀博士。	She's doing a PhD in the US.
+3	博物館	leisure	4	週末我們去博物館看展覽。	This weekend we went to see an exhibition at the museum.
+3	布	daily	2	這塊布可以做一件裙子。	This piece of cloth is enough to make a skirt.
+3	不見	daily	5	我的鑰匙不見了！	My keys are gone!
+3	不得不	general	4	下大雨了，我們不得不取消活動。	It's pouring, so we have to cancel the event.
+3	不斷	general	3	他不斷地努力，終於成功了。	He kept working hard and finally succeeded.
+3	不論	general	3	不論多忙，他每天都會運動。	No matter how busy he is, he exercises every day.
+3	不滿	feelings	3	很多人對這個決定感到不滿。	Many people are unhappy with this decision.
+3	部門	work	3	你在哪個部門工作？	Which department do you work in?
+3	不如	general	4	外面在下雨，不如我們在家看電影吧。	It's raining out, so why don't we watch a movie at home instead?
+3	不少	general	5	今天來了不少人。	Quite a lot of people came today.
+3	不幸	general	2	他不幸在車禍中受傷了。	Unfortunately, he was injured in a car accident.
+3	不用說	general	2	不用說，他一定又遲到了。	Needless to say, he's late again.
+3	布置	home	3	我們一起布置新家吧。	Let's decorate the new home together.
+3	不足	general	3	我最近睡眠不足，常常很累。	I haven't been sleeping enough lately and I'm always tired.
+3	擦	daily	4	吃完飯請把桌子擦乾淨。	Please wipe the table clean after eating.
+3	猜	general	4	你猜猜看我幾歲？	Guess how old I am.
+3	材料	general	3	做蛋糕的材料都準備好了。	The ingredients for the cake are all ready.
+3	採用	work	2	公司決定採用新的方法。	The company decided to adopt a new method.
+3	參考	education	3	這本書可以給你參考。	You can use this book as a reference.
+3	草地	home	3	小狗在草地上跑來跑去。	The puppy is running around on the grass.
+3	草原	home	2	草原上有很多牛和羊。	There are lots of cows and sheep on the grassland.
+3	曾	general	2	我曾去過日本兩次。	I have been to Japan twice.
+3	曾經	general	4	我曾經在台南住過三年。	I once lived in Tainan for three years.
+3	差點	general	4	我今天差點遲到。	I was almost late today.
+3	差別	general	3	這兩支手機有什麼差別？	What's the difference between these two phones?
+3	嘗試	general	3	我想嘗試一些新的東西。	I want to try something new.
+3	產品	shopping	3	這家公司的產品很受歡迎。	This company's products are very popular.
+3	產生	general	3	他對中文產生了很大的興趣。	He developed a strong interest in Chinese.
+3	超過	general	4	這裡的車速不能超過五十公里。	You can't drive over 50 km/h here.
+3	超級	general	5	這家店的牛肉麵超級好吃！	This shop's beef noodles are super tasty!
+3	吵架	people	4	他們昨天又吵架了。	They argued again yesterday.
+3	差異	general	2	南部和北部的天氣有很大的差異。	The weather in the south and the north is very different.
+3	車禍	travel	3	前面發生車禍，所以塞車了。	There was a car accident ahead, so traffic is backed up.
+3	趁	general	3	趁熱吃吧，冷了就不好吃了。	Eat it while it's hot; it won't taste good cold.
+3	襯衫	shopping	3	他今天穿了一件白襯衫。	He's wearing a white shirt today.
+3	成	general	4	請把這句話翻譯成英文。	Please translate this sentence into English.
+3	成果	general	2	這是我們一年努力的成果。	This is the result of a year of hard work.
+3	成就	general	2	他在音樂上有很大的成就。	He has achieved great success in music.
+3	承認	general	3	他終於承認是自己錯了。	He finally admitted he was wrong.
+3	誠實	personal	3	他是一個很誠實的人。	He's a very honest person.
+3	成熟	personal	3	她比同年紀的人成熟。	She's more mature than people her age.
+3	成長	general	3	孩子成長得很快。	Children grow up fast.
+3	吃喝玩樂	leisure	2	放假的時候我只想吃喝玩樂。	On vacation I just want to eat, drink and have fun.
+3	蟲子	home	3	房間裡有一隻蟲，好可怕！	There's a bug in the room, so scary!
+3	充實	general	3	這個週末過得很充實。	This weekend was really full and rewarding.
+3	重新	general	4	這份報告要重新寫。	This report needs to be rewritten.
+3	醜	personal	3	這件衣服好醜喔。	This outfit is so ugly.
+3	抽	daily	3	這裡不可以抽菸。	Smoking isn't allowed here.
+3	初	daily	3	我下個月初要去台中出差。	I'm going to Taichung on business early next month.
+3	串	general	3	我買了一串香蕉。	I bought a bunch of bananas.
+3	創造	general	2	我們一起創造美好的回憶吧。	Let's make some wonderful memories together.
+3	出版	leisure	2	他的新書下個月出版。	His new book comes out next month.
+3	出差	work	4	爸爸下週要去日本出差。	Dad is going to Japan on business next week.
+3	出發	travel	4	我們明天早上七點出發。	We're setting off at seven tomorrow morning.
+3	出現	general	4	他終於出現了！	He finally showed up!
+3	出租	home	3	這間房子要出租。	This house is for rent.
+3	處理	general	4	這件事我來處理就好。	Let me handle this.
+3	廚師	work	3	他是一家餐廳的廚師。	He's a chef at a restaurant.
+3	吹	daily	3	洗完頭記得把頭髮吹乾。	Remember to blow-dry your hair after washing it.
+3	此	general	2	此處禁止停車。	No parking here.
+3	刺激	feelings	3	這部電影很刺激。	This movie is really thrilling.
+3	從不	general	3	他從不喝酒。	He never drinks.
+3	從小	general	4	我從小在台北長大。	I grew up in Taipei.
+3	醋	food	3	吃水餃要不要加醋？	Do you want vinegar with your dumplings?
+3	寸	general	1	我需要兩張兩寸的大頭照。	I need two 2-inch ID photos.
+3	存在	general	2	這個問題一直都存在。	This problem has always been there.
+3	錯誤	general	3	這份報告有幾個錯誤。	This report has a few mistakes.
+3	挫折	feelings	2	遇到挫折不要放棄。	Don't give up when you hit a setback.
+3	達成	general	2	我們終於達成了目標。	We finally reached our goal.
+3	打架	people	3	兩個小朋友在學校打架。	Two kids got into a fight at school.
+3	大多數	general	4	大多數的人都有手機。	Most people have a mobile phone.
+3	大方	personal	3	他對朋友很大方。	He's very generous with his friends.
+3	大會	work	2	公司明天要開員工大會。	The company is holding an all-staff meeting tomorrow.
+3	代表	general	4	他代表班上參加比賽。	He represented the class in the competition.
+3	代替	general	3	今天由林老師代替王老師上課。	Today Ms. Lin is teaching in place of Mr. Wang.
+3	帶領	work	2	他帶領團隊完成了計畫。	He led the team to complete the project.
+3	單純	personal	3	他是個很單純的人。	He's a very simple, genuine person.
+3	淡	food	3	這碗湯有點淡，再加點鹽吧。	This soup is a bit bland; add some salt.
+3	當場	general	2	小偷被警察當場抓到。	The thief was caught on the spot by the police.
+3	當地	travel	4	我們去吃當地有名的小吃吧。	Let's go try the famous local snacks.
+3	當面	people	3	這件事我想跟你當面說。	I want to tell you about this in person.
+3	當年	general	3	我當年念大學的時候很窮。	Back when I was in college, I was poor.
+3	當天	daily	3	這張票只能在當天使用。	This ticket is only valid on the same day.
+3	當作	general	3	我把他當作自己的弟弟。	I treat him like my own little brother.
+3	擔任	work	2	他在公司擔任經理。	He serves as a manager at the company.
+3	單身	personal	4	我現在還是單身。	I'm still single.
+3	島	travel	3	台灣是一個美麗的島。	Taiwan is a beautiful island.
+3	倒	general	3	颱風把路邊的樹吹倒了。	The typhoon blew down the trees by the road.
+3	導演	leisure	3	這部電影的導演是台灣人。	The director of this movie is Taiwanese.
+3	到底	general	5	你到底想吃什麼？	What on earth do you want to eat?
+3	倒是	general	3	這家店不大，東西倒是很好吃。	The shop isn't big, but the food is actually great.
+3	道德	society	2	這種行為不太道德。	This kind of behavior isn't very ethical.
+3	道教	society	2	台灣很多廟是道教的。	Many temples in Taiwan are Taoist.
+3	道理	general	3	你說的很有道理。	What you said makes a lot of sense.
+3	道歉	people	4	你應該跟她道歉。	You should apologize to her.
+3	答應	people	4	他答應明天會來幫忙。	He promised to come and help tomorrow.
+3	打掃	home	4	週末我要打掃房間。	I'm going to clean my room this weekend.
+3	打聽	people	2	我幫你打聽一下他的消息。	I'll ask around for news of him for you.
+3	大小	general	3	這雙鞋的大小剛好。	These shoes are just the right size.
+3	大約	general	4	從這裡到車站大約十分鐘。	It's about ten minutes from here to the station.
+3	打仗	society	2	他爺爺年輕的時候打過仗。	His grandfather fought in a war when he was young.
+3	得意	feelings	3	他考了第一名，很得意。	He came first in the exam and is very pleased with himself.
+3	等待	general	2	謝謝您耐心等待。	Thank you for waiting patiently.
+3	燈光	home	2	這家咖啡廳的燈光很溫暖。	This café has warm lighting.
+3	敵人	people	2	我們不是敵人，是朋友。	We're not enemies; we're friends.
+3	抵達	travel	3	班機將在下午三點抵達桃園機場。	The flight will arrive at Taoyuan Airport at 3 p.m.
+3	地板	home	3	地板剛拖過，小心滑倒。	The floor was just mopped; be careful not to slip.
+3	地帶	general	1	這裡是危險地帶，請不要靠近。	This is a danger zone; please stay away.
+3	地理	education	3	我國中的時候最喜歡地理課。	Geography was my favorite class in junior high.
+3	地球	home	3	我們要好好保護地球。	We should take good care of the Earth.
+3	地區	general	3	明天北部地區會下大雨。	Heavy rain is expected in the northern region tomorrow.
+3	地攤	shopping	3	夜市有很多賣衣服的地攤。	There are lots of stalls selling clothes at the night market.
+3	地位	society	2	女性的社會地位提高了。	Women's social status has risen.
+3	地下	general	3	停車場在地下二樓。	The parking lot is on the second basement level.
+3	地形	home	1	台灣的地形很特別，有很多高山。	Taiwan's terrain is special, with many high mountains.
+3	電車	travel	2	去日本旅行的時候，我們都搭電車。	When we traveled in Japan, we took the train everywhere.
+3	電池	daily	3	遙控器沒電了，要換電池。	The remote is dead; it needs new batteries.
+3	電燈	home	3	出門前記得關電燈。	Remember to turn off the lights before you go out.
+3	調查	society	3	警察正在調查這件事。	The police are investigating this matter.
+3	東北	travel	2	我們週末去東北角看海。	We're going to the Northeast Coast to see the sea this weekend.
+3	東南	travel	2	很多台灣人喜歡去東南亞旅行。	Many Taiwanese people like traveling in Southeast Asia.
+3	懂事	personal	3	這個孩子很懂事，常常幫媽媽做家事。	This child is very sensible and often helps Mom with chores.
+3	動物園	leisure	3	我們週末帶孩子去動物園。	We're taking the kids to the zoo this weekend.
+3	逗	people	3	他很會逗小孩笑。	He's good at making kids laugh.
+3	都市	home	3	我比較喜歡住在都市。	I prefer living in the city.
+3	毒品	society	2	毒品對身體傷害很大。	Drugs do serious harm to the body.
+3	獨特	general	3	這家咖啡廳的風格很獨特。	This café has a unique style.
+3	讀者	leisure	2	這本雜誌有很多年輕讀者。	This magazine has lots of young readers.
+3	段	general	4	我在台灣住過一段時間。	I lived in Taiwan for a while.
+3	堆	general	3	床上有一堆衣服還沒摺。	There's a pile of unfolded clothes on the bed.
+3	對方	people	3	吵架的時候要聽聽對方的想法。	When you argue, listen to what the other person thinks.
+3	對話	education	3	請兩個人一組練習這段對話。	Practice this dialogue in pairs.
+3	對了	general	5	對了，明天的會改到下午。	Oh right, tomorrow's meeting has moved to the afternoon.
+3	對象	people	3	你有對象了嗎？	Are you seeing anyone?
+3	頓	general	4	我一天吃三頓飯。	I eat three meals a day.
+3	多多少少	general	3	每個人多多少少都會緊張。	Everyone gets a little nervous to some degree.
+3	嗯	general	5	嗯，我知道了。	Mm, got it.
+3	而	general	3	他不是不想來，而是太忙了。	It's not that he doesn't want to come; he's just too busy.
+3	兒童	people	3	兒童票比較便宜。	Children's tickets are cheaper.
+3	發	general	4	今天公司發薪水了！	The company paid us today!
+3	發表	general	2	他在會議上發表了自己的看法。	He shared his views at the meeting.
+3	發財	work	3	過年的時候大家都說恭喜發財。	At Lunar New Year everyone says "Wishing you prosperity."
+3	發出	general	2	冰箱發出奇怪的聲音。	The fridge is making a strange noise.
+3	發達	society	2	台北的交通很發達。	Taipei has a well-developed transportation system.
+3	發揮	general	2	他在比賽中發揮得很好。	He performed very well in the competition.
+3	發覺	general	2	到了車站，我才發覺忘了帶錢包。	Only when I got to the station did I realize I'd forgotten my wallet.
+3	發明	general	3	電話是誰發明的？	Who invented the telephone?
+3	犯	general	3	每個人都會犯錯。	Everyone makes mistakes.
+3	反而	general	3	吃了藥以後，他的病反而更嚴重了。	After taking the medicine, his illness actually got worse.
+3	方式	general	4	每個人學習的方式都不一樣。	Everyone learns in a different way.
+3	房客	home	2	這間房子的房客下個月要搬走。	The tenant in this house is moving out next month.
+3	訪問	society	3	記者在街上訪問路人。	A reporter is interviewing passers-by on the street.
+3	煩惱	feelings	3	別煩惱了，事情會解決的。	Don't worry; things will work out.
+3	範圍	education	3	老師說了考試的範圍嗎？	Did the teacher say what the exam will cover?
+3	翻譯	education	3	你可以幫我翻譯這封信嗎？	Can you translate this letter for me?
+3	反應	general	3	他聽到這個消息，反應很大。	He reacted strongly when he heard the news.
+3	發票	shopping	5	結帳時請記得拿發票。	Remember to take your receipt when you pay.
+3	發脾氣	feelings	3	他一累就容易發脾氣。	He loses his temper easily when he's tired.
+3	非	general	3	這部電影我非看不可。	I absolutely have to see this movie.
+3	費用	shopping	3	這次旅行的費用是多少？	How much does this trip cost?
+3	豐富	general	3	這家餐廳的菜色很豐富。	This restaurant has a wide variety of dishes.
+3	風格	general	3	這位歌手的風格很特別。	This singer has a very distinctive style.
+3	風俗	leisure	2	每個地方的風俗都不一樣。	Every place has its own customs.
+3	分開	people	3	他們交往三年後分開了。	They split up after dating for three years.
+3	佛教	society	2	台灣有很多人信佛教。	Many people in Taiwan are Buddhist.
+3	否則	general	3	快一點，否則我們會遲到。	Hurry up, or we'll be late.
+3	夫婦	people	2	隔壁住著一對老夫婦。	An elderly couple lives next door.
+3	符合	general	3	這個工作很符合我的興趣。	This job really suits my interests.
+3	福利	work	3	這家公司的員工福利很好。	This company has good employee benefits.
+3	服裝	shopping	3	這家店賣各種流行服裝。	This shop sells all kinds of fashionable clothing.
+3	腐敗	society	2	人民最討厭腐敗的官員。	People hate corrupt officials the most.
+3	付出	general	3	為了這個家，媽媽付出了很多。	Mom has given so much for this family.
+3	負擔	general	3	房租對年輕人來說是很大的負擔。	Rent is a heavy burden for young people.
+3	複習	education	4	考試前我每天都在複習。	I review every day before an exam.
+3	負責	work	4	他在公司負責管理網站。	He's in charge of managing the website at his company.
+3	該	general	5	時間不早了，我該回家了。	It's getting late; I should go home.
+3	改變	general	4	搬到台北以後，我的生活改變了很多。	My life changed a lot after moving to Taipei.
+3	改進	general	3	老師說我的發音還需要改進。	The teacher says my pronunciation still needs improving.
+3	改善	general	3	政府想改善台北的交通。	The government wants to improve Taipei's traffic.
+3	改天	daily	4	今天太忙了，我們改天再聊吧。	I'm too busy today; let's talk another day.
+3	蓋	home	3	這裡要蓋一棟新的大樓。	A new building is going to be built here.
+3	概念	general	3	他對錢完全沒有概念。	He has no concept of money at all.
+3	趕	daily	4	我要趕最後一班捷運回家。	I need to catch the last MRT train home.
+3	趕上	travel	3	我們跑過去，終於趕上了公車。	We ran over and finally caught the bus.
+3	感動	feelings	4	這部電影讓我很感動。	This movie really moved me.
+3	感想	feelings	3	看完這本書，你有什麼感想？	What did you think after reading this book?
+3	感謝	people	4	感謝大家今天來參加。	Thank you all for coming today.
+3	感興趣	feelings	4	我對台灣歷史很感興趣。	I'm very interested in Taiwanese history.
+3	鋼琴	leisure	3	我妹妹從小就學鋼琴。	My younger sister has learned piano since she was little.
+3	高速	travel	3	開車走高速公路比較快。	Driving on the freeway is faster.
+3	搞	general	3	我還是搞不懂這個問題。	I still can't figure out this problem.
+3	歌曲	leisure	3	這首歌曲最近在網路上很紅。	This song has been really popular online lately.
+3	歌星	leisure	2	她是台灣很有名的歌星。	She's a very famous singer in Taiwan.
+3	隔壁	home	4	隔壁的鄰居人很好。	The neighbors next door are very nice.
+3	個人	personal	4	這只是我個人的看法。	This is just my personal opinion.
+3	個子	personal	4	他個子很高，很適合打籃球。	He's tall, so he's well suited to basketball.
+3	革命	society	2	這場革命改變了整個國家。	This revolution changed the whole country.
+3	根	general	4	不好意思，請給我一根吸管。	Excuse me, could I have a straw, please?
+3	根據	general	3	根據氣象報告，明天會下雨。	According to the weather report, it will rain tomorrow.
+3	更加	general	3	下雨以後，路上更加危險了。	After the rain, the roads became even more dangerous.
+3	各式各樣	general	3	夜市裡有各式各樣的小吃。	The night market has all kinds of snacks.
+3	各位	people	4	各位同學，請安靜一下。	Everyone, please be quiet for a moment.
+3	工廠	work	3	我爸爸在一家工廠上班。	My dad works at a factory.
+3	公尺	general	4	從這裡到捷運站大概五百公尺。	It's about 500 meters from here to the MRT station.
+3	公分	general	4	他的身高是一百八十公分。	He is 180 centimeters tall.
+3	功夫	general	3	他花了很多功夫才學會做菜。	He put a lot of effort into learning to cook.
+3	公共	society	3	在公共場所不可以抽菸。	Smoking isn't allowed in public places.
+3	公斤	general	4	我這個月胖了兩公斤。	I gained two kilos this month.
+3	工具	general	3	修腳踏車需要一些工具。	You need some tools to fix a bike.
+3	公克	general	3	這塊肉大概三百公克。	This piece of meat is about 300 grams.
+3	公里	general	4	我家離公司大概十公里。	My home is about ten kilometers from the office.
+3	功能	general	3	這支手機有很多新功能。	This phone has lots of new features.
+3	恭喜	people	4	恭喜你找到新工作！	Congratulations on finding a new job!
+3	工業	society	2	台灣的電子工業很發達。	Taiwan's electronics industry is highly developed.
+3	公寓	home	4	我住在一棟老公寓的四樓。	I live on the fourth floor of an old apartment building.
+3	共同	general	3	我們有很多共同的興趣。	We have a lot of interests in common.
+3	貢獻	general	3	他對社會有很大的貢獻。	He has made a great contribution to society.
+3	溝通	people	4	夫妻之間要多溝通。	Couples should communicate more.
+3	購買	shopping	3	你可以在網路上購買車票。	You can buy tickets online.
+3	姑娘	people	2	那位姑娘長得很漂亮。	That young lady is very pretty.
+3	古	general	2	古時候的人沒有電可以用。	In ancient times people had no electricity.
+3	古代	education	3	古代的人怎麼過生活？	How did people live in ancient times?
+3	古蹟	travel	3	台南有很多有名的古蹟。	Tainan has many famous historic sites.
+3	古老	general	3	這是一棟很古老的房子。	This is a very old house.
+3	顧	daily	4	週末我要在家顧小孩。	This weekend I have to stay home and look after the kids.
+3	顧客	shopping	3	這家店的顧客大多是學生。	Most of this shop's customers are students.
+3	故意	general	4	對不起，我不是故意的。	Sorry, I didn't do it on purpose.
+3	刮	daily	3	他每天早上都要刮鬍子。	He shaves every morning.
+3	乖	personal	4	這個小孩很乖，從來不哭。	This child is very well-behaved and never cries.
+3	怪	general	4	這個味道有點怪，可能壞了。	This tastes a bit odd; it might have gone bad.
+3	觀察	general	3	我喜歡坐在咖啡店觀察路人。	I like sitting in cafés watching passers-by.
+3	觀點	feelings	3	每個人的觀點都不一樣。	Everyone has a different point of view.
+3	管	general	4	你不要管我，我自己可以。	Don't worry about me, I can manage on my own.
+3	廣播	leisure	3	我開車的時候喜歡聽廣播。	I like listening to the radio when I drive.
+3	廣場	travel	3	晚上很多人在廣場跳舞。	In the evening lots of people dance in the square.
+3	廣告	leisure	4	看影片的時候常常有廣告。	There are often ads when you watch videos.
+3	觀念	feelings	3	父母和孩子的觀念常常不一樣。	Parents and children often think differently.
+3	觀眾	leisure	3	這場比賽的觀眾非常多。	This game had a huge audience.
+3	規矩	people	3	吃飯的時候要守規矩。	You should mind your manners at the table.
+3	規模	general	2	這家公司的規模越來越大。	This company keeps growing in scale.
+3	鬼	general	3	我小時候很怕鬼。	I was afraid of ghosts when I was little.
+3	貴姓	people	4	先生，請問您貴姓？	Sir, may I ask your surname?
+3	國內	travel	3	我們今年打算在國內旅行。	We plan to travel within the country this year.
+3	國外	travel	4	他大學畢業後去國外工作了。	After graduating from university, he went to work abroad.
+3	國王	general	2	故事裡的國王有三個女兒。	The king in the story has three daughters.
+3	國語	education	4	他的國語說得很標準。	He speaks very standard Mandarin.
+3	過去	general	4	過去的事就不要再想了。	Don't dwell on the past anymore.
+3	過日子	daily	3	他們一家人簡單地過日子。	Their family lives a simple life.
+3	嗨	people	3	嗨，好久不見，最近好嗎？	Hi, long time no see! How have you been?
+3	還要	general	4	今天比昨天還要熱。	Today is even hotter than yesterday.
+3	海報	leisure	3	牆上貼著一張電影海報。	There's a movie poster on the wall.
+3	海灘	travel	3	夏天很多人去海灘玩水。	In summer lots of people go to the beach to play in the water.
+3	海洋	home	2	台灣四面都是海洋。	Taiwan is surrounded by ocean on all sides.
+3	害	general	4	都是你害我遲到的！	It's your fault I was late!
+3	航空	travel	3	這家航空公司的服務很好。	This airline's service is very good.
+3	漢語	education	2	他在美國的大學教漢語。	He teaches Chinese at a university in the US.
+3	好好	general	4	你今天好好休息吧。	Get a good rest today.
+3	好了	general	4	今天太晚了，我們明天再去好了。	It's too late today; let's just go tomorrow.
+3	合	general	3	我和朋友合租一間公寓。	My friend and I share an apartment.
+3	合唱	leisure	2	我們班要參加合唱比賽。	Our class is entering a choir competition.
+3	黑	general	5	天黑了，我們快回家吧。	It's getting dark; let's hurry home.
+3	恨	feelings	3	我不恨他，只是不想再見到他。	I don't hate him; I just don't want to see him again.
+3	恨不得	feelings	2	我恨不得馬上放假。	I wish I could go on vacation right now.
+3	紅	general	4	這家店在網路上很紅。	This shop is really popular online.
+3	紅包	people	4	過年的時候，小孩都會拿到紅包。	At Lunar New Year, kids all get red envelopes.
+3	紅豆	food	3	我最喜歡吃紅豆湯。	Red bean soup is my favorite.
+3	紅綠燈	travel	4	過了紅綠燈以後右轉。	Turn right after the traffic light.
+3	厚	general	4	今天很冷，要穿厚一點。	It's cold today; wear something thicker.
+3	忽然	general	4	走在路上，忽然下起大雨。	While I was walking, it suddenly started pouring.
+3	糊塗	personal	3	我真糊塗，又忘了帶鑰匙。	How scatterbrained of me, I forgot my keys again.
+3	互相	people	4	朋友之間要互相幫忙。	Friends should help each other.
+3	護照	travel	4	出國一定要帶護照。	You must bring your passport when you go abroad.
+3	黃	general	4	秋天的時候，葉子都變黃了。	In autumn, the leaves all turn yellow.
+3	花心	people	3	她的男朋友很花心。	Her boyfriend is a player.
+3	花園	home	3	我家後面有一個小花園。	There's a small garden behind my house.
+3	滑雪	leisure	2	冬天我們要去日本滑雪。	This winter we're going skiing in Japan.
+3	話題	people	3	這個話題太無聊了，我們換一個吧。	This topic is too boring; let's change it.
+3	化妝品	shopping	3	她在百貨公司買了很多化妝品。	She bought a lot of cosmetics at the department store.
+3	恢復	health	3	他生病以後還沒完全恢復。	He still hasn't fully recovered from his illness.
+3	回想	general	3	回想起小時候，真的很快樂。	Looking back on my childhood, I was really happy.
+3	會場	work	2	演講的會場在三樓。	The lecture venue is on the third floor.
+3	會話	education	3	我們今天練習中文會話。	Today we're practicing Chinese conversation.
+3	會議	work	4	我下午兩點有一個會議。	I have a meeting at two this afternoon.
+3	婚禮	people	3	下個月我要參加朋友的婚禮。	Next month I'm going to a friend's wedding.
+3	婚姻	people	3	他們的婚姻很幸福。	They have a very happy marriage.
+3	混亂	general	3	地震以後，車站裡一片混亂。	After the earthquake, the station was in chaos.
+3	活	general	4	我爺爺活到九十五歲。	My grandfather lived to ninety-five.
+3	或許	general	3	或許他今天太忙了，忘了回訊息。	Maybe he was too busy today and forgot to reply.
+3	基本	general	3	這些是最基本的中文句子。	These are the most basic Chinese sentences.
+3	基礎	education	3	他的中文基礎很好。	He has a solid foundation in Chinese.
+3	激動	feelings	3	聽到這個消息，他激動得哭了。	He was so moved by the news that he cried.
+3	基督教	society	2	她的家人都信基督教。	Her whole family is Christian.
+3	積極	personal	3	他做事很積極，老闆很喜歡他。	He's very proactive, and his boss really likes him.
+3	激烈	general	3	這場比賽非常激烈。	This competition was really intense.
+3	機器	general	3	這台機器壞了，不能用。	This machine is broken and can't be used.
+3	及	general	2	請帶護照及照片來辦理。	Please bring your passport and a photo to apply.
+3	及時	general	3	還好救護車及時趕到。	Luckily the ambulance arrived in time.
+3	擠	travel	4	早上的捷運總是很擠。	The MRT is always crowded in the morning.
+3	記	general	4	我總是記不住他的名字。	I can never remember his name.
+3	記錄	work	3	請你把會議的內容記錄下來。	Please take notes on what's said in the meeting.
+3	紀念	travel	3	我買了一些小東西做紀念。	I bought a few small things as souvenirs.
+3	技巧	general	3	學游泳要先學呼吸的技巧。	To learn swimming, first learn the breathing technique.
+3	繼續	general	4	休息一下，我們再繼續吧。	Let's take a break and then carry on.
+3	記憶	general	3	那是我最美好的記憶。	That is my most beautiful memory.
+3	記者	society	3	很多記者在門口等著。	Lots of reporters are waiting at the door.
+3	架	general	3	天上有一架飛機飛過去。	A plane is flying across the sky.
+3	價格	shopping	4	這裡的價格比較便宜。	The prices here are cheaper.
+3	肩	health	2	他輕輕拍了拍我的肩。	He gently patted my shoulder.
+3	肩膀	health	3	我每天用電腦，肩膀很痠。	I use a computer every day, so my shoulders are sore.
+3	堅持	general	3	他堅持每天早上跑步。	He sticks to running every morning.
+3	剪	daily	4	我明天要去剪頭髮。	I'm going to get a haircut tomorrow.
+3	檢查	health	4	我明天要去醫院做檢查。	I'm going to the hospital for a checkup tomorrow.
+3	將來	general	4	你將來想做什麼工作？	What job do you want to do in the future?
+3	獎學金	education	3	她拿到了出國留學的獎學金。	She got a scholarship to study abroad.
+3	降低	general	3	吃得健康可以降低生病的機會。	Eating healthily lowers your chances of getting sick.
+3	講話	people	4	上課的時候不要講話。	Don't talk during class.
+3	講價	shopping	3	在夜市買東西可以講價。	You can haggle when shopping at the night market.
+3	講究	personal	3	他對吃很講究，只去好餐廳。	He's particular about food and only goes to good restaurants.
+3	醬油	food	3	這道菜要加一點醬油。	This dish needs a little soy sauce.
+3	堅強	personal	3	她是一個很堅強的女人。	She is a very strong woman.
+3	減輕	general	3	運動可以減輕壓力。	Exercise can relieve stress.
+3	減少	general	4	最近來台灣的觀光客減少了。	Fewer tourists have been coming to Taiwan recently.
+3	簡直	general	3	這裡的夏天簡直熱死了。	Summer here is just unbearably hot.
+3	建立	work	3	他們花了十年建立這家公司。	They spent ten years building this company.
+3	建設	society	2	政府打算在這裡建設新的捷運站。	The government plans to build a new MRT station here.
+3	驕傲	feelings	3	父母都為她感到很驕傲。	Her parents are very proud of her.
+3	交流	people	3	我們常常和外國學生交流。	We often interact with foreign students.
+3	郊區	home	3	他們住在台北的郊區。	They live in the suburbs of Taipei.
+3	交友	people	3	很多人在網路上交友。	Lots of people make friends online.
+3	角度	general	3	換個角度想，事情也沒那麼糟。	Look at it from another angle; it's not that bad.
+3	教材	education	3	老師自己準備上課的教材。	The teacher prepares her own class materials.
+3	教導	education	2	謝謝老師這幾年的教導。	Thank you, teacher, for your guidance these past years.
+3	教法	education	2	這位老師的教法很有趣。	This teacher's teaching method is really interesting.
+3	教練	leisure	3	我的游泳教練非常嚴格。	My swimming coach is very strict.
+3	教師	education	3	他在國中當教師。	He's a teacher at a junior high school.
+3	教堂	society	2	星期天她都會去教堂。	She goes to church every Sunday.
+3	教訓	general	3	這次的失敗給了我一個教訓。	This failure taught me a lesson.
+3	加強	education	3	我需要加強我的中文聽力。	I need to improve my Chinese listening.
+3	加入	general	4	歡迎你加入我們的社團。	Welcome to our club.
+3	家鄉	home	3	我很久沒回家鄉了。	I haven't been back to my hometown in a long time.
+3	家長	education	3	明天學校要開家長會。	The school is holding a parents' meeting tomorrow.
+3	假如	general	3	假如明天下雨，我們就不去了。	If it rains tomorrow, we won't go.
+3	假裝	general	3	他假裝沒看到我，走過去了。	He pretended not to see me and walked past.
+3	價錢	shopping	4	這個價錢太貴了，可以便宜一點嗎？	That price is too high; can you make it cheaper?
+3	價值	general	3	這幅畫很有價值。	This painting is very valuable.
+3	接觸	general	3	小孩子應該多接觸大自然。	Children should spend more time in nature.
+3	接受	general	4	我不能接受這樣的結果。	I can't accept this outcome.
+3	結	daily	2	我的頭髮常常打結。	My hair often gets tangled.
+3	節	general	4	我今天有四節課。	I have four classes today.
+3	節目	leisure	4	這個電視節目很好看。	This TV show is really good.
+3	結局	leisure	3	這部電影的結局讓人很難過。	This movie has a sad ending.
+3	解決	general	4	這個問題很難解決。	This problem is hard to solve.
+3	姊妹	people	3	我們家有三個姊妹。	There are three sisters in our family.
+3	解釋	general	4	你可以再解釋一次嗎？	Could you explain it once more?
+3	斤	shopping	3	這種蘋果一斤一百塊。	These apples are 100 dollars per catty.
+3	金子	general	2	這條項鍊是金子做的。	This necklace is made of gold.
+3	緊	general	3	這雙鞋子太緊了，穿起來很不舒服。	These shoes are too tight and uncomfortable to wear.
+3	僅	general	2	這次活動僅限學生參加。	This event is open to students only.
+3	僅僅	general	2	他僅僅花了一年就學會了中文。	He learned Chinese in just one year.
+3	盡	general	3	我會盡力幫你的。	I'll do my best to help you.
+3	經	travel	2	這班火車經台中到高雄。	This train goes to Kaohsiung via Taichung.
+3	經費	work	2	這個活動的經費不夠。	There isn't enough funding for this event.
+3	驚訝	feelings	3	聽到這個消息，大家都很驚訝。	Everyone was surprised to hear the news.
+3	警察	society	4	有問題可以找警察幫忙。	If you have a problem, you can ask the police for help.
+3	儘管	general	2	儘管很累，他還是去上班了。	Even though he was tired, he still went to work.
+3	進行	general	3	會議正在進行中，請不要打擾。	The meeting is in progress; please don't disturb.
+3	進一步	general	3	我們需要進一步討論這個問題。	We need to discuss this issue further.
+3	酒吧	leisure	3	週末我們常去酒吧喝酒。	On weekends we often go for drinks at a bar.
+3	救	general	3	他跳下水去救那個小孩。	He jumped into the water to save the child.
+3	就是	general	5	他人很好，就是有點懶。	He's a nice guy; he's just a bit lazy.
+3	就算	general	4	就算很貴，我也想買。	Even if it's expensive, I still want to buy it.
+3	舅舅	people	3	我舅舅住在台中，週末常來我們家。	My uncle lives in Taichung and often visits us on weekends.
+3	舅媽	people	3	舅媽做的菜很好吃。	My aunt's cooking is delicious.
+3	居住	home	2	我在台北居住了十年。	I've lived in Taipei for ten years.
+3	舉	general	4	你可以舉個例子說明嗎？	Could you give an example to explain?
+3	舉辦	general	3	學校下個月要舉辦運動會。	The school is holding a sports day next month.
+3	舉手	education	3	有問題的同學請舉手。	Students with questions, please raise your hand.
+3	舉行	general	3	他們的婚禮將在教堂舉行。	Their wedding will be held in a church.
+3	聚	people	3	我們好久沒聚一聚了。	We haven't gotten together in ages.
+3	距	general	2	距考試只剩下三天了。	There are only three days left until the exam.
+3	拒絕	people	3	他邀請我吃飯，但是我拒絕了。	He invited me to dinner, but I said no.
+3	距離	travel	3	這裡距離海邊不遠。	It's not far from here to the sea.
+3	劇本	leisure	2	這部電影的劇本寫得很好。	This film's script is very well written.
+3	劇情	leisure	3	這部連續劇的劇情很精彩。	This TV drama has a really gripping plot.
+3	具有	general	2	這個地方具有很重要的歷史意義。	This place has great historical significance.
+3	絕對	general	4	我絕對不會告訴別人。	I absolutely won't tell anyone.
+3	角色	leisure	3	他在這部電影裡演一個老師的角色。	He plays the role of a teacher in this movie.
+3	軍隊	society	2	他年輕的時候在軍隊待過兩年。	He spent two years in the army when he was young.
+3	軍人	society	2	我爸爸以前是軍人。	My dad used to be a soldier.
+3	卡車	travel	3	一輛大卡車停在我家門口。	A big truck parked in front of my house.
+3	開放	society	3	這個公園晚上不開放。	This park isn't open at night.
+3	開花	home	3	春天到了，院子裡的樹都開花了。	Spring is here, and the trees in the yard are blooming.
+3	開朗	personal	4	她個性很開朗，大家都喜歡她。	She has a cheerful personality, and everyone likes her.
+3	看不起	feelings	3	你不應該看不起沒有錢的人。	You shouldn't look down on people who don't have money.
+3	棵	general	3	我家門口有一棵大樹。	There's a big tree in front of my house.
+3	科	education	3	這學期我一共要考五科。	I have exams in five subjects this semester.
+3	科技	society	4	現代科技讓生活方便很多。	Modern technology makes life much more convenient.
+3	科學	education	3	我弟弟對科學很有興趣。	My younger brother is very interested in science.
+3	可	general	3	圖書館的書可借兩個星期。	Library books can be borrowed for two weeks.
+3	可靠	personal	3	他做事很可靠，你可以放心。	He's very reliable, so you don't need to worry.
+3	可憐	feelings	3	這隻小狗沒有家，好可憐。	This puppy has no home; poor thing.
+3	渴望	feelings	2	他渴望有一天能出國留學。	He longs to study abroad one day.
+3	可惡	feelings	3	有人偷了我的腳踏車，真可惡！	Someone stole my bike. How awful!
+3	刻	general	2	我們三點一刻在門口見。	Let's meet at the entrance at a quarter past three.
+3	克	shopping	2	這塊肉大概有五百克。	This piece of meat is about 500 grams.
+3	課程	education	4	這個課程一共有十二堂課。	This course has twelve classes in total.
+3	課堂	education	3	課堂上不可以用手機。	Phones aren't allowed in class.
+3	課文	education	3	請大家把課文念一遍。	Everyone, please read the text aloud once.
+3	克服	general	3	他終於克服了怕水的問題。	He finally overcame his fear of water.
+3	肯	general	3	我請他幫忙，可是他不肯。	I asked him to help, but he wasn't willing.
+3	肯定	general	4	他明天肯定會來。	He'll definitely come tomorrow.
+3	空間	home	3	這個房間的空間不太大。	This room doesn't have much space.
+3	空軍	society	1	他哥哥在空軍工作。	His older brother works in the air force.
+3	恐怕	general	4	下雨了，恐怕我們不能去爬山了。	It's raining; I'm afraid we can't go hiking.
+3	口味	food	4	這家店的口味比較重。	The food at this place is rather strongly flavored.
+3	寬	general	3	這條路很寬，車子很好開。	This road is wide and easy to drive on.
+3	況且	general	2	太晚了，況且外面在下雨，別出去了。	It's late, and besides, it's raining. Don't go out.
+3	誇張	feelings	4	他說話總是很誇張。	He always exaggerates when he talks.
+3	擴大	general	2	這家公司明年要擴大工廠。	This company will expand its factory next year.
+3	拉肚子	health	4	我昨天吃壞東西，拉肚子了。	I ate something bad yesterday and got diarrhea.
+3	來不及	daily	4	快一點，不然來不及了！	Hurry up, or we won't make it in time!
+3	來得及	daily	3	現在出門還來得及。	If we leave now, we can still make it.
+3	藍	general	4	今天的天空好藍。	The sky is so blue today.
+3	浪漫	feelings	3	他送花給她，真浪漫。	He gave her flowers. How romantic.
+3	老公	people	5	我老公今天晚上要加班。	My husband has to work late tonight.
+3	老虎	home	2	動物園裡的老虎正在睡覺。	The tiger at the zoo is sleeping.
+3	老婆	people	5	他很愛他老婆。	He loves his wife very much.
+3	老實	personal	3	他是一個很老實的人。	He's a very honest person.
+3	老是	general	4	你老是忘記帶鑰匙。	You're always forgetting your keys.
+3	樂	feelings	2	他聽到這個消息，樂得不得了。	He was overjoyed when he heard the news.
+3	樂觀	feelings	3	她是一個很樂觀的人。	She's a very optimistic person.
+3	樂趣	leisure	2	種花是我退休後最大的樂趣。	Growing flowers has been my greatest pleasure since retiring.
+3	淚	feelings	2	她看完電影，眼裡都是淚。	After the movie, her eyes were full of tears.
+3	冷淡	feelings	3	他最近對我很冷淡。	He's been cold toward me lately.
+3	力	general	3	我今天好累，一點力都沒有。	I'm so tired today; I have no strength at all.
+3	里	home	3	我們里的里長人很好。	The chief of our neighborhood is very nice.
+3	練	leisure	4	他每天都練兩個小時的鋼琴。	He practices piano for two hours every day.
+3	戀愛	people	3	他們談戀愛已經三年了。	They've been dating for three years.
+3	亮	daily	4	天已經亮了，快起床吧。	It's already light out. Get up.
+3	良好	general	2	每天運動是一個良好的習慣。	Exercising every day is a good habit.
+3	連絡	people	4	到了以後記得跟我連絡。	Remember to get in touch with me when you arrive.
+3	連續劇	leisure	4	我媽媽每天晚上都看連續劇。	My mom watches TV dramas every night.
+3	了不起	feelings	3	他一個人做完了，真了不起！	He finished it all by himself. Amazing!
+3	離婚	people	3	他們結婚五年後離婚了。	They divorced after five years of marriage.
+3	裡邊	general	2	箱子裡邊有什麼？	What's inside the box?
+3	厲害	feelings	5	你會說四種語言？好厲害！	You speak four languages? That's impressive!
+3	理解	general	3	我能理解你為什麼生氣。	I can understand why you're angry.
+3	理論	education	2	這個理論很難懂。	This theory is hard to understand.
+3	禮堂	education	2	畢業典禮在學校禮堂舉行。	The graduation ceremony is held in the school auditorium.
+3	力量	general	2	家人的支持給了我很大的力量。	My family's support gave me great strength.
+3	領	daily	4	我要去銀行領錢。	I need to go to the bank to withdraw money.
+3	領導	work	2	他很會領導大家。	He's good at leading people.
+3	靈魂	general	1	有些人相信人死後還有靈魂。	Some people believe the soul lives on after death.
+3	領域	work	2	他在這個領域工作了十年。	He has worked in this field for ten years.
+3	令	general	2	這個消息令人很難過。	This news is very upsetting.
+3	留言	people	4	有事請留言給我。	If anything comes up, leave me a message.
+3	流血	health	3	你的手在流血，快去擦藥！	Your hand is bleeding. Go put some medicine on it!
+3	留學	education	4	她想去日本留學。	She wants to study abroad in Japan.
+3	留學生	education	3	我們班上有很多留學生。	There are many international students in our class.
+3	理想	personal	3	他的理想是當一個醫生。	His dream is to become a doctor.
+3	利益	society	2	公司不能只想到自己的利益。	A company can't think only of its own interests.
+3	旅客	travel	3	機場裡有很多旅客。	There are many travelers in the airport.
+3	旅遊	travel	4	我們下個月要去日本旅遊。	We're traveling to Japan next month.
+3	綠	general	4	綠燈亮了，可以過馬路了。	The light turned green, so we can cross the street.
+3	律師	work	3	他哥哥是律師。	His older brother is a lawyer.
+3	錄	general	3	我把他說的話錄下來了。	I recorded what he said.
+3	錄取	education	3	他被那所大學錄取了。	He was accepted by that university.
+3	錄音	education	3	上課的時候可以錄音嗎？	Can I record audio during class?
+3	露營	leisure	3	週末我們全家去山上露營。	This weekend our whole family went camping in the mountains.
+3	龍	leisure	2	今年是龍年。	This year is the Year of the Dragon.
+3	輪胎	travel	2	我的腳踏車輪胎破了。	My bike tire has a puncture.
+3	嘛	general	4	有問題就問嘛！	If you have a question, just ask!
+3	罵	people	4	他今天又被老闆罵了。	He got scolded by his boss again today.
+3	滿意	feelings	4	你對這個結果滿意嗎？	Are you satisfied with this result?
+3	滿足	feelings	3	他是一個很容易滿足的人。	He's a person who is easily satisfied.
+3	慢慢	general	5	你慢慢說，不要急。	Take your time and speak slowly; don't rush.
+3	慢用	food	4	菜來了，請慢用。	Here's your food. Enjoy your meal.
+3	毛筆	education	2	我小時候學過用毛筆寫字。	I learned to write with a brush when I was a kid.
+3	毛病	general	3	我的電腦最近常常出毛病。	My computer has been acting up a lot lately.
+3	貿易	work	3	他在一家貿易公司上班。	He works at a trading company.
+3	馬桶	home	3	廁所的馬桶壞了。	The toilet in the bathroom is broken.
+3	碼頭	travel	2	我們在碼頭等船。	We're waiting for the boat at the pier.
+3	螞蟻	home	3	吃完東西不收，會有螞蟻。	If you don't clean up after eating, you'll get ants.
+3	玫瑰	home	2	情人節他送了她一束玫瑰。	He gave her a bouquet of roses on Valentine's Day.
+3	美好	feelings	2	我在台灣的日子很美好。	My days in Taiwan were wonderful.
+3	沒什麼	general	5	這沒什麼，不用謝。	It's nothing, no need to thank me.
+3	迷人	feelings	2	這裡的夜景很迷人。	The night view here is charming.
+3	密切	general	2	這兩件事有密切的關係。	These two things are closely related.
+3	面	general	3	牆上掛著一面大鏡子。	A large mirror hangs on the wall.
+3	免費	shopping	5	在這家店買兩杯，第二杯免費。	Buy two drinks at this shop and the second one is free.
+3	面積	home	2	這間房子的面積有三十坪。	This house has a floor area of thirty ping.
+3	面前	general	3	他在大家面前唱了一首歌。	He sang a song in front of everyone.
+3	麵條	food	3	我喜歡吃細一點的麵條。	I like thinner noodles.
+3	秒	daily	4	請等我幾秒鐘。	Please give me a few seconds.
+3	描寫	education	2	這本書描寫了台灣的鄉下生活。	This book describes rural life in Taiwan.
+3	廟	leisure	4	過年的時候我們會去廟裡拜拜。	At Chinese New Year we go to the temple to pray.
+3	米飯	food	3	我中午想吃米飯，不想吃麵。	I want rice for lunch, not noodles.
+3	米粉	food	3	新竹的炒米粉很有名。	Hsinchu's fried rice noodles are famous.
+3	迷路	travel	4	我第一次來這裡，結果迷路了。	It was my first time here, and I got lost.
+3	秘密	people	3	這是我們兩個人的秘密。	This is a secret between the two of us.
+3	明白	general	4	你說的我都明白了。	I understand everything you said.
+3	名詞	education	2	「書」是一個名詞。	"書" (book) is a noun.
+3	民國	daily	4	今年是民國一百一十五年。	This year is year 115 of the Republic of China calendar.
+3	明顯	general	3	他的中文進步得很明顯。	His Chinese has clearly improved.
+3	明星	leisure	3	她長得像電影明星。	She looks like a movie star.
+3	命	general	3	是醫生救了他的命。	It was the doctor who saved his life.
+3	民族	society	2	台灣原住民有很多不同的民族。	Taiwan's Indigenous people are made up of many different ethnic groups.
+3	陌生	general	3	這個地方對我來說很陌生。	This place is unfamiliar to me.
+3	摸	daily	3	請不要用手摸這些畫。	Please don't touch these paintings.
+3	某	general	3	他住在台北的某個地方。	He lives somewhere in Taipei.
+3	木	home	2	我喜歡木地板的房子。	I like houses with wooden floors.
+3	目前	general	4	目前我還在找工作。	I'm currently still looking for a job.
+3	木頭	home	3	這張椅子是木頭做的。	This chair is made of wood.
+3	奶	food	3	我的咖啡不要加奶。	No milk in my coffee, please.
+3	耐心	personal	3	教小孩子要很有耐心。	Teaching kids takes a lot of patience.
+3	南方	travel	2	很多鳥冬天會飛到南方。	Many birds fly south in winter.
+3	難怪	general	4	下雨了，難怪路上人這麼少。	It's raining. No wonder there are so few people out.
+3	難看	personal	3	這件衣服的顏色好難看。	The color of this shirt is so ugly.
+3	腦	health	2	吃魚對腦很好。	Eating fish is good for the brain.
+3	腦子	personal	2	他腦子很好，學什麼都很快。	He's sharp and learns everything quickly.
+3	拿手	personal	3	炒飯是我的拿手菜。	Fried rice is my specialty.
+3	哪些	general	5	你週末去了哪些地方？	Which places did you go to this weekend?
+3	內容	general	4	這本書的內容很有趣。	The content of this book is interesting.
+3	能夠	general	3	我希望能夠早一點回家。	I hope I can go home a bit earlier.
+3	年代	general	2	這是一首七十年代的老歌。	This is an old song from the seventies.
+3	年齡	personal	3	請在這裡寫上你的年齡。	Please write your age here.
+3	年年	general	2	我們家年年都去日本玩。	Our family goes to Japan every year.
+3	牛仔褲	shopping	3	我買了一條新的牛仔褲。	I bought a new pair of jeans.
+3	農業	society	2	這個小鎮主要靠農業。	This small town relies mainly on agriculture.
+3	女士	people	3	各位先生、女士，大家好。	Ladies and gentlemen, hello everyone.
+3	喔	general	5	好喔，那我們明天見！	Okay, see you tomorrow then!
+3	哦	general	3	哦？你也會說日文？	Oh? You speak Japanese too?
+3	排	daily	4	大家請排好，不要擠。	Everyone, please line up and don't push.
+3	牌子	shopping	4	你這雙鞋是什麼牌子的？	What brand are your shoes?
+3	盼望	feelings	2	孩子們盼望著放暑假。	The kids are looking forward to summer vacation.
+3	培養	education	2	父母應該培養孩子看書的習慣。	Parents should help their kids build a reading habit.
+3	配	general	3	這件褲子配白色的鞋子很好看。	These pants look great with white shoes.
+3	配合	work	3	我們會配合你的時間。	We'll work around your schedule.
+3	碰	general	3	這個很燙，不要碰！	This is hot. Don't touch it!
+3	碰到	general	4	我昨天在捷運上碰到老同學。	I ran into an old classmate on the MRT yesterday.
+3	碰上	general	2	我們出門的時候碰上大雨。	We ran into heavy rain when we went out.
+3	批評	people	3	他不喜歡被別人批評。	He doesn't like being criticized by others.
+3	皮	food	3	這個蘋果的皮可以吃。	You can eat the skin of this apple.
+3	皮帶	shopping	2	這條褲子太大了，要用皮帶。	These pants are too big; I need a belt.
+3	皮膚	health	3	她的皮膚很好。	She has very good skin.
+3	篇	general	3	老師要我們寫一篇作文。	The teacher wants us to write an essay.
+3	騙子	society	3	網路上有很多騙子，要小心。	There are a lot of scammers online, so be careful.
+3	坪	home	3	這間公寓有二十五坪。	This apartment is twenty-five ping.
+3	平	general	3	這條路很平，很好騎腳踏車。	This road is flat and great for cycling.
+3	平安	people	4	到了打個電話，讓我知道你平安。	Call when you get there so I know you're safe.
+3	平等	society	3	男女應該平等。	Men and women should be equal.
+3	平時	daily	4	我平時很少看電視。	I don't usually watch much TV.
+3	平原	home	2	台灣西部有很多平原。	Western Taiwan has many plains.
+3	品質	shopping	4	這家店的東西品質很好。	The products at this shop are good quality.
+3	破壞	general	2	請不要破壞公園裡的花草。	Please don't damage the plants in the park.
+3	普遍	general	3	在台灣，騎機車很普遍。	Riding scooters is very common in Taiwan.
+3	期	general	2	這本雜誌每個月出一期。	This magazine puts out one issue a month.
+3	氣	general	3	腳踏車的輪胎沒氣了。	The bike tire is out of air.
+3	鉛筆	education	3	考試要用鉛筆寫。	You have to use a pencil for the test.
+3	簽名	daily	4	請在這裡簽名。	Please sign here.
+3	謙虛	personal	3	他很有能力，可是很謙虛。	He's very capable, but modest.
+3	強盜	society	1	電影裡的強盜搶了一家銀行。	The robbers in the movie robbed a bank.
+3	強調	general	3	老師一直強調這個很重要。	The teacher kept stressing that this is important.
+3	搶	general	3	兩個小孩子在搶玩具。	The two kids are fighting over a toy.
+3	橋	travel	3	過了這座橋就到了。	You'll be there once you cross this bridge.
+3	欺負	people	3	你不可以欺負弟弟。	You mustn't pick on your little brother.
+3	其次	general	3	健康最重要，其次才是錢。	Health comes first; money comes second.
+3	期間	general	3	過年期間很多店都不開。	Many shops are closed over the New Year holiday.
+3	起飛	travel	3	我們的飛機早上十點起飛。	Our plane takes off at 10 a.m.
+3	親	people	3	媽媽親了一下孩子的臉。	Mom gave the child a kiss on the cheek.
+3	親切	personal	4	這家店的老闆很親切。	The owner of this shop is very friendly.
+3	親手	general	3	這個蛋糕是我親手做的。	I made this cake myself.
+3	親眼	general	3	這是我親眼看到的。	I saw it with my own eyes.
+3	親自	general	3	這件事我要親自跟他說。	I want to tell him about this in person.
+3	清	home	2	這裡的河水很清。	The river water here is very clear.
+3	青年	society	2	很多青年離開鄉下去城市工作。	Many young people leave the countryside to work in the city.
+3	青少年	society	3	這本書很適合青少年看。	This book is great for teenagers.
+3	晴	home	4	明天會是晴天。	It will be sunny tomorrow.
+3	情	people	2	他們之間已經沒有情了。	There's no love left between them.
+3	情況	general	4	現在的情況怎麼樣？	What's the situation now?
+3	情人	people	3	公園裡有很多情人在散步。	Lots of couples are strolling in the park.
+3	請假	work	4	我明天要請假去看醫生。	I'm taking time off tomorrow to see a doctor.
+3	請教	education	3	我可以請教你一個問題嗎？	May I ask you a question?
+3	請求	people	2	他請求老師再給他一次機會。	He asked the teacher to give him another chance.
+3	慶祝	leisure	3	我們去吃大餐慶祝他的生日。	We went out for a big meal to celebrate his birthday.
+3	窮	society	3	他小時候家裡很窮。	His family was poor when he was young.
+3	求	people	2	他求我幫他一個忙。	He begged me to do him a favor.
+3	球場	leisure	3	我們下課後去球場打球吧。	Let's go play ball at the court after class.
+3	球賽	leisure	3	昨天晚上的球賽好精彩。	Last night's game was so exciting.
+3	球員	leisure	3	他是我們學校最好的球員。	He's the best player at our school.
+3	氣溫	home	3	今天的氣溫只有十度。	The temperature today is only ten degrees.
+3	企業	work	3	他在一家大企業上班。	He works for a large company.
+3	去世	people	3	他的爺爺去年去世了。	His grandpa passed away last year.
+3	全	general	4	全班同學都來了。	The whole class came.
+3	全球	society	2	全球的氣溫越來越高。	Temperatures around the world keep rising.
+3	全身	health	3	我運動完全身都是汗。	After working out, I'm sweaty all over.
+3	取代	general	2	電腦不能完全取代老師。	Computers can't completely replace teachers.
+3	缺點	personal	3	每個人都有缺點。	Everyone has flaws.
+3	卻	general	4	他很努力，卻還是沒考好。	He worked hard but still did poorly on the test.
+3	確定	general	4	你確定明天要去嗎？	Are you sure you're going tomorrow?
+3	確認	general	4	出門前請再確認一下時間。	Please double-check the time before you leave.
+3	忍	feelings	3	我很生氣，可是我忍住了。	I was angry, but I held it in.
+3	認	general	3	我差點認不出你來。	I almost didn't recognize you.
+3	認得	people	3	你還認得我嗎？	Do you still recognize me?
+3	扔	daily	2	不要把垃圾扔在地上。	Don't throw trash on the ground.
+3	仍	general	2	雨下了一整天，他仍在外面等。	It rained all day, but he was still waiting outside.
+3	仍然	general	4	雖然很累，他仍然繼續工作。	Even though he was tired, he still kept working.
+3	人家	people	3	別管人家怎麼說，做你自己就好。	Don't worry about what others say; just be yourself.
+3	人間	general	2	這家店的牛肉麵真是人間美味。	This shop's beef noodles are truly heavenly.
+3	人口	society	3	台灣的人口大約有兩千三百萬。	Taiwan's population is about twenty-three million.
+3	人類	society	3	人類需要乾淨的水和空氣才能生活。	Humans need clean water and air to live.
+3	人們	general	4	過年的時候，人們都會回家吃飯。	At Lunar New Year, people all go home for a meal.
+3	人民	society	3	政府應該多聽聽人民的聲音。	The government should listen more to the people.
+3	人人	general	3	這首歌人人都會唱。	Everyone can sing this song.
+3	人數	general	3	請先確認今天參加的人數。	Please first confirm how many people are coming today.
+3	人物	leisure	3	這部電影裡的人物都很有意思。	The characters in this movie are all interesting.
+3	忍耐	feelings	3	再忍耐一下，我們馬上就到了。	Hang on a bit longer; we're almost there.
+3	任務	work	3	老闆給了我一個新的任務。	The boss gave me a new assignment.
+3	熱水	daily	4	洗澡的時候突然沒有熱水了。	The hot water suddenly ran out while I was showering.
+3	日出	leisure	3	我們半夜起床，上山去看日出。	We got up in the middle of the night to go up the mountain and watch the sunrise.
+3	日期	daily	4	請在這張表上寫下今天的日期。	Please write today's date on this form.
+3	如	general	2	如有問題，請隨時跟我聯絡。	If you have any questions, contact me anytime.
+3	如此	general	3	他每天都如此努力，難怪成績這麼好。	He works this hard every day; no wonder his grades are so good.
+3	如下	general	2	這次活動的時間如下。	The times for this event are as follows.
+3	如意	feelings	2	生活不可能事事都如意。	Life can't always go the way you want.
+3	弱	general	3	我的數學比較弱，需要多練習。	I'm rather weak at math and need more practice.
+3	森林	home	3	這片森林裡有很多種鳥。	There are many kinds of birds in this forest.
+3	失戀	people	3	她最近失戀了，心情很不好。	She recently went through a breakup and is feeling down.
+3	失去	general	4	他失去了工作，心裡很難過。	He lost his job and feels very upset.
+3	獅子	home	2	動物園裡的獅子正在睡覺。	The lion at the zoo is sleeping.
+3	時代	society	3	時代不同了，現在大家都用手機。	Times have changed; now everyone uses a phone.
+3	十分	general	3	今天的天氣十分舒服。	The weather today is very pleasant.
+3	實話	people	3	說實話，我不太喜歡這部電影。	To be honest, I don't really like this movie.
+3	實際	general	3	你的計畫不太實際。	Your plan isn't very realistic.
+3	時刻	general	2	這是我人生中最難忘的時刻。	This is the most unforgettable moment of my life.
+3	實力	general	3	這支球隊的實力很強。	This team is very strong.
+3	石頭	home	3	小心，路上有很多石頭。	Careful, there are lots of stones on the road.
+3	實行	society	2	學校從下個月開始實行新規定。	The school will start enforcing the new rules next month.
+3	石油	society	2	最近石油的價格又上漲了。	Oil prices have gone up again recently.
+3	實在	general	4	這道菜實在太好吃了。	This dish is really delicious.
+3	使得	general	2	這場大雨使得很多人不能出門。	This heavy rain kept many people from going out.
+3	使用	general	4	請不要在圖書館裡使用手機。	Please don't use your phone in the library.
+3	事業	work	3	他把所有時間都放在事業上。	He puts all his time into his career.
+3	事實	general	3	這不是我的意見，這是事實。	This isn't my opinion; it's a fact.
+3	適應	general	4	我還在適應台灣的天氣。	I'm still getting used to Taiwan's weather.
+3	市長	society	3	市長今天去參觀新的捷運站。	The mayor visited the new MRT station today.
+3	殺	society	2	新聞說那個人殺了兩個人。	The news said that man killed two people.
+3	晒	daily	3	天氣很好，我把衣服拿出去晒。	The weather is nice, so I took the clothes out to dry in the sun.
+3	傷害	people	3	他說的話傷害了我。	What he said hurt me.
+3	商品	shopping	3	這家店的商品都打八折。	Everything in this store is 20% off.
+3	商業	work	2	這個地區是台北的商業中心。	This area is Taipei's business center.
+3	上當	people	3	他在網路上買東西，結果上當了。	He bought something online and got scammed.
+3	上帝	society	2	他相信上帝，每個星期天都去教堂。	He believes in God and goes to church every Sunday.
+3	上街	shopping	2	週末我們一起上街買衣服吧。	Let's go out shopping for clothes together this weekend.
+3	山區	home	3	山區晚上很冷，記得多帶衣服。	It's cold in the mountains at night; remember to bring extra clothes.
+3	燒	daily	3	水燒開了，可以泡茶了。	The water has boiled; we can make tea now.
+3	蛇	home	2	山上有蛇，走路要小心。	There are snakes on the mountain, so watch your step.
+3	設備	general	3	這家健身房的設備很新。	This gym's equipment is very new.
+3	設計	work	4	他在一家公司做網頁設計。	He does web design at a company.
+3	升	general	2	太陽慢慢升起來了。	The sun is slowly rising.
+3	聲	general	4	你到了以後，跟我說一聲。	Let me know when you get there.
+3	生	general	4	她上個月生了一個女兒。	She gave birth to a daughter last month.
+3	生產	work	2	這家工廠生產電腦。	This factory makes computers.
+3	聲調	education	3	學中文的時候，聲調很重要。	Tones are very important when learning Chinese.
+3	生動	general	2	老師上課講得很生動。	The teacher's lessons are very lively.
+3	生命	general	3	我們要愛護每一個生命。	We should cherish every living thing.
+3	生字	education	4	這一課有二十個生字。	This lesson has twenty new characters.
+3	深入	general	2	我們需要更深入地了解這個問題。	We need to understand this problem more deeply.
+3	身上	daily	4	我身上沒帶錢。	I don't have any money on me.
+3	省	general	4	坐捷運比較省時間。	Taking the MRT saves more time.
+3	省錢	shopping	4	自己做飯比較省錢。	Cooking for yourself saves more money.
+3	剩	general	4	我的錢包裡只剩一百塊。	I only have a hundred dollars left in my wallet.
+3	剩下	general	4	剩下的菜可以帶回家。	You can take the leftover food home.
+3	甚至	general	3	他很忙，甚至沒時間吃飯。	He's so busy he doesn't even have time to eat.
+3	收穫	general	3	這次旅行讓我很有收穫。	I got a lot out of this trip.
+3	收音機	leisure	2	爺爺每天早上都聽收音機。	Grandpa listens to the radio every morning.
+3	熟悉	general	3	我對這附近還不太熟悉。	I'm still not very familiar with this neighborhood.
+3	手續	general	3	辦簽證的手續很麻煩。	The procedure for getting a visa is a hassle.
+3	首	general	4	這首歌很好聽。	This song sounds great.
+3	受得了	feelings	3	這麼熱的天氣，你受得了嗎？	Can you stand weather this hot?
+3	受傷	health	4	他打球的時候腳受傷了。	He hurt his foot while playing ball.
+3	輸	leisure	3	我們的球隊昨天輸了。	Our team lost yesterday.
+3	蔬菜	food	4	多吃蔬菜對身體好。	Eating more vegetables is good for you.
+3	舒適	general	2	這家旅館的房間很舒適。	The rooms at this hotel are very comfortable.
+3	數	general	3	請你數一數這裡有幾個人。	Please count how many people are here.
+3	數字	general	3	這個數字好像不對。	This number doesn't seem right.
+3	刷牙	daily	4	睡覺前要記得刷牙。	Remember to brush your teeth before bed.
+3	水餃	food	4	我午餐吃了十五個水餃。	I ate fifteen dumplings for lunch.
+3	水平	general	2	他的中文水平進步了很多。	His Chinese level has improved a lot.
+3	睡著	daily	4	我昨天太累了，一躺下就睡著了。	I was so tired yesterday that I fell asleep as soon as I lay down.
+3	水準	general	3	這家餐廳的水準很高。	This restaurant's standard is very high.
+3	樹木	home	2	公園裡有很多高大的樹木。	There are many tall trees in the park.
+3	順便	general	4	你去超市的時候，順便幫我買牛奶。	When you go to the supermarket, pick up some milk for me.
+3	順利	general	4	祝你考試順利！	Good luck on your exam!
+3	說法	general	3	我不同意這種說法。	I don't agree with that view.
+3	說明	general	3	請先看說明再使用。	Please read the instructions before using it.
+3	說起來	general	3	說起來，我們已經十年沒見了。	Come to think of it, we haven't seen each other in ten years.
+3	思考	general	3	這個問題需要好好思考。	This question needs careful thought.
+3	思想	society	2	他的思想很開放。	He's very open-minded.
+3	似乎	general	3	他似乎不太高興。	He doesn't seem very happy.
+3	寺廟	leisure	3	台灣到處都有寺廟。	There are temples all over Taiwan.
+3	算了	general	4	算了，我們明天再去吧。	Forget it, let's go tomorrow.
+3	隨便	general	4	隨便坐，不用客氣。	Sit anywhere, make yourself at home.
+3	隨時	general	4	有問題隨時打電話給我。	Call me anytime if you have a question.
+3	所	general	2	這所大學很有名。	This university is very famous.
+3	所謂	general	2	這就是所謂的台灣味。	This is what they call the taste of Taiwan.
+3	抬	daily	3	這張桌子太重了，我們一起抬吧。	This table is too heavy; let's lift it together.
+3	態度	feelings	3	他的工作態度很好。	He has a great attitude toward work.
+3	堂	general	3	我今天有三堂課。	I have three classes today.
+3	躺	daily	4	我累了，想躺一下。	I'm tired and want to lie down for a bit.
+3	談話	people	2	老師想找你談話。	The teacher wants to have a talk with you.
+3	討厭	feelings	4	我最討厭下雨天。	I hate rainy days the most.
+3	特地	general	3	他特地從台南來看我。	He came all the way from Tainan just to see me.
+3	特色	general	3	這家店的特色是牛肉麵。	This shop's specialty is beef noodles.
+3	特殊	general	2	這是一個很特殊的情況。	This is a very special situation.
+3	田	home	2	爺爺每天都去田裡工作。	Grandpa goes to work in the fields every day.
+3	填	daily	3	請先填這張表。	Please fill out this form first.
+3	天堂	general	2	對愛吃的人來說，夜市就是天堂。	For food lovers, the night market is paradise.
+3	天天	daily	4	他天天都去運動。	He goes to exercise every day.
+3	天下	general	1	他想走遍天下。	He wants to travel all over the world.
+3	條件	work	3	這份工作的條件很好。	This job offers very good terms.
+3	挑戰	general	3	學中文對我來說是一個挑戰。	Learning Chinese is a challenge for me.
+3	題材	leisure	2	這部電影的題材很特別。	This movie's subject matter is very unusual.
+3	提到	general	4	他在信裡提到了你。	He mentioned you in his letter.
+3	提高	general	3	多練習可以提高你的中文程度。	Practicing more can improve your Chinese.
+3	提供	general	4	這家飯店提供免費早餐。	This hotel offers free breakfast.
+3	體會	feelings	2	當了父母以後，我才體會到他們的辛苦。	Only after becoming a parent did I understand how hard my parents worked.
+3	體力	health	3	爬山需要很好的體力。	Hiking up mountains takes good stamina.
+3	體貼	personal	3	他是一個很體貼的人。	He's a very considerate person.
+3	體重	health	3	我最近體重增加了三公斤。	I've gained three kilos recently.
+3	貼	daily	3	請把這張紙貼在門上。	Please stick this sheet of paper on the door.
+3	鐵	general	2	這個門是鐵做的。	This door is made of iron.
+3	鐵路	travel	2	台灣的鐵路很方便。	Taiwan's railways are very convenient.
+3	聽力	education	3	我的中文聽力比口說好。	My Chinese listening is better than my speaking.
+3	聽起來	general	4	聽起來不錯，我們就這樣做吧。	Sounds good, let's do it that way.
+3	聽眾	leisure	2	今天的演講有很多聽眾。	There was a big audience at today's talk.
+3	挺	general	3	這家的咖啡挺好喝的。	The coffee here is pretty good.
+3	通	general	2	他的電話一直打不通。	I keep failing to get through to his phone.
+3	通過	general	3	他通過了這次的考試。	He passed this exam.
+3	通知	general	3	有消息我會馬上通知你。	I'll let you know right away if there's news.
+3	同	general	2	我們兩個同一天生日。	The two of us have the same birthday.
+3	同情	feelings	3	大家都很同情這隻受傷的小狗。	Everyone feels sorry for this injured puppy.
+3	同事	work	5	我常跟同事一起去吃午餐。	I often go to lunch with my coworkers.
+3	痛苦	feelings	3	失戀讓他很痛苦。	The breakup left him in a lot of pain.
+3	投	leisure	3	他把球投給我。	He threw the ball to me.
+3	投資	society	3	他把錢拿去投資股票。	He put his money into stocks.
+3	土	home	2	這些花需要好一點的土。	These flowers need better soil.
+3	團體	general	3	這次我們是團體旅行。	This time we're traveling as a group.
+3	團圓	people	3	過年的時候，一家人都會團圓。	At Lunar New Year, the whole family gets together.
+3	土地	society	2	這塊土地很貴。	This piece of land is very expensive.
+3	推	daily	4	請推門進去。	Please push the door to go in.
+3	推薦	general	4	你可以推薦一家好吃的餐廳嗎？	Can you recommend a good restaurant?
+3	推銷	shopping	2	有人打電話來推銷保險。	Someone called trying to sell insurance.
+3	退步	education	3	我很久沒說中文，退步了很多。	I haven't spoken Chinese in a long time and have gotten a lot worse.
+3	退休	work	3	我爸爸明年就要退休了。	My dad is retiring next year.
+3	突然	general	4	外面突然下起大雨。	It suddenly started pouring outside.
+3	兔子	home	2	她養了一隻白色的兔子。	She keeps a white rabbit.
+3	外邊	general	2	外邊在下雨，記得帶傘。	It's raining outside; remember to bring an umbrella.
+3	外文	education	3	他在大學念外文系。	He studies foreign languages at university.
+3	外語	education	3	學一種外語需要很多時間。	Learning a foreign language takes a lot of time.
+3	外祖父	people	2	我的外祖父今年八十歲了。	My maternal grandfather is eighty this year.
+3	外祖母	people	2	我的外祖母住在台南。	My maternal grandmother lives in Tainan.
+3	完成	general	4	我終於完成了今天的工作。	I finally finished today's work.
+3	玩具	leisure	3	孩子們在房間裡玩玩具。	The kids are playing with toys in their room.
+3	萬一	general	3	帶把傘吧，萬一下雨呢？	Bring an umbrella, just in case it rains.
+3	網	daily	3	我在網上買了一雙鞋。	I bought a pair of shoes online.
+3	往往	general	3	便宜的東西往往品質不好。	Cheap things are often poor quality.
+3	娃娃	leisure	3	她買了一個娃娃給女兒。	She bought a doll for her daughter.
+3	維持	general	3	他每天運動，維持身體健康。	He exercises every day to stay healthy.
+3	微笑	people	3	她總是帶著微笑跟客人說話。	She always talks to customers with a smile.
+3	偉大	feelings	2	母親的愛是很偉大的。	A mother's love is truly great.
+3	為	general	4	父母為孩子付出很多。	Parents give a lot for their children.
+3	未來	general	3	你對未來有什麼計畫？	What are your plans for the future?
+3	位置	general	3	你的位置在窗戶旁邊。	Your seat is next to the window.
+3	溫度	home	3	今天的溫度比昨天低很多。	Today's temperature is much lower than yesterday's.
+3	溫暖	home	3	冬天的陽光很溫暖。	The winter sunshine is very warm.
+3	溫柔	personal	3	她說話的聲音很溫柔。	She has a very gentle voice.
+3	文件	work	3	請把這份文件寄給我。	Please send me this document.
+3	文學	education	2	她對文學很有興趣。	She's very interested in literature.
+3	文章	education	3	這篇文章寫得很好。	This article is very well written.
+3	文字	education	2	這個網站的文字太小了，看不清楚。	The text on this website is too small to read clearly.
+3	穩定	general	3	這份工作很穩定。	This job is very stable.
+3	問好	people	3	請替我向你父母問好。	Please say hello to your parents for me.
+3	問候	people	2	他打電話問候生病的朋友。	He called to check on his sick friend.
+3	握手	people	3	第一次見面時，大家握手打招呼。	When meeting for the first time, everyone shook hands to say hello.
+3	無	general	2	本店全年無休。	This store is open every day of the year.
+3	無法	general	3	我今天無法參加會議。	I'm unable to attend the meeting today.
+3	無論如何	general	3	無論如何，你明天都要來。	No matter what, you have to come tomorrow.
+3	無窮	general	1	小孩子的想像力是無窮的。	Children's imagination is endless.
+3	無所謂	feelings	3	吃什麼我都無所謂。	I don't mind what we eat.
+3	誤會	people	3	對不起，我誤會你的意思了。	Sorry, I misunderstood what you meant.
+3	物價	society	3	台北的物價越來越高。	Prices in Taipei keep getting higher.
+3	西北	travel	2	機場在城市的西北邊。	The airport is northwest of the city.
+3	西餐	food	3	我們今天晚上去吃西餐吧。	Let's have Western food tonight.
+3	西方	society	2	西方人過年的方式跟我們不一樣。	Westerners celebrate the new year differently from us.
+3	西南	travel	2	台南在台灣的西南部。	Tainan is in southwestern Taiwan.
+3	吸毒	society	2	吸毒對身體的傷害很大。	Taking drugs does great harm to the body.
+3	犧牲	general	2	媽媽為了家庭犧牲了很多。	Mom sacrificed a lot for the family.
+3	吸收	general	2	植物從土裡吸收水分。	Plants absorb water from the soil.
+3	吸引	general	3	這家店的廣告吸引了很多客人。	This shop's ads attracted lots of customers.
+3	喜愛	feelings	2	這本書很受年輕人喜愛。	This book is very popular with young people.
+3	細	general	3	這種麵很細，很好吃。	These noodles are very thin and delicious.
+3	細心	personal	3	護士照顧病人很細心。	The nurse takes very careful care of patients.
+3	戲	leisure	3	我們今天晚上去看戲吧。	Let's go see a play tonight.
+3	戲劇	leisure	2	她在大學念戲劇。	She studies drama at university.
+3	系統	general	3	電腦系統出了問題。	There's a problem with the computer system.
+3	嚇	feelings	3	你突然出現，嚇了我一跳。	You startled me when you suddenly appeared.
+3	下來	general	4	請把這些話寫下來。	Please write these words down.
+3	線	general	3	請在這條線後面排隊。	Please line up behind this line.
+3	相對	general	2	台南的物價相對比較便宜。	Prices in Tainan are relatively cheap.
+3	相反	general	3	他的想法跟我完全相反。	His ideas are the complete opposite of mine.
+3	相關	general	3	請準備相關的文件。	Please prepare the relevant documents.
+3	香水	shopping	2	她身上有香水的味道。	She smells of perfume.
+3	相同	general	3	我們兩個人的答案相同。	Our two answers are the same.
+3	詳細	general	3	請你說得詳細一點。	Please explain in a bit more detail.
+3	響	daily	3	電話響了，快去接。	The phone is ringing; go answer it.
+3	想到	general	4	我沒想到他會來。	I didn't expect him to come.
+3	想像	general	3	我很難想像沒有手機的生活。	I can hardly imagine life without a phone.
+3	項	general	2	這項工作需要兩個人做。	This task needs two people.
+3	相聲	leisure	2	他很喜歡聽相聲。	He loves listening to crosstalk comedy.
+3	限	general	2	這個商品每人限買兩個。	This item is limited to two per person.
+3	現實	general	2	現實生活跟電影不一樣。	Real life isn't like the movies.
+3	現象	society	2	年輕人晚婚是很常見的現象。	Young people marrying late is a very common phenomenon.
+3	限制	general	3	這個活動沒有年齡限制。	This event has no age limit.
+3	小說	leisure	4	我最近在看一本很好看的小說。	I've been reading a really good novel lately.
+3	小偷	society	3	我的腳踏車昨天被小偷偷走了。	My bike was stolen by a thief yesterday.
+3	小組	education	3	老師把我們分成四個小組討論。	The teacher split us into four groups for discussion.
+3	效果	general	4	這個方法的效果很好。	This method works really well.
+3	笑話	people	4	他很會講笑話，大家都很喜歡他。	He's great at telling jokes, and everyone likes him.
+3	孝順	people	3	她很孝順，每個週末都回家看父母。	She's devoted to her parents and goes home to see them every weekend.
+3	校長	education	3	校長今天早上在操場跟學生說話。	The principal spoke to the students on the field this morning.
+3	嚇一跳	feelings	4	聽到這個消息，大家都嚇一跳。	Everyone was startled to hear the news.
+3	協助	work	3	如果需要協助，請告訴服務台。	If you need assistance, please tell the service desk.
+3	血	health	3	我的手指流血了。	My finger is bleeding.
+3	謝	people	3	你幫了我這麼多，真不知道怎麼謝你。	You've helped me so much, I don't know how to thank you.
+3	心得	education	3	看完這本書，請寫一篇心得。	After reading this book, please write a reflection.
+3	心理	health	3	他最近心理壓力很大。	He's been under a lot of mental stress lately.
+3	心意	people	3	這只是一點小心意，請你收下。	This is just a small token of my appreciation; please accept it.
+3	欣賞	feelings	4	我很欣賞他做事認真的態度。	I really admire his conscientious attitude toward work.
+3	新生	education	3	開學第一天，新生都很緊張。	On the first day of school, the new students are all nervous.
+3	信心	feelings	4	我對這次考試很有信心。	I'm very confident about this exam.
+3	興奮	feelings	4	明天要去日本玩，孩子們都很興奮。	The kids are excited about going to Japan tomorrow.
+3	行動	general	3	有了計畫，就要開始行動。	Once you have a plan, you need to start taking action.
+3	形容	general	3	你可以形容一下那個人的樣子嗎？	Can you describe what that person looked like?
+3	行為	general	3	在捷運上吃東西是不好的行為。	Eating on the MRT is bad behavior.
+3	醒	daily	5	我今天早上六點就醒了。	I woke up at six this morning.
+3	醒來	daily	4	他醒來的時候，天已經亮了。	When he woke up, it was already light out.
+3	性別	personal	3	請在表格上填寫姓名和性別。	Please fill in your name and gender on the form.
+3	性格	personal	3	她的性格很開朗，朋友很多。	She has a cheerful personality and lots of friends.
+3	幸好	general	4	幸好有帶傘，不然就淋濕了。	Good thing I brought an umbrella, or I'd have gotten soaked.
+3	幸虧	general	3	幸虧你提醒我，我差點忘了。	Luckily you reminded me; I almost forgot.
+3	幸運	feelings	4	能認識你，我覺得很幸運。	I feel very lucky to have met you.
+3	兇	personal	3	那隻狗看起來很兇。	That dog looks fierce.
+3	熊貓	leisure	2	動物園裡的熊貓很受歡迎。	The pandas at the zoo are very popular.
+3	修	daily	4	我的手機壞了，要拿去修。	My phone is broken; I need to take it to get fixed.
+3	修改	work	3	這份報告還需要再修改一下。	This report still needs some revising.
+3	修理	daily	4	爸爸正在修理家裡的冷氣。	Dad is repairing the air conditioner at home.
+3	需求	work	3	我們要先了解客人的需求。	We need to understand the customers' needs first.
+3	選舉	society	4	明年有總統選舉，大家都很關心。	There's a presidential election next year, and everyone cares about it.
+3	學費	education	4	私立大學的學費比較貴。	Tuition at private universities is more expensive.
+3	學會	education	4	我上個月學會了游泳。	I learned to swim last month.
+3	學問	education	3	做菜也是一門學問。	Cooking is a skill in its own right.
+3	尋找	general	2	他們正在尋找走失的小狗。	They're looking for the lost puppy.
+3	訓練	leisure	3	球隊每天下午都要訓練。	The team trains every afternoon.
+3	押金	home	3	租這間房子要付兩個月的押金。	Renting this apartment requires a two-month deposit.
+3	鴨子	home	3	公園的湖裡有很多鴨子。	There are a lot of ducks on the lake in the park.
+3	牙	health	4	我每天睡覺前都會刷牙。	I brush my teeth every night before bed.
+3	牙齒	health	3	吃完糖要記得清潔牙齒。	Remember to clean your teeth after eating candy.
+3	演	leisure	3	這部電影是誰演的？	Who acts in this movie?
+3	演出	leisure	3	今天晚上的演出七點半開始。	Tonight's performance starts at 7:30.
+3	羊	home	2	我們在農場看到很多羊。	We saw lots of sheep at the farm.
+3	陽光	home	3	今天陽光很好，適合出去走走。	It's sunny today, nice for going out for a walk.
+3	養	home	4	你家有養寵物嗎？	Do you have any pets at home?
+3	樣樣	general	2	他很聰明，樣樣都學得很快。	He's smart and picks up everything quickly.
+3	煙火	leisure	3	跨年夜我們去台北101看煙火。	On New Year's Eve we went to Taipei 101 to watch the fireworks.
+3	眼光	personal	3	你挑衣服的眼光真好。	You have great taste in picking clothes.
+3	演講	education	3	他明天要在學校演講。	He's giving a talk at school tomorrow.
+3	眼淚	feelings	3	看完那部電影，她流下了眼淚。	She cried after watching that movie.
+3	演員	leisure	3	她是台灣很有名的演員。	She's a very famous actress in Taiwan.
+3	邀請	people	4	謝謝你邀請我參加你的婚禮。	Thank you for inviting me to your wedding.
+3	咬	daily	3	我的腳被蚊子咬了。	My foot got bitten by a mosquito.
+3	要不然	general	4	快一點，要不然會趕不上公車。	Hurry up, or we'll miss the bus.
+3	要不是	general	3	要不是你幫忙，我一定做不完。	If it weren't for your help, I definitely couldn't have finished.
+3	要緊	general	3	沒關係，這不要緊。	It's fine, it doesn't matter.
+3	也好	general	3	下雨不能出門也好，可以在家休息。	It's fine that the rain keeps us in; we can rest at home.
+3	頁	general	4	請大家打開課本第三十頁。	Everyone, please open your textbooks to page 30.
+3	夜裡	daily	3	他夜裡常常睡不著。	He often can't sleep at night.
+3	一般來說	general	4	一般來說，台灣的夏天很熱。	Generally speaking, summers in Taiwan are hot.
+3	一方面	general	3	我學中文，一方面是為了工作，一方面是為了興趣。	I study Chinese partly for work and partly for interest.
+3	衣櫃	home	3	我的衣櫃已經放不下了。	My wardrobe is already full.
+3	依靠	people	3	孩子長大了，不能一直依靠父母。	Once kids grow up, they can't rely on their parents forever.
+3	一連	general	2	這裡一連下了三天的雨。	It rained here for three days in a row.
+3	一生	general	3	這是我一生中最快樂的一天。	This is the happiest day of my life.
+3	一時	general	3	我一時想不起他的名字。	I can't recall his name right now.
+3	一同	general	2	歡迎大家一同參加。	Everyone is welcome to join us.
+3	一向	general	3	他一向很早到公司。	He always gets to the office early.
+3	以	general	3	他以第一名的成績畢業。	He graduated at the top of his class.
+3	以及	general	3	請帶護照、照片以及申請表。	Please bring your passport, a photo, and the application form.
+3	以來	general	3	搬到台北以來，我很少開車。	Since moving to Taipei, I've rarely driven.
+3	以免	general	3	出門記得帶傘，以免下雨淋濕。	Remember to take an umbrella so you don't get wet if it rains.
+3	藝術	leisure	3	我對現代藝術很有興趣。	I'm very interested in modern art.
+3	意外	general	4	開車要小心，以免發生意外。	Drive carefully so you don't have an accident.
+3	意義	general	3	這份工作對我來說很有意義。	This job is very meaningful to me.
+3	陰	home	3	今天天氣很陰，好像快下雨了。	It's very overcast today; it looks like it's about to rain.
+3	因此	general	4	他生病了，因此今天沒來上班。	He got sick, so he didn't come to work today.
+3	音響	leisure	2	這台音響的聲音很好。	This stereo has great sound.
+3	引起	general	3	這件事引起了很多人的注意。	This incident drew a lot of people's attention.
+3	英俊	personal	2	他長得又高又英俊。	He's tall and handsome.
+3	贏	leisure	4	昨天的比賽我們贏了。	We won yesterday's game.
+3	營養	health	3	小孩子要吃得有營養。	Kids need to eat nutritious food.
+3	影片	leisure	4	我常常在網路上看影片。	I often watch videos online.
+3	勇敢	personal	3	不要哭，你要勇敢一點。	Don't cry; you need to be a bit braver.
+3	擁有	general	2	他擁有兩間房子。	He owns two houses.
+3	永遠	general	4	我永遠不會忘記你。	I'll never forget you.
+3	用法	education	3	這兩個詞的用法不一樣。	These two words are used differently.
+3	用品	shopping	3	這家店賣很多生活用品。	This shop sells lots of everyday household goods.
+3	優點	personal	3	每個人都有自己的優點。	Everyone has their own strengths.
+3	幽默	personal	3	我們老師很幽默，上課很有趣。	Our teacher is very funny, so class is fun.
+3	優秀	personal	3	她是一位很優秀的學生。	She's an outstanding student.
+3	遊客	travel	3	週末九份有很多遊客。	There are lots of tourists in Jiufen on weekends.
+3	由於	general	3	由於下大雨，比賽取消了。	Due to the heavy rain, the game was canceled.
+3	有效	general	3	這種藥對感冒很有效。	This medicine works well for colds.
+3	友誼	people	2	我們的友誼已經有二十年了。	Our friendship has lasted twenty years.
+3	愉快	feelings	4	祝你週末愉快！	Have a nice weekend!
+3	於是	general	3	下雨了，於是我們決定在家看電影。	It started raining, so we decided to watch a movie at home.
+3	噢	general	3	噢，原來是這樣！	Oh, so that's how it is!
+3	與	general	3	這件事與你無關。	This has nothing to do with you.
+3	玉	shopping	2	奶奶很喜歡戴玉手環。	Grandma loves wearing jade bracelets.
+3	玉米	food	3	我喜歡在夜市吃烤玉米。	I like eating grilled corn at the night market.
+3	預備	general	2	我們要預備明天的會議資料。	We need to prepare the materials for tomorrow's meeting.
+3	遇到	general	5	我今天在捷運上遇到老同學。	I ran into an old classmate on the MRT today.
+3	預習	education	3	上課前最好先預習課文。	It's best to preview the lesson before class.
+3	員工	work	4	這家公司有五百個員工。	This company has 500 employees.
+3	原諒	people	4	對不起，請你原諒我。	I'm sorry, please forgive me.
+3	願望	feelings	3	生日的時候可以許三個願望。	On your birthday you get to make three wishes.
+3	月餅	food	3	中秋節的時候，大家都會吃月餅。	Everyone eats mooncakes at the Mid-Autumn Festival.
+3	閱讀	education	3	我每天晚上都會花半個小時閱讀。	I spend half an hour reading every evening.
+3	樂團	leisure	3	我很喜歡這個樂團的歌。	I really like this band's songs.
+3	雲	home	3	今天天上一朵雲都沒有。	There isn't a single cloud in the sky today.
+3	運氣	general	3	他的運氣真好，又中獎了。	He's really lucky; he won a prize again.
+3	在意	feelings	4	別在意別人怎麼說。	Don't worry about what other people say.
+3	在於	general	2	問題在於我們沒有足夠的時間。	The problem is that we don't have enough time.
+3	早日	general	3	祝你早日康復！	Wishing you a speedy recovery!
+3	早晚	general	3	你早晚會習慣台灣的天氣。	Sooner or later you'll get used to Taiwan's weather.
+3	造成	general	3	大雨造成很多地方淹水。	The heavy rain caused flooding in many places.
+3	噪音	home	3	樓上的噪音吵得我睡不著。	The noise from upstairs keeps me from sleeping.
+3	增加	general	3	最近來台灣的觀光客增加了很多。	The number of tourists coming to Taiwan has risen a lot recently.
+3	責任	general	3	照顧孩子是父母的責任。	Taking care of children is the parents' responsibility.
+3	知	general	2	我以為會下雨，誰知天氣這麼好。	I thought it would rain, but who knew the weather would be this nice.
+3	之後	general	5	下課之後我們一起去吃飯吧。	Let's go eat together after class.
+3	之間	general	4	我家和學校之間有一家便利商店。	There's a convenience store between my house and school.
+3	之前	general	5	睡覺之前不要喝咖啡。	Don't drink coffee before going to bed.
+3	直	travel	4	從這裡直走，就會看到捷運站。	Go straight from here and you'll see the MRT station.
+3	直到	general	3	他直到昨天才告訴我。	He didn't tell me until yesterday.
+3	值得	general	4	這部電影很值得一看。	This movie is well worth watching.
+3	殖民地	society	2	台灣以前曾經是日本的殖民地。	Taiwan was once a Japanese colony.
+3	植物	home	3	我在陽台種了很多植物。	I've planted lots of plants on my balcony.
+3	職業	work	3	你的職業是什麼？	What's your occupation?
+3	職員	work	3	銀行的職員很親切。	The bank staff are very friendly.
+3	指	general	3	他用手指著地圖上的一個地方。	He pointed at a place on the map.
+3	只是	general	4	我只是想問一下而已。	I just wanted to ask, that's all.
+3	只有	general	4	只有多練習，才能說得流利。	Only by practicing more can you speak fluently.
+3	制度	society	3	台灣的健保制度很方便。	Taiwan's national health insurance system is very convenient.
+3	智慧	personal	3	老人家的話常常很有智慧。	Older people's words are often very wise.
+3	至少	general	4	從這裡到機場至少要一個小時。	It takes at least an hour to get from here to the airport.
+3	至於	general	3	我負責買飲料，至於吃的，就交給你了。	I'll handle the drinks; as for food, I'll leave that to you.
+3	摘	daily	3	我們去農場摘草莓。	We went to the farm to pick strawberries.
+3	暫時	general	4	他暫時住在朋友家。	He's staying at a friend's place for the time being.
+3	戰爭	society	3	希望世界上不要再有戰爭。	I hope there will be no more war in the world.
+3	掌握	general	2	學語言要先掌握發音。	When learning a language, you should first master the pronunciation.
+3	障礙	general	2	這次的計畫遇到了一些障礙。	This plan has run into some obstacles.
+3	著急	feelings	4	別著急，慢慢說。	Don't worry, take your time.
+3	招待	people	3	謝謝你們這麼熱情地招待我們。	Thank you for hosting us so warmly.
+3	招牌	shopping	3	那家店的招牌很大，很容易找到。	That shop has a big sign, so it's easy to find.
+3	找錢	shopping	4	老闆，你還沒找錢給我。	Excuse me, you haven't given me my change yet.
+3	照	general	3	照醫生說的去做，病就會好。	Do what the doctor says and you'll get better.
+3	珍貴	feelings	3	這張照片對我來說很珍貴。	This photo is very precious to me.
+3	真理	general	1	他一直在追求真理。	He has always been in search of the truth.
+3	真實	general	3	這部電影是根據真實的故事拍的。	This movie is based on a true story.
+3	真是	general	4	你真是太好了！	You're really so kind!
+3	真心	feelings	3	我是真心想幫你。	I sincerely want to help you.
+3	真正	general	4	他才是我真正的朋友。	He's the one who's my true friend.
+3	整理	home	4	週末我要整理房間。	This weekend I'm going to tidy my room.
+3	整齊	general	3	他的書桌總是很整齊。	His desk is always very neat.
+3	證明	general	3	這可以證明他沒有說謊。	This proves he didn't lie.
+3	正確	general	4	請選出正確的答案。	Please choose the correct answer.
+3	證書	education	3	通過考試以後就可以拿到證書。	Once you pass the exam, you can get a certificate.
+3	政治	society	3	我對政治沒什麼興趣。	I'm not very interested in politics.
+3	哲學	education	2	他在大學念哲學。	He studies philosophy at university.
+3	這樣子	general	4	原來是這樣子啊！	Oh, so that's how it is!
+3	中部	travel	3	台中在台灣的中部。	Taichung is in central Taiwan.
+3	中餐	food	3	我們中餐去吃牛肉麵吧。	Let's have beef noodles for lunch.
+3	終於	general	5	等了半個小時，公車終於來了。	After waiting half an hour, the bus finally came.
+3	重點	general	4	老師說這是考試的重點。	The teacher said this is a key point for the exam.
+3	重視	general	3	台灣人很重視家庭。	Taiwanese people place great value on family.
+3	周圍	home	3	我家周圍有很多小吃店。	There are lots of snack shops around my home.
+3	煮	food	4	媽媽在廚房煮晚餐。	Mom is cooking dinner in the kitchen.
+3	主動	personal	3	他很主動，常常幫忙同事。	He's very proactive and often helps his coworkers.
+3	主婦	home	2	我媽媽是家庭主婦。	My mom is a housewife.
+3	主管	work	4	我得先問一下主管。	I need to ask my supervisor first.
+3	主任	work	3	他是我們系的主任。	He's the head of our department.
+3	主題	general	3	這次比賽的主題是環保。	The theme of this competition is environmental protection.
+3	主要	general	4	這家公司主要賣電腦。	This company mainly sells computers.
+3	主意	general	4	這是個好主意！	That's a good idea!
+3	助	people	2	他很喜歡助人。	He loves helping others.
+3	祝福	people	3	祝福你們新婚快樂！	Best wishes on your marriage!
+3	助理	work	3	有問題可以問我的助理。	If you have questions, you can ask my assistant.
+3	著名	general	2	日月潭是台灣著名的景點。	Sun Moon Lake is a famous sight in Taiwan.
+3	狀態	general	3	他今天的狀態不太好。	He's not in good shape today.
+3	專心	education	4	上課要專心聽老師說話。	In class you should listen closely to the teacher.
+3	專業	work	3	他是一位很專業的醫生。	He's a very professional doctor.
+3	追求	general	3	他正在追求自己的夢想。	He's pursuing his dream.
+3	準時	daily	4	台灣的火車大多很準時。	Trains in Taiwan are mostly on time.
+3	資源	society	3	我們應該好好利用資源。	We should make good use of resources.
+3	仔細	general	4	請仔細看清楚再簽名。	Please read it carefully before signing.
+3	自從	general	3	自從搬到台北，我每天坐捷運上班。	Since moving to Taipei, I take the MRT to work every day.
+3	自動	general	3	門會自動打開。	The door opens automatically.
+3	自殺	society	2	這幾年自殺的人數增加了。	The number of suicides has risen in recent years.
+3	自信	personal	3	他說話很有自信。	He speaks with a lot of confidence.
+3	自在	feelings	3	在朋友家，我覺得很自在。	I feel very at ease at my friend's place.
+3	宗教	society	2	台灣有很多不同的宗教。	Taiwan has many different religions.
+3	總而言之	general	2	總而言之，這次的旅行很成功。	In short, this trip was a big success.
+3	總算	general	3	下了一個星期的雨，今天總算出太陽了。	After a week of rain, the sun finally came out today.
+3	總統	society	3	台灣每四年選一次總統。	Taiwan elects a president every four years.
+3	總之	general	3	總之，你明天一定要來。	Anyway, you have to come tomorrow.
+3	走走	leisure	4	吃完飯我們去公園走走吧。	After eating, let's go for a walk in the park.
+3	組	general	3	我們全班分成五組。	Our class split into five groups.
+3	祖父	people	2	我的祖父今年九十歲了。	My grandfather is ninety this year.
+3	祖母	people	2	祖母常常跟我說以前的故事。	My grandmother often tells me stories about the old days.
+3	祖先	people	3	過年的時候，我們會拜祖先。	At Lunar New Year we make offerings to our ancestors.
+3	醉	food	3	他昨天晚上喝醉了。	He got drunk last night.
+3	最初	general	2	最初我不喜歡吃臭豆腐，現在很愛吃。	At first I didn't like stinky tofu, but now I love it.
+3	最多	general	4	這台電梯最多可以坐十個人。	This elevator holds at most ten people.
+3	最佳	general	2	她得到了最佳女演員獎。	She won the Best Actress award.
+3	尊敬	people	3	他是大家都很尊敬的老師。	He's a teacher everyone respects.
+3	作	general	2	我一直把她當作自己的妹妹。	I've always thought of her as my own little sister.
+3	做夢	daily	3	我昨天晚上做夢夢到你了。	I dreamed about you last night.
+3	作品	leisure	3	這是一位台灣畫家的作品。	This is a work by a Taiwanese painter.
+3	做人	people	3	他做人很好，大家都喜歡他。	He's a good person, and everyone likes him.
+3	做事	work	3	他做事很認真。	He's very conscientious in his work.
+3	作者	education	3	這本書的作者是誰？	Who's the author of this book?

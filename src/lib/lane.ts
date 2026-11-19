@@ -34,7 +34,7 @@ export interface LaneProgress {
 interface CardLike { id: string; term: string; definition: string }
 
 /** Every Chinese form a card offers: the whole field and each part split on common separators */
-function cardForms(card: CardLike): string[] {
+export function cardForms(card: CardLike): string[] {
   const out: string[] = []
   for (const field of [card.term, card.definition]) {
     for (const part of [field, ...field.split(/[\/／,，;；、|()（）]/)]) {
