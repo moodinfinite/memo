@@ -18,6 +18,8 @@ const shortMeaning = (m: string) => m.replace(/\s*\([^)]*\)/g, '').split(/[;/]/)
 const theme = (t: string) => THEMES[t] ?? THEMES.general
 /** Locked units shown after the current one */
 const AHEAD = 8
+/** How long a right answer stays up (pinyin and example) before the check moves on */
+const AUTO_NEXT_MS = 1600
 
 interface CheckItem { word: ListWord; card?: CardRef; score: number | null; typed: string }
 /** A test-out run: passing marks units up to `target` done */
@@ -74,21 +76,27 @@ export default function PathPage() {
         const { error } = await supabase.from('cards').insert(rows)
         if (error) throw new Error('Could not add the words')
       }
-      for (const [i, w] of fresh.entries()) if (choices[w.forms[0]] === 'know') useSRSStore.getState().seedKnown(rows[i].id, setId!, KNOWN_INTERVAL)
+      const pick = (w: ListWord) => choices[w.forms[0]] ?? 'learn'
+      for (const [i, w] of fresh.entries()) if (pick(w) === 'know') useSRSStore.getState().seedKnown(rows[i].id, setId!, KNOWN_INTERVAL)
       setCards(prev => [...(prev ?? []), ...rows.map(({ id, set_id, term, definition }) => ({ id, set_id, term, definition }))])
       useSetsStore.setState({ setsLastFetched: 0 })
       setChoices({})
-      if (fresh.some(w => choices[w.forms[0]] === 'learn')) navigate(`/sets/${setId}/study?mode=learn&filter=new&from=path`)
-      else setPhase({ kind: 'path' })
+      // 1. One flow: learn the new words (which comes back to the check), or straight to the check
+      if (fresh.some(w => pick(w) === 'learn')) navigate(`/sets/${setId}/study?mode=learn&filter=new&from=path`)
+      else {
+        const added = new Map(rows.map(r => [r.term, { id: r.id, set_id: r.set_id, term: r.term, definition: r.definition }]))
+        startCheck(unit, w => added.get(w.forms[0]))
+      }
     } catch (err: any) {
       setFailed(err?.message ?? 'Something went wrong')
     } finally { setBusy(false) }
   }
 
-  const startCheck = (unit: PathUnit) => {
+  /** `extra` finds cards added a moment ago, before the index has caught up */
+  const startCheck = (unit: PathUnit, extra?: (w: ListWord) => CardRef | undefined) => {
     if (!index) return
     const items = unit.words.flatMap(word => {
-      const { card } = wordState(word, index, seen)
+      const card = wordState(word, index, seen).card ?? extra?.(word)
       return card ? [{ word, card, score: null, typed: '' }] : []
     })
     setTyped('')
@@ -106,12 +114,14 @@ export default function PathPage() {
   // Opened from Home's "continue" button: go straight to the current unit's next step
   const jumped = useRef(false)
   useEffect(() => {
-    if (jumped.current || params.get('go') !== '1' || !onLevel || !pathSets) return
+    const want = params.get('go')
+    if (jumped.current || (want !== '1' && want !== 'check') || !onLevel || !pathSets) return
     jumped.current = true
     setParams({}, { replace: true })
     const unit = onLevel.units[onLevel.current]
     const stage = onLevel.stages[onLevel.current]
-    if (unit && stage !== 'skip') go(unit, stage)
+    // Back from a Learn session only goes on to the check, so an unfinished session can't loop
+    if (unit && stage !== 'skip' && (want === '1' || stage === 'check')) go(unit, stage)
   }, [onLevel, pathSets])
 
   const startTestOut = (unit: PathUnit, scope: TestOutScope) => {
@@ -147,6 +157,29 @@ export default function PathPage() {
     } finally { setBusy(false) }
   }
 
+  // ── Check: a right answer moves on by itself; a miss waits for Next (or Enter) so you can read it ──
+  const advanceCheck = (p: Extract<Phase, { kind: 'check' }>) => {
+    if (p.at + 1 < p.items.length) { setTyped(''); setPhase({ ...p, at: p.at + 1, revealed: false }) }
+    else if (p.test) void finishTestOut(p.unit, p.items, p.test)
+    else void finishCheck(p.unit, p.items)
+  }
+  const settleCheck = (p: Extract<Phase, { kind: 'check' }>, score: number) =>
+    advanceCheck({ ...p, items: p.items.map((x, i) => i === p.at ? { ...x, score } : x) })
+  useEffect(() => {
+    if (phase.kind !== 'check' || !phase.revealed) return
+    const score = phase.items[phase.at].score
+    if (score === 1) { const id = setTimeout(() => advanceCheck(phase), AUTO_NEXT_MS); return () => clearTimeout(id) }
+    if (score !== null) return
+    // Were you right? Y or N
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const k = e.key.toLowerCase()
+      if (k === 'y' || k === 'n') { e.preventDefault(); settleCheck(phase, k === 'y' ? 1 : 0) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [phase])
+
   // ── Screens ──
 
   if (failed) return (
@@ -174,16 +207,18 @@ export default function PathPage() {
     const rows = unit.words.map(w => ({ w, state: wordState(w, index, seen).state }))
     const fresh = rows.filter(r => r.state === 'new')
     const own = rows.filter(r => r.state === 'own')
-    const ready = fresh.every(r => choices[r.w.forms[0]])
+    const pickOf = (w: ListWord) => choices[w.forms[0]] ?? 'learn'
+    const toLearn = fresh.filter(r => pickOf(r.w) === 'learn').length
+    const allKnown = fresh.length > 0 && toLearn === 0
     return (
       <div className={styles.page}>
         <div className={styles.eyebrow}>Unit {unit.index + 1} · {theme(unit.theme).en}</div>
-        <h1 className={styles.title}>Which of these do you know?</h1>
-        <p className={styles.lede}>Words you know are skipped for now and tested at the end of the unit. The rest you’ll learn next.</p>
+        <h1 className={styles.title}>Tap the ones you already know</h1>
+        <p className={styles.lede}>Everything else you’ll learn next. All of them are checked at the end of the unit.</p>
         <div className={styles.sweepList}>
           {fresh.map(({ w }) => {
             const tag = tagFor(tags, w)
-            const pick = choices[w.forms[0]]
+            const pick = pickOf(w)
             return (
               <div key={w.forms[0]} className={styles.sweepRow}>
                 <div className={styles.sweepWord}>
@@ -204,9 +239,12 @@ export default function PathPage() {
         </div>
         {own.length > 0 && <p className={styles.footnote}>Already in your sets: <span lang="zh-Hant">{own.map(r => r.w.forms[0]).join('、')}</span></p>}
         <div className={styles.row}>
-          <button className={styles.primaryBtn} disabled={!ready || busy} onClick={() => finishSweep(unit)}>
-            {busy ? 'Adding…' : fresh.some(r => choices[r.w.forms[0]] === 'learn') ? 'Add and learn' : 'Add and continue'}
+          <button className={styles.primaryBtn} disabled={busy} onClick={() => finishSweep(unit)}>
+            {busy ? 'Adding…' : toLearn ? `Learn ${toLearn} word${toLearn === 1 ? '' : 's'} →` : 'Go to the check →'}
           </button>
+          {fresh.length > 1 && <button className={styles.linkBtn} onClick={() => setChoices(Object.fromEntries(fresh.map(r => [r.w.forms[0], allKnown ? 'learn' : 'know'])))}>
+            {allKnown ? 'Clear' : 'I know all of these'}
+          </button>}
           <button className={styles.ghostBtn} onClick={() => setPhase({ kind: 'path' })}>Back</button>
         </div>
       </div>
@@ -220,12 +258,8 @@ export default function PathPage() {
       const next = items.map((x, i) => i === at ? { ...x, score, typed } : x)
       setPhase({ ...phase, items: next, revealed: true })
     }
-    const settle = (score: number) => setPhase({ ...phase, items: items.map((x, i) => i === at ? { ...x, score } : x) })
-    const nextItem = () => {
-      if (at + 1 < items.length) { setTyped(''); setPhase({ ...phase, at: at + 1, revealed: false }) }
-      else if (phase.test) void finishTestOut(unit, items, phase.test)
-      else void finishCheck(unit, items)
-    }
+    const settle = (score: number) => settleCheck(phase, score)
+    const nextItem = () => advanceCheck(phase)
     const tag = tagFor(tags, it.word)
     return (
       <div className={styles.page}>
@@ -254,15 +288,18 @@ export default function PathPage() {
                 <div className={styles.selfGrade}>
                   <span>You wrote “{it.typed}”. Were you right?</span>
                   <div className={styles.row}>
-                    <button className={styles.ghostBtn} onClick={() => settle(1)}>Yes</button>
-                    <button className={styles.ghostBtn} onClick={() => settle(0)}>No</button>
+                    <button className={styles.ghostBtn} onClick={() => settle(1)} disabled={busy}>Yes <kbd className={styles.key}>Y</kbd></button>
+                    <button className={styles.ghostBtn} onClick={() => settle(0)} disabled={busy}>No <kbd className={styles.key}>N</kbd></button>
                   </div>
                 </div>
-              ) : <span className={it.score === 1 ? styles.right : styles.wrong}>{it.score === 1 ? 'Yes.' : it.typed ? 'Not quite.' : 'Noted.'}</span>}
+              ) : <span className={it.score === 1 ? styles.right : styles.wrong}>{it.score === 1 ? 'Yes!' : it.typed ? 'Not quite.' : 'Noted.'}</span>}
             </div>
           )}
         </div>
-        {revealed && it.score !== null && <button className={styles.primaryBtn} onClick={nextItem} disabled={busy} autoFocus>{at + 1 < items.length ? 'Next' : busy ? 'Saving…' : phase.test ? 'See result' : 'Finish unit'}</button>}
+        {revealed && it.score !== null && (it.score === 1
+          ? <div className={styles.autoNext} key={at} aria-hidden="true"><i style={{ animationDuration: `${AUTO_NEXT_MS}ms` }} /></div>
+          : <button className={styles.primaryBtn} onClick={nextItem} disabled={busy} autoFocus>{at + 1 < items.length ? 'Next' : busy ? 'Saving…' : phase.test ? 'See result' : 'Finish unit'}</button>)}
+        {busy && it.score === 1 && <span className={styles.count}>Saving…</span>}
       </div>
     )
   }

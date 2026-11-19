@@ -191,6 +191,14 @@ export default function StudyPage() {
     } finally { setIsStarting(false) }
   }
 
+  // From the path: start the Learn session straight away, once the set has loaded (only the first time)
+  const autoStarted = useRef(false)
+  useEffect(() => {
+    if (!fromPath || autoStarted.current || !selecting || currentSet?.id !== id || !currentSet?.cards?.length) return
+    autoStarted.current = true
+    void handleStart()
+  }, [fromPath, selecting, currentSet?.id, currentSet?.cards?.length, id])
+
   const handleResume = async (draft: SessionDraft) => {
     if (!currentSet?.cards || !id || isStarting) return
     setIsStarting(true)
@@ -327,7 +335,8 @@ export default function StudyPage() {
   )
 
   if (learnActive) return <LearnSession title={currentSet.title} cards={currentSet.cards ?? []}
-    handleEnd={handleEnd} backTo={backTo} backLabel={fromPath ? 'Back to your path' : 'Back to set'} />
+    handleEnd={handleEnd} backTo={backTo} backLabel={fromPath ? 'Back to your path' : 'Back to set'}
+    onFinish={fromPath ? () => navigate('/path?go=check', { replace: true }) : undefined} />
 
   // ── Story summary checkpoint ─────────────────────────────────
   if (storySummary) {

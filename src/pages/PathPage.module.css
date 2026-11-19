@@ -106,3 +106,8 @@
 .testOut { font-size: 0.8125rem; color: var(--text-tertiary); line-height: 1.6; }
 .testOut .linkBtn { color: var(--ink-cyan-strong); }
 .lanePlaceholder { aspect-ratio: 16 / 9; border: 1px solid var(--ink-cyan-border); background: var(--bg-raised); }
+.key { margin-left: 6px; padding: 0 5px; border: 1px solid var(--border-default); border-radius: 3px; font: inherit; font-size: 0.75rem; color: var(--text-tertiary); }
+.autoNext { height: 4px; background: var(--ink-cyan-tint); overflow: hidden; border-radius: 2px; }
+.autoNext i { display: block; height: 100%; background: var(--ink-cyan-strong); transform-origin: left; animation: autoNext linear forwards; }
+@keyframes autoNext { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .autoNext i { animation: none; transform: none; } }

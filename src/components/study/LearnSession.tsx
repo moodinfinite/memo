@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useStudyStore } from '@/store/studyStore'
 import type { Card } from '@/lib/database.types'
@@ -13,11 +14,14 @@ interface Props {
   backLabel: string
   masteryLabel?: string
   handleEnd: () => void
+  /** Called once the session is complete, in place of the summary (the path goes on to its check) */
+  onFinish?: () => void
 }
 
-export default function LearnSession({ title, cards, backTo, backLabel, masteryLabel, handleEnd }: Props) {
+export default function LearnSession({ title, cards, backTo, backLabel, masteryLabel, handleEnd, onFinish }: Props) {
   const { learnComplete, learnStoryReady, learnBatchSummary, learnBatch, learnSetId,
     learnCards, learnGraduated, startLearnSession, completeLearnStory } = useStudyStore()
+  useEffect(() => { if (learnComplete && onFinish) onFinish() }, [learnComplete])
   // ── Learn story interlude (after batch graduates, before advancing) ──
   if (learnStoryReady && !learnComplete) {
     // Use the just-graduated batch cards (learnBatchSummary) for the story.
@@ -67,6 +71,7 @@ export default function LearnSession({ title, cards, backTo, backLabel, masteryL
   }
 
   // ── Learn session complete ────────────────────────────────────
+  if (onFinish) return <div className={styles.page} />
   return (
     <div className={styles.page}>
       <div className={styles.summaryWrap}>
