@@ -13,6 +13,20 @@ const boxOf = (svg: SVGSVGElement | null, i: number | null): Box | null => {
   try { const b = svg.querySelector<SVGGElement>(`[data-item="${i}"]`)?.getBBox(); return b ? { x: b.x, y: b.y, width: b.width, height: b.height } : null } catch { return null }
 }
 
+const W = 1600, H = 900
+/**
+ * Move a light towards the middle and enlarge it, without showing past the scene's edges. The same
+ * translate-then-scale form both ways, so zooming in and back out interpolate smoothly.
+ */
+function zoomTo(b: Box | null) {
+  if (!b) return 'translate(0px, 0px) scale(1)'
+  const k = Math.max(1.25, Math.min(1.8, (W * 0.45) / Math.max(1, b.width), (H * 0.55) / Math.max(1, b.height)))
+  const cx = b.x + b.width / 2, cy = b.y + b.height / 2
+  const tx = Math.min(0, Math.max(W - W * k, W / 2 - k * cx))
+  const ty = Math.min(0, Math.max(H - H * k, H / 2 - k * cy))
+  return `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${k.toFixed(3)})`
+}
+
 interface Props {
   /** Lights on, counting from Auntie's stall */
   shown: number
@@ -34,9 +48,7 @@ export default function AlleyScene({ shown, warmth, fresh = null, focus = null, 
   useLayoutEffect(() => { setRing(boxOf(svg.current, fresh)) }, [fresh])
   useLayoutEffect(() => { setZoom(boxOf(svg.current, focus)) }, [focus])
 
-  const zoomStyle: React.CSSProperties = zoom
-    ? { transform: 'scale(1.32)', transformOrigin: `${zoom.x + zoom.width / 2}px ${zoom.y + zoom.height / 2}px`, transformBox: 'view-box' }
-    : { transform: 'none', transformBox: 'view-box' }
+  const zoomStyle: React.CSSProperties = { transform: zoomTo(zoom), transformOrigin: '0 0', transformBox: 'view-box' }
 
   return <svg ref={svg} viewBox="0 0 1600 900" className={styles.svg} role="img" aria-label={label}>
     <g className={styles.zoom} style={zoomStyle}>

@@ -152,7 +152,7 @@ export default function AppLayout() {
       {statsOpen && <ProfileStats name={displayName} collapsed={collapsed} onClose={() => setStatsOpen(false)} />}
       <main className={styles.main}>
         {sync.storageError && <div role="alert" className={styles.storageWarning}>Device storage is unavailable. Keep this tab open until progress finishes syncing.</div>}
-        <Outlet key={user?.id} />
+        <div className={styles.mainInner}><Outlet key={user?.id} /></div>
       </main>
     </div>
   )

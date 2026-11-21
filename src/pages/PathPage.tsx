@@ -14,6 +14,28 @@ import styles from './PathPage.module.css'
 
 const LaneReveal = lazy(() => import('@/components/home/LaneReveal'))
 
+const STEPS = ['Sort', 'Learn', 'Check'] as const
+/** The unit's badge, topic and where you are in its three steps */
+function UnitHeader({ unit, step }: { unit: PathUnit; step: 0 | 1 | 2 }) {
+  const t = theme(unit.theme)
+  return (
+    <header className={styles.unitHeader}>
+      <span className={styles.unitBadge} aria-hidden="true">{unit.index + 1}</span>
+      <div className={styles.unitHeadText}>
+        <span className={styles.unitKicker}>Unit {unit.index + 1} · {SECTIONS[unit.section]}</span>
+        <span className={styles.unitTopic}>{t.en} <span className={styles.unitTopicZh} lang="zh-Hant">{t.zh}</span></span>
+      </div>
+      <ol className={styles.steps} aria-label="Unit steps">
+        {STEPS.map((name, i) => (
+          <li key={name} className={i < step ? styles.stepDone : i === step ? styles.stepNow : undefined} aria-current={i === step ? 'step' : undefined}>
+            <span aria-hidden="true">{i < step ? '✓' : i + 1}</span>{name}
+          </li>
+        ))}
+      </ol>
+    </header>
+  )
+}
+
 const shortMeaning = (m: string) => m.replace(/\s*\([^)]*\)/g, '').split(/[;/]/).map(s => s.trim()).filter(Boolean).slice(0, 3).join('; ')
 const theme = (t: string) => THEMES[t] ?? THEMES.general
 /** Locked units shown after the current one */
@@ -180,6 +202,11 @@ export default function PathPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [phase])
 
+  // Each screen starts at the top (the page scrolls inside the layout's main column)
+  useEffect(() => { document.querySelector('main')?.scrollTo({ top: 0 }) }, [phase.kind])
+  /** Focus a button without scrolling to it, so the done screen opens on the alley */
+  const focusQuietly = (el: HTMLButtonElement | null) => { if (el && document.activeElement !== el) el.focus({ preventScroll: true }) }
+
   // ── Screens ──
 
   if (failed) return (
@@ -212,9 +239,8 @@ export default function PathPage() {
     const allKnown = fresh.length > 0 && toLearn === 0
     return (
       <div className={styles.page}>
-        <div className={styles.eyebrow}>Unit {unit.index + 1} · {theme(unit.theme).en}</div>
+        <UnitHeader unit={unit} step={0} />
         <h1 className={styles.title}>Tap the ones you already know</h1>
-        <p className={styles.lede}>Everything else you’ll learn next. All of them are checked at the end of the unit.</p>
         <div className={styles.sweepList}>
           {fresh.map(({ w }) => {
             const tag = tagFor(tags, w)
@@ -263,8 +289,9 @@ export default function PathPage() {
     const tag = tagFor(tags, it.word)
     return (
       <div className={styles.page}>
+        {!phase.test && <UnitHeader unit={unit} step={2} />}
         <div className={styles.progressRow}>
-          <span className={styles.eyebrow}>{phase.test ? `Test out · ${phase.test.scope === 'level' ? `rest of ${levelName(unit.level)}` : SECTIONS[unit.section]}` : `Unit ${unit.index + 1} check`}</span>
+          <span className={styles.eyebrow}>{phase.test ? `Test out · ${phase.test.scope === 'level' ? `rest of ${levelName(unit.level)}` : SECTIONS[unit.section]}` : ''}</span>
           <span className={styles.count}>{at + 1} of {items.length}</span>
         </div>
         <div className={styles.card}>
@@ -312,7 +339,7 @@ export default function PathPage() {
     const nextUnit = onLevel && !onLevel.complete ? onLevel.units[onLevel.current] : null
     const nextStage = nextUnit && onLevel ? onLevel.stages[onLevel.current] : null
     return (
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageWide}`}>
         {level && before && <Suspense fallback={<div className={styles.lanePlaceholder} />}><LaneReveal level={level} before={before} /></Suspense>}
         <div className={styles.eyebrow}>{test ? (test.passed ? 'Tested out' : 'Test out') : `Unit ${unit.index + 1} done`}</div>
         <h1 className={styles.title}>{items.length - missed.length} of {items.length} right</h1>
@@ -333,10 +360,9 @@ export default function PathPage() {
         </> : test ? null : <p className={styles.lede}>All of them. Words you said you knew come back in a review in two weeks to make sure they stick.</p>}
         <div className={styles.row}>
           {nextUnit && nextStage && nextStage !== 'skip'
-            ? <button className={styles.primaryBtn} onClick={() => go(nextUnit, nextStage)} autoFocus>Next unit · {theme(nextUnit.theme).en} →</button>
-            : <button className={styles.primaryBtn} onClick={() => setPhase({ kind: 'path' })} autoFocus>Back to the path</button>}
+            ? <button className={styles.primaryBtn} onClick={() => go(nextUnit, nextStage)} ref={focusQuietly}>Next unit →</button>
+            : <button className={styles.primaryBtn} onClick={() => setPhase({ kind: 'path' })} ref={focusQuietly}>Back to the path</button>}
           <Link to="/" className={styles.ghostBtn}>Home</Link>
-          {nextUnit && <button className={styles.linkBtn} onClick={() => setPhase({ kind: 'path' })}>See the path</button>}
         </div>
       </div>
     )

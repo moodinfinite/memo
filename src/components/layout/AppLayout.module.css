@@ -41,7 +41,9 @@
 .userName{font-size:var(--text-body);font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logoutBtn{font-size:var(--text-body);color:var(--text-tertiary);background:none;border:none;padding:0;cursor:pointer;font-family:var(--font);transition:color var(--t-fast)}
 .logoutBtn:hover{color:var(--text-secondary)}
-.main{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:32px 40px;max-width:960px}
+.main{flex:1;min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:32px 40px}
+/* The page column: centred in the space beside the sidebar, while the scrollbar stays at the window's edge */
+.mainInner{max-width:880px;margin:0 auto}
 
 /* Backdrop for mobile sidebar */
 .backdrop{display:none}

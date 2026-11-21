@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/authStore'
-import { writeSeen } from '@/lib/laneSeen'
+import { reducedMotion, writeSeen } from '@/lib/laneSeen'
 import { pathLights, STAGE_PART } from '@/lib/path'
 import type { PathLevel } from '@/lib/usePath'
 import { LANE_ITEMS } from './laneScene'
 import AlleyScene, { LANE_N as N } from './AlleyScene'
-import { useLightReveal } from './useLightReveal'
 import styles from './TheLane.module.css'
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const units = (n: number) => `${n} more unit${n === 1 ? '' : 's'}`
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+/**
+ * One beat at a time, so nothing overlaps: the alley as it was, a slow zoom to the light at stake,
+ * the light switching on (or the next one warming), a moment to take it in, then back out.
+ */
+const BEAT = { zoom: 300, on: 1800, warm: 3000, out: 4100 }
+/** Extra lights from a test-out come on in quick succession before the last one */
+const STEP_MS = 160
+type Beat = 'still' | 'zoom' | 'on' | 'warm' | 'out'
 
 interface Props {
   level: PathLevel
@@ -18,9 +26,8 @@ interface Props {
 }
 
 /**
- * The payoff on the path's "unit done" screen: the alley as it was, then the light this unit earned
- * flickering on, or the next light warming if it needs more units. Marks the light seen so Home
- * doesn't play it again.
+ * The payoff on the path's "unit done" screen: the light this unit earned switching on, or the next
+ * light warming if it needs more units. Can be replayed; marks the light seen so Home doesn't replay it.
  */
 export default function LaneReveal({ level, before }: Props) {
   const user = useAuthStore(s => s.user)
@@ -28,33 +35,52 @@ export default function LaneReveal({ level, before }: Props) {
   const stage = level.complete ? 'skip' : level.stages[level.current]
   const after = pathLights(level.units.length, level.doneCount, STAGE_PART[stage], N)
   const target = Math.max(after.lit, from.lit)
-  const { visible, ready, fresh } = useLightReveal(target, from.lit, from.lit)
   const earned = target > from.lit
+  const extra = Math.max(0, target - from.lit - 1) * STEP_MS
 
-  // Zoom in on the light at stake, warm the next one once the new light is on, then pull back
-  const [beat, setBeat] = useState(0)
-  useEffect(() => { const id = setTimeout(() => setBeat(1), 250); return () => clearTimeout(id) }, [])
+  const [run, setRun] = useState(0)
+  const [beat, setBeat] = useState<Beat>('still')
+  const [shown, setShown] = useState(from.lit)
   useEffect(() => {
-    if (!ready || beat < 1) return
-    const ids = [setTimeout(() => setBeat(b => Math.max(b, 2)), 500), setTimeout(() => setBeat(3), 2800)]
+    setShown(from.lit)
+    if (reducedMotion()) { setBeat('out'); setShown(target); return }
+    setBeat('still')
+    const ids = [
+      setTimeout(() => setBeat('zoom'), BEAT.zoom),
+      setTimeout(() => setBeat('on'), BEAT.on),
+      setTimeout(() => setBeat('warm'), BEAT.warm + extra),
+      setTimeout(() => setBeat('out'), BEAT.out + extra),
+    ]
     return () => ids.forEach(clearTimeout)
-  }, [ready, beat >= 1])
-  useEffect(() => { if (ready && user) writeSeen(user.id, level.level, target) }, [ready, target, user?.id, level.level])
+  }, [run])
+
+  const lit = beat === 'on' || beat === 'warm' || beat === 'out'
+  // Switch the earned lights on, the last with its flicker
+  useEffect(() => {
+    if (!lit || shown >= target) return
+    const id = setTimeout(() => setShown(s => Math.min(target, s + 1)), shown === from.lit ? 0 : STEP_MS)
+    return () => clearTimeout(id)
+  }, [lit, shown, target])
+  useEffect(() => { if (lit && user) writeSeen(user.id, level.level, target) }, [lit, target, user?.id, level.level])
 
   const focusOn = earned ? target - 1 : target < N ? target : null
-  const warmth = beat >= 2 ? after.warmth : visible === from.lit ? from.warmth : 0
+  const warmth = beat === 'warm' || beat === 'out' ? after.warmth : shown === from.lit ? from.warmth : 0
   const next = target < N ? LANE_ITEMS[target] : null
 
-  let line: React.ReactNode = '…'
-  if (ready && earned && target >= N) line = <>整條巷子都亮了！<b>{cap(LANE_ITEMS[N - 1].name)}</b> just came on.</>
-  else if (ready && earned) line = <><b>{cap(LANE_ITEMS[target - 1].name)}</b> just came on!{next ? ` ${units(after.toNext)} until ${next.name}.` : ''}</>
-  else if (ready && next) line = <>{units(after.toNext)} until <b>{next.name}</b>.</>
+  let line: React.ReactNode = null
+  if (earned && target >= N) line = <>整條巷子都亮了！ <b>{cap(LANE_ITEMS[N - 1].name)}</b> is on: the whole alley is lit.</>
+  else if (earned) line = <><b>{cap(LANE_ITEMS[target - 1].name)}</b> is on.{next ? ` ${cap(units(after.toNext))} until ${next.name}.` : ''}</>
+  else if (next) line = <>{cap(units(after.toNext))} until <b>{next.name}</b> comes on.</>
 
   return <div className={styles.lane}>
     <div className={styles.stage}>
-      <AlleyScene shown={visible} warmth={warmth} fresh={fresh} focus={beat >= 1 && beat < 3 ? focusOn : null}
-        label={`The alley with ${visible} of ${N} lights on`} />
-      <p className={styles.auntie} aria-live="polite"><b>Auntie</b> · {line}</p>
+      <AlleyScene shown={shown} warmth={warmth} fresh={earned && lit && shown >= target ? target - 1 : null}
+        focus={beat === 'zoom' || beat === 'on' || beat === 'warm' ? focusOn : null}
+        label={`The alley with ${shown} of ${N} lights on`} />
+    </div>
+    <div className={styles.revealBar}>
+      <p aria-live="polite" style={{ opacity: lit ? 1 : 0 }}>{lit ? line : ''}</p>
+      {beat === 'out' && !reducedMotion() && <button type="button" className={styles.replay} onClick={() => setRun(r => r + 1)}>↻ Replay</button>}
     </div>
   </div>
 }
