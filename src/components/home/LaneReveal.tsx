@@ -3,12 +3,9 @@ import { useAuthStore } from '@/store/authStore'
 import { reducedMotion, writeSeen } from '@/lib/laneSeen'
 import { pathLights, STAGE_PART } from '@/lib/path'
 import type { PathLevel } from '@/lib/usePath'
-import { LANE_ITEMS } from './laneScene'
 import AlleyScene, { LANE_N as N } from './AlleyScene'
 import styles from './TheLane.module.css'
 
-const units = (n: number) => `${n} more unit${n === 1 ? '' : 's'}`
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 /**
  * One beat at a time, so nothing overlaps: the alley as it was, a slow zoom to the light at stake,
@@ -65,21 +62,12 @@ export default function LaneReveal({ level, before }: Props) {
 
   const focusOn = earned ? target - 1 : target < N ? target : null
   const warmth = beat === 'warm' || beat === 'out' ? after.warmth : shown === from.lit ? from.warmth : 0
-  const next = target < N ? LANE_ITEMS[target] : null
-
-  let line: React.ReactNode = null
-  if (earned && target >= N) line = <>整條巷子都亮了！ <b>{cap(LANE_ITEMS[N - 1].name)}</b> is on: the whole alley is lit.</>
-  else if (earned) line = <><b>{cap(LANE_ITEMS[target - 1].name)}</b> is on.{next ? ` ${cap(units(after.toNext))} until ${next.name}.` : ''}</>
-  else if (next) line = <>{cap(units(after.toNext))} until <b>{next.name}</b> comes on.</>
 
   return <div className={styles.lane}>
     <div className={styles.stage}>
       <AlleyScene shown={shown} warmth={warmth} fresh={earned && lit && shown >= target ? target - 1 : null}
         focus={beat === 'zoom' || beat === 'on' || beat === 'warm' ? focusOn : null}
         label={`The alley with ${shown} of ${N} lights on`} />
-    </div>
-    <div className={styles.revealBar}>
-      <p aria-live="polite" style={{ opacity: lit ? 1 : 0 }}>{lit ? line : ''}</p>
       {beat === 'out' && !reducedMotion() && <button type="button" className={styles.replay} onClick={() => setRun(r => r + 1)}>↻ Replay</button>}
     </div>
   </div>

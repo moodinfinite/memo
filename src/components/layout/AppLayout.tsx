@@ -71,7 +71,7 @@ export default function AppLayout() {
         </div>
         <nav className={styles.nav}>
           <NavLink to="/" end className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 7.2L8 2.5l5.5 4.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M3.8 6.3V13.5h8.4V6.3" strokeLinejoin="round"/><path d="M6.6 13.5V9.8h2.8v3.7" strokeLinejoin="round"/></svg>
             <span>Home</span>
           </NavLink>
           <NavLink to="/sets" className={({ isActive }) => [styles.navItem, isActive ? styles.active : ''].join(' ')}>
