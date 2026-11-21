@@ -1,0 +1,8 @@
+.wrap{max-width:420px;margin:96px auto;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.title{margin:0;font-family:var(--font-display);font-size:var(--text-section);color:var(--text-primary)}
+.text{margin:0;font-size:var(--text-body);line-height:1.5;color:var(--text-secondary)}
+.row{display:flex;gap:10px;margin-top:6px}
+.primary,.ghost{display:inline-flex;align-items:center;min-height:40px;padding:0 18px;border-radius:var(--r-md);font:inherit;font-size:var(--text-body);font-weight:500;cursor:pointer;text-decoration:none}
+.primary{background:var(--primary);color:var(--on-primary);border:none}
+.ghost{background:transparent;color:var(--text-secondary);border:1px solid var(--border-default)}
+.primary:focus-visible,.ghost:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}

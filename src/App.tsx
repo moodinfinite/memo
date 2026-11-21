@@ -11,18 +11,19 @@ import { FullPageSkeleton } from '@/components/ui/Skeleton'
 import '@/styles/globals.css'
 
 // Lazy-load heavy pages so they're only downloaded when first visited
-const NewSetPage     = lazy(() => import('@/pages/NewSetPage'))
-const EditSetPage    = lazy(() => import('@/pages/EditSetPage'))
-const StudyPage      = lazy(() => import('@/pages/StudyPage'))
-const SetDetailPage  = lazy(() => import('@/pages/SetDetailPage'))
-const FolderPage     = lazy(() => import('@/pages/FolderPage'))
-const MasterDeckPage = lazy(() => import('@/pages/MasterDeckPage'))
-const AllSetsPage    = lazy(() => import('@/pages/AllSetsPage'))
-const DailyPage      = lazy(() => import('@/pages/DailyPage'))
-const LaneLessonPage = lazy(() => import('@/pages/LaneLessonPage'))
-const ResourceLibraryPage = lazy(() => import('@/pages/ResourceLibraryPage'))
-const LevelPage      = lazy(() => import('@/pages/LevelPage'))
-const PathPage       = lazy(() => import('@/pages/PathPage'))
+import { lazyPage } from '@/lib/lazyPage'
+const NewSetPage     = lazyPage(() => import('@/pages/NewSetPage'))
+const EditSetPage    = lazyPage(() => import('@/pages/EditSetPage'))
+const StudyPage      = lazyPage(() => import('@/pages/StudyPage'))
+const SetDetailPage  = lazyPage(() => import('@/pages/SetDetailPage'))
+const FolderPage     = lazyPage(() => import('@/pages/FolderPage'))
+const MasterDeckPage = lazyPage(() => import('@/pages/MasterDeckPage'))
+const AllSetsPage    = lazyPage(() => import('@/pages/AllSetsPage'))
+const DailyPage      = lazyPage(() => import('@/pages/DailyPage'))
+const LaneLessonPage = lazyPage(() => import('@/pages/LaneLessonPage'))
+const ResourceLibraryPage = lazyPage(() => import('@/pages/ResourceLibraryPage'))
+const LevelPage      = lazyPage(() => import('@/pages/LevelPage'))
+const PathPage       = lazyPage(() => import('@/pages/PathPage'))
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, initialised } = useAuthStore()

@@ -9,10 +9,11 @@ import { getSetMastery } from '@/lib/mastery'
 import type { FlashcardSet } from '@/lib/database.types'
 import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import DailyAlmanac from '@/components/home/DailyAlmanac'
+import { lazyPage } from '@/lib/lazyPage'
 import styles from './HomePage.module.css'
 
-const TheLane = lazy(() => import('@/components/home/TheLane'))
-const DailyPaper = lazy(() => import('@/components/home/DailyPaper'))
+const TheLane = lazyPage(() => import('@/components/home/TheLane'))
+const DailyPaper = lazyPage(() => import('@/components/home/DailyPaper'))
 const HOME_VIEW_KEY = 'memo-home-view'
 type HomeView = 'calendar' | 'lane' | 'paper'
 

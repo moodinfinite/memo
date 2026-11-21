@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
 import { useFoldersStore } from '@/store/foldersStore'
 import { currentResults, isLevelCheckDue, levelHistory, levelName } from '@/lib/levelTest'
+import PageErrorBoundary from '@/components/ui/PageErrorBoundary'
 import styles from './AppLayout.module.css'
 
 export default function AppLayout() {
@@ -152,7 +153,7 @@ export default function AppLayout() {
       {statsOpen && <ProfileStats name={displayName} collapsed={collapsed} onClose={() => setStatsOpen(false)} />}
       <main className={styles.main}>
         {sync.storageError && <div role="alert" className={styles.storageWarning}>Device storage is unavailable. Keep this tab open until progress finishes syncing.</div>}
-        <div className={styles.mainInner}><Outlet key={user?.id} /></div>
+        <div className={styles.mainInner}><PageErrorBoundary key={location.pathname}><Outlet key={user?.id} /></PageErrorBoundary></div>
       </main>
     </div>
   )

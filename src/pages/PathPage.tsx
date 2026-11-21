@@ -10,9 +10,10 @@ import {
   KNOWN_INTERVAL, STAGE_PART, TEST_OUT, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type TestOutScope, type UnitStage, type WordState,
 } from '@/lib/path'
 import { usePath } from '@/lib/usePath'
+import { lazyPage } from '@/lib/lazyPage'
 import styles from './PathPage.module.css'
 
-const LaneReveal = lazy(() => import('@/components/home/LaneReveal'))
+const LaneReveal = lazyPage(() => import('@/components/home/LaneReveal'))
 
 const STEPS = ['Sort', 'Learn', 'Check'] as const
 /** The unit's badge, topic and where you are in its three steps */
