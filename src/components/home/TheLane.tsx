@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { levelName } from '@/lib/levelTest'
 import { laneThreshold } from '@/lib/lane'
-import { pathLights, unitsForLight, STAGE_PART, THEMES } from '@/lib/path'
+import { pathLights, sectionPlace, unitsForLight, STAGE_PART, SECTIONS, THEMES } from '@/lib/path'
 import { usePath } from '@/lib/usePath'
 import { readSeen, writeSeen } from '@/lib/laneSeen'
 import { LANE_ITEMS } from './laneScene'
@@ -67,7 +67,7 @@ export default function TheLane() {
       {item && <div className={styles.popover} role="dialog" aria-label={item.name}>
         <div className={styles.popHead}><strong>{item.name}</strong><button type="button" onClick={() => setOpen(null)} aria-label="Close">✕</button></div>
         {litUnits
-          ? <><p className={styles.popSub}>Switched on by {litUnits.map(u => `unit ${u.index + 1} (${theme(u.theme)})`).join(', ')}</p>
+          ? <><p className={styles.popSub}>Switched on by {litUnits.map(u => `${SECTIONS[u.section].toLowerCase()} unit ${sectionPlace(onLevel!.units, u).n} (${theme(u.theme)})`).join(', ')}</p>
             {litWords.length > 0 && <ul className={styles.words}>{litWords.slice(0, 12).map(w => <li key={w.forms[0]}><b lang="zh-Hant">{w.forms[0]}</b> {w.pinyin} · {shortMeaning(w.meaning)}</li>)}</ul>}</>
           : <p className={styles.popSub}>Still dark.{onLevel && open != null ? ` It comes on after ${units(Math.max(1, laneThreshold(onLevel.units.length, N, open) - onLevel.doneCount))}.` : ''}</p>}
       </div>}
@@ -88,7 +88,7 @@ export default function TheLane() {
           <button type="button" className={styles.inline} onClick={() => setExplain(e => !e)} aria-expanded={explain}>How it lights</button>
           <Link to="/lane/lesson" className={styles.inline}>Daily practice</Link>
           {start === null ? <Link to="/path" className={styles.go}>Start your path →</Link>
-            : unit ? <Link to="/path?go=1" className={styles.go}>Unit {unit.index + 1} · {theme(unit.theme)} →</Link>
+            : unit ? <Link to="/path?go=1" className={styles.go}>Unit {onLevel ? sectionPlace(onLevel.units, unit).n : unit.index + 1} · {theme(unit.theme)} →</Link>
             : <Link to="/path" className={styles.go}>Open your path →</Link>}
         </span>
       </div>

@@ -6,7 +6,7 @@ import { useSRSStore } from '@/store/srsStore'
 import { useSetsStore } from '@/store/setsStore'
 import { levelInfo, levelName, matchMeaning, type ListWord } from '@/lib/levelTest'
 import {
-  pathCard, pathSetTitle, tagFor, taggedLevels, testOutPassed, testOutSample, testOutTarget, wordState,
+  pathCard, pathSetTitle, sectionPlace, tagFor, taggedLevels, testOutPassed, testOutSample, testOutTarget, wordState,
   KNOWN_INTERVAL, STAGE_PART, TEST_OUT, PATH_KEY, SECTIONS, THEMES, UNIT_SIZE, type CardRef, type PathUnit, type TestOutScope, type UnitStage, type WordState,
 } from '@/lib/path'
 import { usePath } from '@/lib/usePath'
@@ -16,13 +16,14 @@ const LaneReveal = lazy(() => import('@/components/home/LaneReveal'))
 
 const STEPS = ['Sort', 'Learn', 'Check'] as const
 /** The unit's badge, topic and where you are in its three steps */
-function UnitHeader({ unit, step }: { unit: PathUnit; step: 0 | 1 | 2 }) {
+function UnitHeader({ unit, units, step }: { unit: PathUnit; units: PathUnit[]; step: 0 | 1 | 2 }) {
   const t = theme(unit.theme)
+  const { n, of } = sectionPlace(units, unit)
   return (
     <header className={styles.unitHeader}>
-      <span className={styles.unitBadge} aria-hidden="true">{unit.index + 1}</span>
+      <span className={styles.unitBadge} aria-hidden="true">{n}</span>
       <div className={styles.unitHeadText}>
-        <span className={styles.unitKicker}>Unit {unit.index + 1} · {SECTIONS[unit.section]}</span>
+        <span className={styles.unitKicker}>{SECTIONS[unit.section]} · Unit {n} of {of}</span>
         <span className={styles.unitTopic}>{t.en} <span className={styles.unitTopicZh} lang="zh-Hant">{t.zh}</span></span>
       </div>
       <ol className={styles.steps} aria-label="Unit steps">
@@ -240,7 +241,7 @@ export default function PathPage() {
     const allKnown = fresh.length > 0 && toLearn === 0
     return (
       <div className={styles.page}>
-        <UnitHeader unit={unit} step={0} />
+        <UnitHeader unit={unit} units={levels.find(l => l.level === unit.level)?.units ?? [unit]} step={0} />
         {(() => {
           const lv = levels.find(l => l.level === unit.level)
           if (!lv) return null
@@ -304,7 +305,7 @@ export default function PathPage() {
     const tag = tagFor(tags, it.word)
     return (
       <div className={styles.page}>
-        {!phase.test && <UnitHeader unit={unit} step={2} />}
+        {!phase.test && <UnitHeader unit={unit} units={levels.find(l => l.level === unit.level)?.units ?? [unit]} step={2} />}
         <div className={styles.progressRow}>
           <span className={styles.eyebrow}>{phase.test ? `Test out · ${phase.test.scope === 'level' ? `rest of ${levelName(unit.level)}` : SECTIONS[unit.section]}` : ''}</span>
           <span className={styles.count}>{at + 1} of {items.length}</span>
@@ -356,7 +357,7 @@ export default function PathPage() {
     return (
       <div className={`${styles.page} ${styles.pageWide}`}>
         {level && before && <Suspense fallback={<div className={styles.lanePlaceholder} />}><LaneReveal level={level} before={before} /></Suspense>}
-        <div className={styles.eyebrow}>{test ? (test.passed ? 'Tested out' : 'Test out') : `Unit ${unit.index + 1} done`}</div>
+        <div className={styles.eyebrow}>{test ? (test.passed ? 'Tested out' : 'Test out') : `${SECTIONS[unit.section]} · Unit ${sectionPlace(levels.find(l => l.level === unit.level)?.units ?? [unit], unit).n} done`}</div>
         <h1 className={styles.title}>{items.length - missed.length} of {items.length} right</h1>
         {test && <p className={styles.lede}>{test.passed
           ? `You skipped ${test.skipped} unit${test.skipped === 1 ? '' : 's'}${test.scope === 'level' ? ` and finished ${levelName(unit.level)}` : ''}. Skipped words aren’t added to your sets.`
@@ -425,9 +426,17 @@ export default function PathPage() {
           const state = complete || i < current ? 'done' : i === current ? 'current' : 'locked'
           return (
             <li key={i} className={styles.unitItem}>
-              {(!prev || prev.section !== unit.section) && <div className={styles.section}>{SECTIONS[unit.section]}</div>}
+              {(!prev || prev.section !== unit.section) && (() => {
+                const inSection = units.filter(u => u.section === unit.section)
+                const doneIn = inSection.filter(u => u.index < doneCount).length
+                return <div className={styles.section}>
+                  <span className={styles.sectionName}>{SECTIONS[unit.section]}</span>
+                  <span className={styles.sectionCount}>{doneIn} of {inSection.length} units</span>
+                  <span className={styles.sectionBar} aria-hidden="true"><i style={{ width: `${(doneIn / inSection.length) * 100}%` }} /></span>
+                </div>
+              })()}
               <div className={[styles.unit, styles[state]].join(' ')} aria-current={state === 'current' ? 'step' : undefined}>
-                <span className={styles.node} aria-hidden="true">{state === 'done' ? '✓' : i + 1}</span>
+                <span className={styles.node} aria-hidden="true">{state === 'done' ? '✓' : sectionPlace(units, unit).n}</span>
                 <div className={styles.unitBody}>
                   <div className={styles.unitHead}>
                     <span className={styles.unitTheme}>{theme(unit.theme).en}</span>

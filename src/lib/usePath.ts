@@ -4,7 +4,7 @@ import { readAllRows } from '@/lib/readAllRows'
 import { useAuthStore } from '@/store/authStore'
 import { useSRSStore } from '@/store/srsStore'
 import { currentResults, levelHistory, loadWordList, type ListWord } from '@/lib/levelTest'
-import { buildUnits, indexCards, parsePathTags, readProgress, taggedLevels, unitStage, wordState, type CardRef, type PathTag } from '@/lib/path'
+import { buildUnits, indexCards, migrateProgress, parsePathTags, readProgress, taggedLevels, unitStage, wordState, type CardRef, type PathTag } from '@/lib/path'
 
 let tagsPending: Promise<Map<string, PathTag>> | null = null
 export const loadTags = () => {
@@ -56,7 +56,9 @@ export function usePath() {
   useEffect(reload, [user?.id])
 
   const meta = user?.user_metadata
-  const progress = readProgress(meta)
+  const saved = readProgress(meta)
+  // Progress saved under an older unit layout is carried over by the words it covered; the next save stores it
+  const progress = useMemo(() => list && tags ? migrateProgress(saved, list, tags) : saved, [list, tags, JSON.stringify(saved)])
   const latest = currentResults(levelHistory(meta))[0]
   const start = progress.start ?? latest?.level ?? null
 

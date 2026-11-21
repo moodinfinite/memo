@@ -65,3 +65,31 @@ test('test out: section and level targets, samples only new words, 80% to pass',
  assert.equal(P.testOutSample(units,states,0,4,10).length,10);
  assert.ok(P.testOutPassed(8,10)); assert.ok(!P.testOutPassed(7,10)); assert.ok(P.testOutPassed(12,15)); assert.ok(!P.testOutPassed(0,0));
 });
+
+test('units of about 10: topics split evenly, small topics pooled, stray words join the smallest unit',()=>{
+ const P=lib();
+ const words=[]; const lines=[];
+ const add=(n,form,theme,use)=>{for(let i=0;i<n;i++){words.push(W(3,form+i));lines.push(`3\t${form}${i}\t${theme}\t${use}\tex\ten`);}};
+ add(23,'食','food',5); add(7,'行','travel',5); add(3,'家','home',5); // section 0: 23 → 12+11, 7 → 7, 3 stray → smallest (7 → 10)
+ add(3,'工','work',3); add(4,'學','education',3);                   // section 1: two small topics pool into one mixed unit
+ const units=P.buildUnits(words,P.parsePathTags(lines.join('\n')),3);
+ assert.deepEqual([...units.map(u=>[u.section,u.theme,u.words.length])],[[0,'food',12],[0,'travel',10],[0,'food',11],[1,'mixed',7]]);
+ assert.deepEqual({...P.sectionPlace(units,units[2])},{n:3,of:3});
+ assert.deepEqual({...P.sectionPlace(units,units[3])},{n:1,of:1});
+ assert.equal(P.buildUnits(words,P.parsePathTags(lines.join('\n')),3,1).length,8,'layout 1 still rebuilds the 6-word units');
+});
+
+test('progress from the 6-word layout carries over by the words it covered',()=>{
+ const P=lib();
+ const words=[]; const lines=[];
+ for(let i=0;i<20;i++){words.push(W(3,'食'+i));lines.push(`3\t食${i}\tfood\t5\tex\ten`);}
+ const tags=P.parsePathTags(lines.join('\n'));
+ // old layout: 6+6+8 → three units; new: 10+10
+ const m=(done)=>P.migrateProgress({start:3,done:{'3':done}},words,tags);
+ assert.equal(m(1).done['3'],0,'6 of the first 10 words covered: that unit comes back');
+ assert.equal(m(2).done['3'],1,'12 words covered: the first new unit is done');
+ assert.equal(m(3).done['3'],2);
+ assert.equal(m(2).v,P.PATH_LAYOUT);
+ const already={start:3,done:{'3':1},v:P.PATH_LAYOUT};
+ assert.equal(P.migrateProgress(already,words,tags),already,'current progress is left alone');
+});

@@ -2,16 +2,22 @@ import type { ListWord } from './levelTest'
 import { cardForms, laneThreshold } from './lane'
 
 /**
- * The learning path: the official TOCFL words for a level, in 6-word units ordered by usefulness and
+ * The learning path: the official TOCFL words for a level, in units of about 10 ordered by usefulness and
  * grouped by topic. Topics, usefulness and one example sentence per word come from a one-off Claude
  * pass saved in public/path-tags.txt (reviewable, never generated at study time). Each level's units add
  * their words to one normal set, "Path · Level N", so Learn, Daily 10 and the Lane all see them.
  */
 
 export const PATH_KEY = 'memo_path'
-export const UNIT_SIZE = 6
-/** A topic's leftover words join its last unit when fewer than this */
-const MIN_UNIT = 3
+/** Level → section → unit. Units hold about this many words (5–14 in practice) */
+export const UNIT_SIZE = 10
+/** Topics with fewer words than this in a section are pooled into a mixed unit */
+const MIN_TOPIC = 5
+/**
+ * How units are cut. 1: 6-word units (Nov 2026, first release). 2: about 10 words, small topics pooled.
+ * Saved progress records the layout so older progress can be carried over by the words it covered.
+ */
+export const PATH_LAYOUT = 2
 
 export const THEMES: Record<string, { en: string; zh: string }> = {
   food: { en: 'Food & drink', zh: '飲食' },
@@ -28,6 +34,7 @@ export const THEMES: Record<string, { en: string; zh: string }> = {
   feelings: { en: 'Feelings & opinions', zh: '情感與看法' },
   society: { en: 'Society & news', zh: '社會與新聞' },
   general: { en: 'Core words', zh: '常用詞' },
+  mixed: { en: 'Mixed topics', zh: '綜合' },
 }
 
 export const SECTIONS = ['Everyday words', 'Useful words', 'Less common words']
@@ -41,7 +48,7 @@ export function parsePathTags(text: string): Map<string, PathTag> {
     if (!line || line[0] === '#') continue
     const [level, form, theme, use, example = '', english = ''] = line.split('\t')
     if (!form || !/^\d$/.test(level)) continue
-    tags.set(`${level}:${form}`, { theme: THEMES[theme] ? theme : 'general', use: Math.min(5, Math.max(1, Number(use) || 3)), example, english })
+    tags.set(`${level}:${form}`, { theme: THEMES[theme] && theme !== 'mixed' ? theme : 'general', use: Math.min(5, Math.max(1, Number(use) || 3)), example, english })
   }
   return tags
 }
@@ -56,35 +63,75 @@ export interface PathUnit { index: number; level: number; section: number; theme
 
 const sectionOf = (use: number) => (use >= 4 ? 0 : use === 3 ? 1 : 2)
 
+/** Split `n` items into `k` runs as even as possible, larger runs first */
+const evenRuns = <T,>(items: T[], k: number): T[][] => {
+  const runs: T[][] = []
+  for (let i = 0, at = 0; i < k; i++) {
+    const size = Math.floor(items.length / k) + (i < items.length % k ? 1 : 0)
+    runs.push(items.slice(at, at + size)); at += size
+  }
+  return runs
+}
+
 /**
  * Units for one level. Most useful words first (three sections by usefulness); inside a section each topic's
- * words are cut into units of about 6, and topics take turns, the topic with the most useful words first.
+ * words are split evenly into units of about 10, topics with only a few words share a mixed unit, and topics
+ * take turns, the topic with the most useful words first. `layout` 1 rebuilds the original 6-word units.
  */
-export function buildUnits(list: ListWord[], tags: Map<string, PathTag>, level: number): PathUnit[] {
+export function buildUnits(list: ListWord[], tags: Map<string, PathTag>, level: number, layout = PATH_LAYOUT): PathUnit[] {
   const words = list.filter(w => w.level === level)
   const units: PathUnit[] = []
+  type Item = { word: ListWord; use: number; order: number; theme: string }
+  const byUse = (a: Item, b: Item) => b.use - a.use || a.order - b.order
   for (let section = 0; section < SECTIONS.length; section++) {
-    const byTheme = new Map<string, { word: ListWord; use: number; order: number }[]>()
+    const byTheme = new Map<string, Item[]>()
     words.forEach((word, order) => {
       const tag = tagFor(tags, word)
       const use = tag?.use ?? 3
       if (sectionOf(use) !== section) return
       const theme = tag?.theme ?? 'general'
-      byTheme.set(theme, [...(byTheme.get(theme) ?? []), { word, use, order }])
+      byTheme.set(theme, [...(byTheme.get(theme) ?? []), { word, use, order, theme }])
     })
-    const queues = [...byTheme].map(([theme, items]) => {
-      items.sort((a, b) => b.use - a.use || a.order - b.order)
-      const chunks: ListWord[][] = []
-      for (let i = 0; i < items.length; i += UNIT_SIZE) chunks.push(items.slice(i, i + UNIT_SIZE).map(x => x.word))
-      if (chunks.length > 1 && chunks[chunks.length - 1].length < MIN_UNIT) chunks[chunks.length - 2].push(...chunks.pop()!)
-      const weight = items.reduce((s, x) => s + x.use, 0)
-      return { theme, chunks, weight }
-    }).sort((a, b) => b.weight - a.weight || a.theme.localeCompare(b.theme))
+    const weightOf = (items: Item[]) => items.reduce((s, x) => s + x.use, 0)
+    let queues: { theme: string; chunks: ListWord[][]; weight: number }[]
+    if (layout === 1) {
+      queues = [...byTheme].map(([theme, items]) => {
+        items.sort(byUse)
+        const chunks: ListWord[][] = []
+        for (let i = 0; i < items.length; i += 6) chunks.push(items.slice(i, i + 6).map(x => x.word))
+        if (chunks.length > 1 && chunks[chunks.length - 1].length < 3) chunks[chunks.length - 2].push(...chunks.pop()!)
+        return { theme, chunks, weight: weightOf(items) }
+      })
+    } else {
+      const pool: Item[] = []
+      queues = []
+      for (const [theme, items] of byTheme) {
+        if (items.length < MIN_TOPIC) { pool.push(...items); continue }
+        items.sort(byUse)
+        queues.push({ theme, chunks: evenRuns(items, Math.max(1, Math.round(items.length / UNIT_SIZE))).map(r => r.map(x => x.word)), weight: weightOf(items) })
+      }
+      pool.sort(byUse)
+      if (pool.length >= MIN_TOPIC || !queues.length) {
+        const themes = new Set(pool.map(x => x.theme))
+        if (pool.length) queues.push({ theme: themes.size === 1 ? pool[0].theme : 'mixed', chunks: evenRuns(pool, Math.max(1, Math.round(pool.length / UNIT_SIZE))).map(r => r.map(x => x.word)), weight: weightOf(pool) })
+      } else {
+        // A handful of stray words joins the section's smallest unit rather than making a tiny one
+        const smallest = queues.flatMap(q => q.chunks).reduce((a, b) => (b.length < a.length ? b : a))
+        smallest.push(...pool.map(x => x.word))
+      }
+    }
+    queues.sort((a, b) => b.weight - a.weight || a.theme.localeCompare(b.theme))
     for (let round = 0; queues.some(q => round < q.chunks.length); round++) {
       for (const q of queues) if (round < q.chunks.length) units.push({ index: units.length, level, section, theme: q.theme, words: q.chunks[round] })
     }
   }
   return units
+}
+
+/** A unit's place in its section: unit `n` of `of` */
+export function sectionPlace(units: PathUnit[], unit: PathUnit) {
+  const inSection = units.filter(u => u.section === unit.section)
+  return { n: inSection.findIndex(u => u.index === unit.index) + 1, of: inSection.length }
 }
 
 /** Where each word stands: already in one of your own sets, added to the path set (seen or not yet), or new */
@@ -117,13 +164,31 @@ export type UnitStage = 'sweep' | 'learn' | 'check'
 export const unitStage = (states: WordState[]): UnitStage | 'skip' =>
   states.every(s => s === 'own') ? 'skip' : states.includes('new') ? 'sweep' : states.includes('added') ? 'learn' : 'check'
 
-export interface PathProgress { start?: number; done: Record<string, number> }
+export interface PathProgress { start?: number; done: Record<string, number>; v?: number }
 
 export function readProgress(metadata: Record<string, unknown> | null | undefined): PathProgress {
   const raw = metadata?.[PATH_KEY] as Partial<PathProgress> | undefined
   const done: Record<string, number> = {}
   for (const [k, v] of Object.entries(raw?.done ?? {})) if (/^\d$/.test(k) && Number.isInteger(v) && v >= 0) done[k] = v
-  return { start: Number.isInteger(raw?.start) ? raw!.start : undefined, done }
+  return { start: Number.isInteger(raw?.start) ? raw!.start : undefined, done, v: Number.isInteger(raw?.v) ? raw!.v : undefined }
+}
+
+/**
+ * Carry progress saved under an older unit layout over to the current one, by words: a unit now counts as
+ * done when every one of its words was in a unit finished before. Partly covered units come back, and only
+ * their new words need sorting and learning.
+ */
+export function migrateProgress(progress: PathProgress, list: ListWord[], tags: Map<string, PathTag>): PathProgress {
+  if (progress.v === PATH_LAYOUT) return progress
+  const done: Record<string, number> = {}
+  for (const [key, count] of Object.entries(progress.done)) {
+    const level = Number(key)
+    const covered = new Set(buildUnits(list, tags, level, progress.v ?? 1).slice(0, count).flatMap(u => u.words.map(w => w.forms[0])))
+    const now = buildUnits(list, tags, level)
+    const firstOpen = now.findIndex(u => u.words.some(w => !covered.has(w.forms[0])))
+    done[key] = firstOpen < 0 ? now.length : firstOpen
+  }
+  return { ...progress, done, v: PATH_LAYOUT }
 }
 
 export const pathSetTitle = (level: number) => `Path · ${level === 0 ? 'Novice' : `Level ${level}`}`

@@ -37,7 +37,11 @@
 /* The line of units */
 .line { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; }
 .unitItem { display: flex; flex-direction: column; }
-.section { margin: 14px 0 8px 52px; font-size: var(--text-body); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+.section { margin: 14px 0 10px 52px; display: grid; grid-template-columns: auto auto; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+.sectionName { font-size: var(--text-body); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.sectionCount { font-size: 0.8125rem; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.sectionBar { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--ink-cyan-tint); box-shadow: inset 0 0 0 1px var(--ink-cyan-border); overflow: hidden; }
+.sectionBar i { display: block; height: 100%; background: var(--ink-red); }
 .unitItem:first-child .section { margin-top: 0; }
 .unit { position: relative; display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding-bottom: 14px; }
 .unit::before { content: ''; position: absolute; left: 17px; top: 36px; bottom: -2px; width: 6px; border-radius: 3px; background: var(--ink-cyan-border); }
