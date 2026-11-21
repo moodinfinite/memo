@@ -147,9 +147,10 @@ export default function PathPage() {
   }, [onLevel, pathSets])
 
   const startTestOut = (unit: PathUnit, scope: TestOutScope) => {
-    if (!active) return
-    const target = testOutTarget(active.units, unit.index, scope)
-    const words = testOutSample(active.units, active.states, unit.index, target, TEST_OUT[scope])
+    const lv = levels.find(l => l.level === unit.level)
+    if (!lv) return
+    const target = testOutTarget(lv.units, unit.index, scope)
+    const words = testOutSample(lv.units, lv.states, unit.index, target, TEST_OUT[scope])
     if (!words.length) return
     setTyped('')
     setPhase({ kind: 'check', unit, items: words.map(word => ({ word, score: null, typed: '' })), at: 0, revealed: false, test: { scope, target, skipped: target - unit.index } })
@@ -240,6 +241,20 @@ export default function PathPage() {
     return (
       <div className={styles.page}>
         <UnitHeader unit={unit} step={0} />
+        {(() => {
+          const lv = levels.find(l => l.level === unit.level)
+          if (!lv) return null
+          const sectionEnd = testOutTarget(lv.units, unit.index, 'section')
+          return (
+            <div className={styles.testOutBar}>
+              <span>Know these already?</span>
+              {sectionEnd < lv.units.length && <button className={styles.testOutBtn} onClick={() => startTestOut(unit, 'section')}>
+                Test out of {SECTIONS[unit.section].toLowerCase()} <small>{sectionEnd - unit.index} units</small></button>}
+              <button className={styles.testOutBtn} onClick={() => startTestOut(unit, 'level')}>
+                Test out of {levelName(unit.level)} <small>{lv.units.length - unit.index} units</small></button>
+            </div>
+          )
+        })()}
         <h1 className={styles.title}>Tap the ones you already know</h1>
         <div className={styles.sweepList}>
           {fresh.map(({ w }) => {
@@ -430,16 +445,6 @@ export default function PathPage() {
                       <span className={styles.stepHint}>{stage === 'sweep' ? 'Step 1 of 3 · sort the words' : stage === 'learn' ? 'Step 2 of 3 · Learn mode' : 'Step 3 of 3 · type each meaning'}</span>
                     </div>
                   )}
-                  {state === 'current' && stage !== 'skip' && (() => {
-                    const sectionEnd = testOutTarget(units, i, 'section')
-                    return (
-                      <div className={styles.testOut}>
-                        Already know this?{' '}
-                        {sectionEnd < units.length && <><button className={styles.linkBtn} onClick={() => startTestOut(unit, 'section')}>Test out of {SECTIONS[unit.section].toLowerCase()}</button> ({sectionEnd - i} units) · </>}
-                        <button className={styles.linkBtn} onClick={() => startTestOut(unit, 'level')}>Test out of {levelName(level)}</button> ({units.length - i} units)
-                      </div>
-                    )
-                  })()}
                 </div>
               </div>
             </li>
