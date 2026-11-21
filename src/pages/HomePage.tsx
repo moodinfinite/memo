@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/store/authStore'
 import { useSetsStore } from '@/store/setsStore'
 import { useFoldersStore } from '@/store/foldersStore'
 import { useProgressStore } from '@/store/progressStore'
@@ -18,7 +17,6 @@ const HOME_VIEW_KEY = 'memo-home-view'
 type HomeView = 'calendar' | 'lane' | 'paper'
 
 export default function HomePage() {
-  const { user } = useAuthStore()
   const { sets, fetchSets, searchSets, togglePin, isLoading } = useSetsStore()
   const { folders } = useFoldersStore()
   const { studiedDays, fetchProgress, progressLastFetched } = useProgressStore()

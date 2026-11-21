@@ -86,13 +86,12 @@ export default function TheLane() {
         <span className={styles.count}>{onLevel ? <><strong>{onLevel.doneCount}</strong> / {onLevel.units.length} units · {levelName(onLevel.level)}</> : start === null ? 'No path yet' : 'Finding your place…'}</span>
         <span className={styles.actions}>
           <button type="button" className={styles.inline} onClick={() => setExplain(e => !e)} aria-expanded={explain}>How it lights</button>
-          <Link to="/lane/lesson" className={styles.inline}>Daily practice</Link>
           {start === null ? <Link to="/path" className={styles.go}>Start your path →</Link>
             : unit ? <Link to="/path?go=1" className={styles.go}>Unit {onLevel ? sectionPlace(onLevel.units, unit).n : unit.index + 1} · {theme(unit.theme)} →</Link>
             : <Link to="/path" className={styles.go}>Open your path →</Link>}
         </span>
       </div>
-      {explain && <p className={styles.explain}>Each unit you finish on your path (sort the words, learn the new ones, pass the check) moves the alley forward. {lights && onLevel ? `About every ${lights.per} units switch on another light, from Auntie’s stall to the far blocks, and the last light needs all ${onLevel.units.length} units of ${levelName(onLevel.level)}. ` : ''}A unit you’re partway through warms the next light. Daily practice keeps your reviews going but doesn’t move the alley. Beta: the street and its pace may change.</p>}
+      {explain && <p className={styles.explain}>Each unit you finish on your path (sort the words, learn the new ones, pass the check) moves the alley forward. {lights && onLevel ? `About every ${lights.per} units switch on another light, from Auntie’s stall to the far blocks, and the last light needs all ${onLevel.units.length} units of ${levelName(onLevel.level)}. ` : ''}A unit you’re partway through warms the next light. Beta: the street and its pace may change.</p>}
     </div>
   </section>
 }
