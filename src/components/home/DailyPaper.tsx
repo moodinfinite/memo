@@ -20,6 +20,10 @@ const readEdition = (key: string): Edition | null => {
   } catch { return null }
 }
 const writeEdition = (key: string, e: Edition) => { try { localStorage.setItem(key, JSON.stringify(e)) } catch { /* fine for this visit */ } }
+/** Whether today's paper has been marked read, on this device */
+const readKey = (user: string, day: string) => `memo-paper-read:${user}:${day}`
+const readFlag = (key: string) => { try { return localStorage.getItem(key) === '1' } catch { return false } }
+const writeFlag = (key: string, on: boolean) => { try { on ? localStorage.setItem(key, '1') : localStorage.removeItem(key) } catch { /* fine for this visit */ } }
 
 /**
  * The daily paper on Home: one short local-news story a day, written with the words you studied most
@@ -36,6 +40,10 @@ export default function DailyPaper() {
     .filter(r => r.last_seen_at)
     .sort((a, b) => b.last_seen_at.localeCompare(a.last_seen_at))
     .map(r => r.card_id), [cardSRS])
+
+  const [read, setRead] = useState(false)
+  useEffect(() => { setRead(user ? readFlag(readKey(user.id, day)) : false) }, [user?.id, day])
+  const markRead = (on: boolean) => { if (!user) return; writeFlag(readKey(user.id, day), on); setRead(on) }
 
   const [edition, setEdition] = useState<Edition | null>(null)
   useEffect(() => {
@@ -79,6 +87,7 @@ export default function DailyPaper() {
     <header className={styles.masthead}>
       <div className={styles.dateline}><span>{date}</span><span>{edition && edition.batch > 0 ? `Edition ${edition.batch + 1}` : 'Morning edition'}</span></div>
       <h2 className={styles.name} lang="zh-Hant">巷口日報</h2>
+      {read && <span className={styles.stamp} aria-label="Read today"><span lang="zh-Hant">已讀</span>Read</span>}
       <div className={styles.sub}>The Lane Daily · today’s news, written with your words</div>
     </header>
     <div className={styles.body}>
@@ -88,6 +97,9 @@ export default function DailyPaper() {
         : !cards ? <p className={styles.note}>Printing…</p>
         : <StoryCard key={`${day}:${edition!.batch}`} terms={cards} setId="" setTitle={SUBJECT}
             cacheKey={`paper:${user.id}:${day}:${edition!.batch}`} onNewBatch={nextEdition} newBatchLabel="Another edition" />}
+      {cards && (read
+        ? <p className={styles.readRow}><span>✓ You read today’s paper.</span> <button type="button" className={styles.retry} onClick={() => markRead(false)}>Undo</button></p>
+        : <div className={styles.readRow}><button type="button" className={styles.readBtn} onClick={() => markRead(true)}>Mark as read</button></div>)}
     </div>
   </section>
 }
