@@ -462,7 +462,7 @@ export default function PathPage() {
         {later > 0 && <li className={styles.collapsed}>{later} more unit{later === 1 ? '' : 's'} in {levelName(level)}</li>}
       </ol>
       {complete && <p className={styles.lede}>{levelName(level)} is done. {levels.find(l => l.level > level) ? 'The next level is open above.' : 'More levels are coming.'}</p>}
-      <p className={styles.footnote}>Words come from the official TOCFL list. Topics, usefulness and example sentences were written once by Claude and saved, so they may occasionally be off. Path words go into the set “{pathSetTitle(level)}”, so they show up in Daily 10 reviews too.
+      <p className={styles.footnote}>Words come from the official TOCFL list. Topics, usefulness and example sentences were written once by Claude and saved, so they may occasionally be off. Path words go into the set “{pathSetTitle(level)}”, so you can also study them like any other set.
         {latest && progress.start === undefined ? ` Starting from your level check (${levelName(latest.level)}).` : ''}</p>
     </div>
   )

@@ -578,7 +578,7 @@ export default function LevelPage() {
           {saveState === 'failed' && <>Couldn’t save this result. <button className={styles.linkBtn} onClick={() => saveResult(result)}>Retry</button></>}
         </div>
         <div className={styles.row}>
-          <Link to="/daily" className={styles.primaryBtn}>Do today’s Daily 10</Link>
+          <Link to="/path" className={styles.primaryBtn}>Go to your path</Link>
           <button className={styles.ghostBtn} onClick={() => setPhase('intro')}>Done</button>
         </div>
       </div>

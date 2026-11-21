@@ -9,8 +9,6 @@ import { getSetMastery } from '@/lib/mastery'
 import type { FlashcardSet } from '@/lib/database.types'
 import { HomePageSkeleton } from '@/components/ui/Skeleton'
 import DailyAlmanac from '@/components/home/DailyAlmanac'
-import { laneSetId } from '@/lib/lane'
-import DailyCard from '@/components/home/DailyCard'
 import styles from './HomePage.module.css'
 
 const TheLane = lazy(() => import('@/components/home/TheLane'))
@@ -59,8 +57,6 @@ export default function HomePage() {
   }
 
   const folderMap = useMemo(() => new Map(folders.map(f => [f.id, f])), [folders])
-  const pathSet = user ? laneSetId(user.id) : null
-  const hasPersonalCards = sets.some(set => set.id !== pathSet && (set.cardCount ?? 0) > 0)
   const pinned = sets.filter((s) => s.pinned)
   const rest = sets.filter((s) => !s.pinned)
   const totalCards = sets.reduce((a, s) => a + (s.cardCount ?? 0), 0)
@@ -86,7 +82,7 @@ export default function HomePage() {
           ? <Suspense fallback={<div className={styles.lanePlaceholder} />}><DailyPaper /></Suspense>
           : <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />}
       </div>
-      {hasPersonalCards && <DailyCard />}
+      {/* Daily 10 is shelved for now (Nov 2026): DailyCard and /daily still exist, just not on Home */}
 
       <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
