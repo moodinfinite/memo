@@ -14,8 +14,9 @@ import DailyCard from '@/components/home/DailyCard'
 import styles from './HomePage.module.css'
 
 const TheLane = lazy(() => import('@/components/home/TheLane'))
+const DailyPaper = lazy(() => import('@/components/home/DailyPaper'))
 const HOME_VIEW_KEY = 'memo-home-view'
-type HomeView = 'calendar' | 'lane'
+type HomeView = 'calendar' | 'lane' | 'paper'
 
 export default function HomePage() {
   const { user } = useAuthStore()
@@ -27,8 +28,10 @@ export default function HomePage() {
   const [query, setQuery] = useState('')
   const [dataError, setDataError] = useState<string | null>(null)
   const [homeView, setHomeView] = useState<HomeView>(() => {
-    if (new URLSearchParams(window.location.search).get('view') === 'lane') return 'lane'
-    try { return localStorage.getItem(HOME_VIEW_KEY) === 'lane' ? 'lane' : 'calendar' } catch { return 'calendar' }
+    const pick = (v: string | null): HomeView | null => v === 'lane' || v === 'paper' || v === 'calendar' ? v : null
+    const asked = pick(new URLSearchParams(window.location.search).get('view'))
+    if (asked) return asked
+    try { return pick(localStorage.getItem(HOME_VIEW_KEY)) ?? 'calendar' } catch { return 'calendar' }
   })
   const chooseView = (view: HomeView) => {
     setHomeView(view)
@@ -75,9 +78,12 @@ export default function HomePage() {
         <div className={styles.viewToggle} role="group" aria-label="Top of Home">
           <button type="button" aria-pressed={homeView === 'calendar'} onClick={() => chooseView('calendar')}>Calendar</button>
           <button type="button" aria-pressed={homeView === 'lane'} onClick={() => chooseView('lane')}>The Lane <span className={styles.beta}>beta</span></button>
+          <button type="button" aria-pressed={homeView === 'paper'} onClick={() => chooseView('paper')}>Newspaper</button>
         </div>
         {homeView === 'lane'
           ? <Suspense fallback={<div className={styles.lanePlaceholder} />}><TheLane /></Suspense>
+          : homeView === 'paper'
+          ? <Suspense fallback={<div className={styles.lanePlaceholder} />}><DailyPaper /></Suspense>
           : <DailyAlmanac studiedDays={studiedDays} ready={progressLastFetched > 0 || studiedDays.length > 0} />}
       </div>
       {hasPersonalCards && <DailyCard />}

@@ -15,6 +15,15 @@ interface Props {
   setId: string
   onNewBatch: () => void
   onComplete?: () => void   // when set, shows "Continue →" button (used in learn mode)
+  /** Keep the story under this key on the device, so it isn't rewritten on every visit (the daily paper) */
+  cacheKey?: string
+  /** Label for the "New batch" button */
+  newBatchLabel?: string
+}
+
+const storyCache = {
+  read: (key: string) => { try { return localStorage.getItem(`memo-story:${key}`) } catch { return null } },
+  write: (key: string, story: string) => { try { localStorage.setItem(`memo-story:${key}`, story) } catch { /* the story still shows */ } },
 }
 
 /** Split `text` into plain/highlighted segments for the given terms */
@@ -31,7 +40,7 @@ function buildSegments(text: string, terms: Card[]): { text: string; highlighted
   })
 }
 
-export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: Props) {
+export default function StoryCard({ terms, setTitle, onNewBatch, onComplete, cacheKey, newBatchLabel = 'New batch' }: Props) {
   const [story, setStory] = useState('')
   const [loading, setLoading] = useState(false)
   const [slowLoad, setSlowLoad] = useState(false)
@@ -133,6 +142,7 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
       try { data = JSON.parse(text) } catch { throw new Error('Story generation timed out — tap to try again') }
       if (!res.ok) throw new Error(data.error || 'Failed to generate story')
       setStory(data.story)
+      if (cacheKey) storyCache.write(cacheKey, data.story)
     } catch (err: any) {
       const msg = err.name === 'AbortError' ? 'Taking too long — tap to try again' : (err.message ?? 'Something went wrong')
       setError(msg)
@@ -142,9 +152,12 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
       setLoading(false)
       setSlowLoad(false)
     }
-  }, [terms, setTitle])
+  }, [terms, setTitle, cacheKey])
 
-  useEffect(() => { generate() }, [generate])
+  useEffect(() => {
+    const cached = cacheKey ? storyCache.read(cacheKey) : null
+    if (cached) { setStory(cached); setError(null) } else generate()
+  }, [generate])
 
   const segments = story ? buildSegments(story, terms) : []
 
@@ -303,7 +316,7 @@ export default function StoryCard({ terms, setTitle, onNewBatch, onComplete }: P
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M1 4h9M1 7h7M1 10h5"/><path d="M11 8l2 2-2 2"/>
               </svg>
-              New batch
+              {newBatchLabel}
             </button>
           )}
         </div>
